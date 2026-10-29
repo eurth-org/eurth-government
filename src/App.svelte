@@ -5,15 +5,24 @@
     faBookOpen,
     faCircleInfo,
     faCodeBranch,
+    faDice,
+    faFloppyDisk,
     faHeart,
+    faKeyboard,
     faLightbulb,
+    faRedo,
     faRotateLeft,
+    faShareNodes,
+    faUndo,
     faUserShield,
+    faVolumeHigh,
+    faVolumeXmark,
   } from '@fortawesome/free-solid-svg-icons';
-  import { tick } from 'svelte';
+  import { tick, untrack } from 'svelte';
+  import { slide } from 'svelte/transition';
   import yurt from './assets/eurth-yurt-circle.svg';
   import { defaultCountry, describe } from './model/engine';
-  import { sentence } from './model/formats';
+  import { randomCountry } from './model/random';
   import { decodeCountry, encodeCountry } from './model/link';
   import { familyLabels, type Family } from './model/naming';
   import { settings, type Country, type SettingId } from './model/settings';
@@ -21,10 +30,16 @@
   import Budget from './ui/Budget.svelte';
   import Compass from './ui/Compass.svelte';
   import Field from './ui/Field.svelte';
+  import { clink, setSound, soundOn, toast } from './ui/fun';
   import Globe from './ui/Globe.svelte';
+  import Headline from './ui/Headline.svelte';
+  import NameCard from './ui/NameCard.svelte';
+  import { save } from './ui/saved';
+  import Shortcuts from './ui/Shortcuts.svelte';
   import Icon from './ui/Icon.svelte';
   import { groupIcons, groupSwatches, panelIcons, ruleIcon, severityIcons } from './ui/icons';
   import Picker from './ui/Picker.svelte';
+  import { ref, wikipedia } from './ui/ref';
   import Radar from './ui/Radar.svelte';
   import Scales from './ui/Scales.svelte';
   import SectionNav from './ui/SectionNav.svelte';
@@ -41,38 +56,95 @@
     defs: defs.filter((d) => d.group === name),
   }));
   const familyOrder: Family[] = ['structure', 'system', 'form', 'regime', 'rulers'];
+  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const params = new URLSearchParams(location.search);
   let country = $state<Country>(params.get('c') ? decodeCountry(params.get('c')!) : defaultCountry());
   let name = $state(params.get('n') ?? '');
+  // A real country's flag (its ISO code), shown on the name card and kept in the link.
+  let flag = $state<string | undefined>(/^[a-z]{2}$/.test(params.get('f') ?? '') ? params.get('f')! : undefined);
+  // The flag belongs to the country's name: rename the country and the flag goes.
+  let flagFor = untrack(() => name);
+  $effect(() => {
+    if (flag && name !== flagFor) flag = undefined;
+  });
   const profile = $derived(describe(country));
   const shownName = $derived(name.trim() || 'Your country');
-
-  // While the empty name field has focus, its placeholder suggests a name: classics of fiction,
-  // with a few of Eurth's nations among them.
-  const suggestions = ['Ruritania', 'Orioni', 'Freedonia', 'Dolchland', 'Grand Fenwick', 'Adaptus', 'Elbonia', 'Lysia'];
-  let placeholder = $state('Your country');
-  let suggesting: ReturnType<typeof setInterval> | undefined;
-  function suggestNames() {
-    let i = 0;
-    placeholder = suggestions[i]!;
-    suggesting = setInterval(() => (placeholder = suggestions[++i % suggestions.length]!), 1800);
-  }
-  function stopSuggesting() {
-    clearInterval(suggesting);
-    placeholder = 'Your country';
-  }
+  const code = $derived(encodeCountry(country));
 
   const link = $derived.by(() => {
     const url = new URL(location.pathname, location.origin);
-    url.searchParams.set('c', encodeCountry(country));
+    url.searchParams.set('c', code);
     if (name.trim()) url.searchParams.set('n', name.trim());
+    if (flag) url.searchParams.set('f', flag);
     return url.toString();
   });
 
   $effect(() => {
     history.replaceState(null, '', link);
   });
+
+  // The country as it was loaded, picked or rolled: the budget can go back to it.
+  let baseline = $state<Country>(untrack(() => $state.snapshot(country) as Country));
+
+  // Undo and redo, for every change to the settings, the name and the flag. Quick runs of changes
+  // (a slider being dragged, a name being typed) count as one.
+  const snapshot = $derived(JSON.stringify([code, name, flag ?? null]));
+  let past = $state<string[]>([]);
+  let future = $state<string[]>([]);
+  let recorded = $state(untrack(() => snapshot));
+  let replaying = false;
+  let settle: ReturnType<typeof setTimeout> | undefined;
+  $effect(() => {
+    const now = snapshot;
+    if (replaying) {
+      replaying = false;
+      recorded = now;
+      return;
+    }
+    clearTimeout(settle);
+    settle = setTimeout(() => {
+      if (now === recorded) return;
+      past = [...past.slice(-99), recorded];
+      future = [];
+      recorded = now;
+    }, 400);
+  });
+
+  const canUndo = $derived(past.length > 0 || snapshot !== recorded);
+
+  function restore(saved: string) {
+    const [savedCode, savedName, savedFlag] = JSON.parse(saved) as [string, string, string | null];
+    replaying = true;
+    country = decodeCountry(savedCode);
+    name = savedName;
+    flagFor = savedName;
+    flag = savedFlag ?? undefined;
+  }
+
+  function undo() {
+    clearTimeout(settle);
+    if (snapshot !== recorded) {
+      // A change that's still settling is undone first.
+      future = [snapshot, ...future];
+      restore(recorded);
+      return;
+    }
+    const previous = past.at(-1);
+    if (!previous) return;
+    past = past.slice(0, -1);
+    future = [snapshot, ...future];
+    restore(previous);
+  }
+
+  function redo() {
+    const next = future[0];
+    if (!next) return;
+    clearTimeout(settle);
+    future = future.slice(1);
+    past = [...past, snapshot];
+    restore(next);
+  }
 
   let pickerOpen = $state(false);
   let current = $state(groups[0]!.id);
@@ -149,36 +221,154 @@
     return () => removeEventListener('scroll', update);
   });
 
-  function pick(next: Country, countryName: string) {
+  function load(next: Country, countryName: string, countryFlag?: string) {
     country = next;
     name = countryName;
+    flagFor = countryName;
+    flag = countryFlag;
+    baseline = $state.snapshot(next) as Country;
+  }
+
+  const fictional = ['Ruritania', 'Freedonia', 'Grand Fenwick', 'Elbonia', 'Genovia', 'Borduria', 'Kreplachistan', 'Molvania'];
+  function random() {
+    load(randomCountry(), fictional[Math.floor(Math.random() * fictional.length)]!);
   }
 
   function reset() {
-    country = defaultCountry();
-    name = '';
+    load(defaultCountry(), '');
+  }
+
+  // Save: kept on this device, and the link copied, since the link is what travels.
+  async function saveCountry() {
+    save({ name: shownName, code, flag, government: profile.name, at: new Date().toISOString() });
+    try {
+      await navigator.clipboard.writeText(link);
+      toast('Saved on this device, and the link is copied.');
+    } catch {
+      toast('Saved on this device.');
+    }
+    clink();
+  }
+
+  let sound = $state(soundOn());
+  function toggleSound() {
+    sound = !sound;
+    setSound(sound);
+    if (sound) clink();
+  }
+
+  // Easter egg: choosing "The whole world" sets the globe spinning faster for a while.
+  let worldSpin = $state(0);
+  let lastExtent = untrack(() => country.extent);
+  $effect(() => {
+    if (country.extent === 'world' && lastExtent !== 'world') worldSpin += 1;
+    lastExtent = country.extent;
+  });
+
+  // The footer yurt follows Eurth's seasonal avatars.
+  function seasonalYurt(now = new Date()): string {
+    const month = now.getMonth() + 1;
+    const day = now.getDate();
+    if (month === 2) return '/yurt/valentines.gif';
+    if (month === 4 && day >= 16 && day <= 22) return '/yurt/earth-day.svg';
+    if (month === 6) return '/yurt/pride.svg';
+    if (month === 10) return '/yurt/halloween.png';
+    if (month === 12) return '/yurt/december.gif';
+    return yurt;
+  }
+  const footerYurt = seasonalYurt();
+
+  // Keyboard shortcuts, listed with "?". They stay quiet while you type in a field.
+  let shortcutsOpen = $state(false);
+  function keys(event: KeyboardEvent) {
+    const target = event.target as HTMLElement;
+    const typing = target.matches('input, textarea, select, [contenteditable]');
+    const mod = event.metaKey || event.ctrlKey;
+    if (mod && event.key.toLowerCase() === 'z' && !typing) {
+      event.preventDefault();
+      if (event.shiftKey) redo();
+      else undo();
+      return;
+    }
+    if (typing || mod || event.altKey || document.querySelector('dialog[open]')) return;
+    const sectionIds = groups.map((g) => g.id);
+    const at = sectionIds.indexOf(current);
+    switch (event.key) {
+      case '/':
+        event.preventDefault();
+        document.getElementById('setting-search')?.focus();
+        break;
+      case '?':
+        shortcutsOpen = true;
+        break;
+      case 'e':
+      case 'E':
+        pickerOpen = true;
+        break;
+      case 'r':
+      case 'R':
+        random();
+        break;
+      case 's':
+      case 'S':
+        saveCountry();
+        break;
+      case '[':
+      case ']': {
+        const next = sectionIds[Math.max(0, Math.min(sectionIds.length - 1, at + (event.key === ']' ? 1 : -1)))];
+        if (next) document.getElementById(next)?.scrollIntoView({ block: 'start' });
+        break;
+      }
+    }
   }
 </script>
 
+<svelte:window onkeydown={keys} />
+
 <div class="topbar">
-  <nav aria-label="Links">
-    <a href="#about"><Icon icon={faCircleInfo} /> About</a>
-    <a href="https://github.com/eurth-org/eurth-government"><Icon icon={faGithub} /> GitHub</a>
-    <a href="https://eurth.org"><Icon icon={faArrowUpRightFromSquare} /> Eurth.org</a>
-  </nav>
+  <div class="bar">
+    <nav aria-label="Links">
+      <a href="#about"><Icon icon={faCircleInfo} /> About</a>
+      <a href={ref('https://github.com/eurth-org/eurth-government')}><Icon icon={faGithub} /> GitHub</a>
+      <a href={ref('https://eurth.org')}><Icon icon={faArrowUpRightFromSquare} /> Eurth.org</a>
+    </nav>
+  </div>
 </div>
 
 <header class="header">
-  <div class="brand">
-    <Globe />
-    <span class="title">Governmint</span>
-    <span class="tagline">Freshly minted governments</span>
-    <span class="badge">Preview</span>
-  </div>
-  <div class="actions">
-    <button class="btn" onclick={() => (pickerOpen = true)}><Icon icon={faBookOpen} /> Start from…</button>
-    <button class="btn reset" onclick={reset}><Icon icon={faRotateLeft} /> Reset</button>
-    <ThemeSwitch />
+  <div class="bar">
+    <div class="brand">
+      <!-- Like any site's logo, this one goes home: a fresh, default country. -->
+      <a class="home" href="/" title="Governmint: start afresh">
+        <Globe spin={worldSpin} />
+        <span class="title">Governmint</span>
+      </a>
+      <span class="tagline">Freshly minted governments</span>
+      <span class="badge">Preview</span>
+    </div>
+    <div class="actions">
+      <button class="btn" onclick={() => (pickerOpen = true)} title="Start from an example or a real country (E)">
+        <Icon icon={faBookOpen} /> Examples &amp; countries
+      </button>
+      <button class="btn" data-click="tumble" onclick={random} title="Roll a random country (R)">
+        <Icon icon={faDice} /> Random
+      </button>
+      <button class="btn btn-primary" data-click="bounce" onclick={saveCountry} title="Save on this device and copy the link (S)">
+        <Icon icon={faFloppyDisk} /> Save
+      </button>
+      <span class="history">
+        <button class="btn icon-only" data-click="swing-left" onclick={undo} disabled={!canUndo} aria-label="Undo" title="Undo (⌘Z)">
+          <Icon icon={faUndo} />
+        </button>
+        <button class="btn icon-only" data-click="swing-right" onclick={redo} disabled={!future.length} aria-label="Redo" title="Redo (⇧⌘Z)">
+          <Icon icon={faRedo} />
+        </button>
+      </span>
+      <button class="btn reset" data-click="spin-back" onclick={reset} title="Back to the default country">
+        <Icon icon={faRotateLeft} /> Reset
+      </button>
+      <ThemeSwitch />
+    </div>
   </div>
 </header>
 
@@ -202,7 +392,15 @@
           {group.name}
         </h2>
         {#if group.name === 'Budget'}
-          <Budget {country} {flashing} {hits} currentHit={hits[hit]} name={shownName} onchange={(next) => (country = next)} />
+          <Budget
+            {country}
+            {baseline}
+            {flashing}
+            {hits}
+            currentHit={hits[hit]}
+            name={shownName}
+            onchange={(next) => (country = next)}
+          />
         {:else}
           {#each group.defs as def (def.id)}
             <Field
@@ -221,28 +419,15 @@
 
   <aside class="results" id="results">
     <section class="panel summary">
-      <label class="kicker" for="country-name"><Icon icon={panelIcons.name} /> Country name</label>
-      <input
-        id="country-name"
-        class="name-input"
-        {placeholder}
-        bind:value={name}
-        onfocus={suggestNames}
-        onblur={stopSuggesting}
-      />
-      {#key profile.name}
-        <!-- A fresh name gets a "freshly minted" shine. -->
-        <h1 class="minted" aria-live="polite">{profile.name}</h1>
-      {/key}
-      <p class="sentence">{sentence(name.trim() || 'This country', profile)}</p>
+      <NameCard bind:name {profile} seed={code} {flag} />
     </section>
 
     {#if profile.checks.length}
-      <section class="panel" aria-labelledby="checks-title">
+      <section class="panel" aria-labelledby="checks-title" transition:slide={{ duration: calm ? 0 : 250 }}>
         <h2 id="checks-title"><Icon icon={panelIcons.checks} /> Worth a second look</h2>
         <ul class="checks">
           {#each profile.checks as check (check.id)}
-            <li class={check.severity}>
+            <li class={check.severity} transition:slide={{ duration: calm ? 0 : 200 }}>
               <span class="severity">
                 <Icon icon={severityIcons[check.severity]} />
                 {check.severity === 'conflict' ? 'Contradiction' : 'Unusual'}
@@ -263,12 +448,14 @@
           <li>
             <span class="label-icon"><Icon icon={ruleIcon(family, label.rule)} /></span>
             <div>
-              <p class="label-title">{familyLabels[family]}: <strong>{label.label}</strong></p>
+              <p class="label-title">
+                {familyLabels[family]}:
+                <a class="wiki" href={wikipedia(label.wiki)} target="_blank" rel="noopener" title="{label.wiki} on Wikipedia">
+                  <strong>{label.label}</strong>
+                </a>
+              </p>
               <p class="because">{label.because}</p>
               <p class="label-links">
-                <a href="https://en.wikipedia.org/wiki/{encodeURIComponent(label.wiki.replaceAll(' ', '_'))}" target="_blank" rel="noopener">
-                  <Icon icon={faWikipediaW} /> {label.wiki}
-                </a>
                 <button class="link" onclick={() => flash(label.dependsOn, true)}>
                   Based on: {label.dependsOn.map((id) => defs.find((d) => d.id === id)?.label ?? id).join(', ')}
                 </button>
@@ -296,8 +483,11 @@
     </section>
 
     <section class="panel" aria-labelledby="share-title">
-      <h2 id="share-title"><Icon icon={panelIcons.share} /> Share</h2>
-      <Share name={shownName} {country} {profile} {link} />
+      <h2 id="share-title">
+        <span title="The share icon, designed by the late, great Alex King"><Icon icon={faShareNodes} /></span>
+        Save &amp; share
+      </h2>
+      <Share name={shownName} {country} {profile} {link} onsave={saveCountry} />
     </section>
   </aside>
 </div>
@@ -314,63 +504,96 @@
     </li>
     <li>
       <span class="about-icon"><Icon icon={faUserShield} /></span>
-      <p>A country lives in its link: copy it to share it or come back later. Nothing is stored anywhere else.</p>
-    </li>
-    <li>
-      <span class="about-icon"><img src={yurt} alt="" width="18" height="18" /></span>
       <p>
-        <a href="https://eurth.org">Made by Eurth, a Worldbuilding &amp; Roleplay Writing Community</a>. Built a
-        country you like? Give it a world to live in.
+        A country lives in its link: copy it to share it or come back later. Save keeps a list on this device too, in
+        your browser; nothing is stored anywhere else.
       </p>
     </li>
     <li>
+      <span class="about-icon"><img src={footerYurt} alt="" width="18" height="18" /></span>
+      <p>
+        <a href={ref('https://eurth.org')}>Made by Eurth, a Worldbuilding &amp; Roleplay Writing Community</a>. Built
+        a country you like? Give it a world to live in.
+      </p>
+    </li>
+    <Headline />
+    <li>
       <span class="about-icon heart beat"><Icon icon={faHeart} /></span>
       <p>
-        Made with love by <a href="https://iiwiki.com/w/Orioni">Orioni</a>, for Eurth and the people who live in it,
-        going strong since 2004. Thanks to <a href="https://www.nationstates.net">NationStates</a>, where Eurth's
-        worldbuilding began.
+        Made with love by <a href={ref('https://iiwiki.com/w/Orioni')}>Orioni</a>, for Eurth and the people who live
+        in it, going strong since 2004. Thanks to <a href={ref('https://www.nationstates.net')}>NationStates</a>,
+        where Eurth's worldbuilding began.
+      </p>
+    </li>
+    <li>
+      <span class="about-icon"><Icon icon={faShareNodes} /></span>
+      <p>
+        The share icon was designed by the late, great <a href={ref('https://alexking.org')}>Alex King</a>. We never
+        met him, but his work shaped how the web shares things, and how Orioni thinks about design.
+        <span class="heart"><Icon icon={faHeart} label="love" /></span>
       </p>
     </li>
     <li>
       <span class="about-icon"><Icon icon={faLightbulb} /></span>
       <p>
         Fellow worldbuilder?
-        <a href="https://github.com/eurth-org/eurth-government/discussions/categories/ideas">Table a motion for the roadmap</a>
+        <a href={ref('https://github.com/eurth-org/eurth-government/discussions/categories/ideas')}>Table a motion for the roadmap</a>
         on GitHub. No quorum required.
       </p>
     </li>
     <li>
       <span class="about-icon"><Icon icon={faWikipediaW} /></span>
       <p>
-        Every label links to <a href="https://en.wikipedia.org">Wikipedia</a> for the full story. Thank you, Wikipedia
-        <span class="heart"><Icon icon={faHeart} label="love" /></span>
+        Every label links to <a href={ref('https://en.wikipedia.org')}>Wikipedia</a> for the full story. Thank you,
+        Wikipedia <span class="heart"><Icon icon={faHeart} label="love" /></span>
+      </p>
+    </li>
+    <li>
+      <span class="about-icon"><Icon icon={faKeyboard} /></span>
+      <p>
+        Prefer the keyboard? <button class="link" onclick={() => (shortcutsOpen = true)}>Press ? for the shortcuts</button>.
+        And for a little sound when coins change hands:
+        <button class="link sound" aria-pressed={sound} onclick={toggleSound}>
+          <Icon icon={sound ? faVolumeHigh : faVolumeXmark} /> Sound: {sound ? 'on' : 'off'}
+        </button>
       </p>
     </li>
     <li>
       <span class="about-icon"><Icon icon={faCodeBranch} /></span>
       <p>
         Inspired by the
-        <a href="https://minkinfin.github.io/Filteries-Political-Simulator-Archive/">Filteries Political Simulator</a>
-        (2016–2018). Icons by <a href="https://fontawesome.com">Font Awesome</a> (CC BY 4.0) and
-        <a href="https://github.com/cyberalien/line-md">line-md</a> (MIT). Open source under the
-        <a href="https://github.com/eurth-org/eurth-government/blob/main/LICENSE">Apache 2.0 licence</a>.
+        <a href={ref('https://minkinfin.github.io/Filteries-Political-Simulator-Archive/')}>Filteries Political Simulator</a>
+        (2016–2018). Icons by <a href={ref('https://fontawesome.com')}>Font Awesome</a> (CC BY 4.0) and
+        <a href={ref('https://github.com/cyberalien/line-md')}>line-md</a> (MIT); flags by
+        <a href={ref('https://github.com/jdecked/twemoji')}>Twemoji</a> (CC BY 4.0). Open source under the
+        <a href={ref('https://github.com/eurth-org/eurth-government/blob/main/LICENSE')}>Apache 2.0 licence</a>.
       </p>
     </li>
   </ul>
 </footer>
 
-<Picker open={pickerOpen} onpick={pick} onclose={() => (pickerOpen = false)} />
+<Picker open={pickerOpen} onpick={load} onclose={() => (pickerOpen = false)} />
+<Shortcuts open={shortcutsOpen} onclose={() => (shortcutsOpen = false)} />
 
 <style>
   /* Top bar and header, as on eurth.org. The bar is Eurth blue; its links are white pills with
      Eurth blue text, so the bar stays two colours (a brand exception in contrast.test.ts). */
   .topbar {
     background: var(--eurth-blue);
+    padding: 0 var(--space-4);
+  }
+
+  /* On wide screens, the bars' contents line up with the page below instead of the screen's edges. */
+  .bar {
+    max-width: calc(1200px - 2 * var(--space-4));
+    margin: 0 auto;
+  }
+
+  .topbar .bar {
     min-height: 40px;
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    padding: 0 var(--space-4);
   }
 
   .topbar nav {
@@ -415,8 +638,11 @@
 
   .header {
     background: var(--header);
-    min-height: 56px;
     padding: var(--space-2) var(--space-4);
+  }
+
+  .header .bar {
+    min-height: 56px;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -424,10 +650,17 @@
     gap: var(--space-2) var(--space-4);
   }
 
-  .brand {
+  .brand,
+  .home {
     display: flex;
     align-items: center;
     gap: var(--space-2);
+  }
+
+  .home {
+    color: inherit;
+    text-decoration: none;
+    border-radius: var(--radius-control);
   }
 
   .title {
@@ -459,7 +692,30 @@
 
   .actions {
     display: flex;
+    flex-wrap: wrap;
+    align-items: center;
     gap: var(--space-2);
+  }
+
+  .history {
+    display: inline-flex;
+    gap: 2px;
+  }
+
+  .icon-only {
+    padding: 6px 9px;
+  }
+
+  .actions .btn:disabled {
+    opacity: 0.45;
+    cursor: default;
+    box-shadow: none;
+    transform: none;
+  }
+
+  .actions .btn:disabled:hover {
+    background: var(--button);
+    border-color: transparent;
   }
 
   /* Layout */
@@ -512,66 +768,8 @@
     display: inline-flex;
   }
 
-  /* Results */
-  .kicker {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    color: var(--ink-muted);
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-
-  .kicker :global(.icon) {
-    color: var(--accent-fill);
-    font-size: 14px;
-  }
-
-  .name-input {
-    width: 100%;
-    margin: var(--space-1) 0 var(--space-3);
-    padding: 4px 8px;
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius-control);
-    background: var(--surface);
-    font-weight: 600;
-  }
-
-  h1 {
-    margin: 0;
-    font-size: 24px;
-    line-height: 1.25;
-  }
-
   @media (prefers-reduced-motion: no-preference) {
-    /* A shine sweeps across a freshly minted name. */
-    .minted {
-      position: relative;
-      overflow: hidden;
-    }
-
-    .minted::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(100deg, transparent 30%, rgb(255 255 255 / 0.6) 50%, transparent 70%);
-      transform: translateX(-100%);
-      animation: shine 0.9s ease-out 0.1s;
-      pointer-events: none;
-    }
-
-    :global([data-theme='dark']) .minted::after {
-      background: linear-gradient(100deg, transparent 30%, rgb(255 255 255 / 0.25) 50%, transparent 70%);
-    }
-
-    /* The flag waves when you point at it, the reset arrow winds back, the heart beats. */
-    .kicker:hover :global(.icon) {
-      animation: wave 0.6s ease-in-out;
-      transform-origin: 10% 90%;
-    }
-
+    /* The reset arrow winds back when you point at it, the heart beats. */
     .reset :global(.icon) {
       transition: transform 0.4s ease-out;
     }
@@ -585,21 +783,6 @@
     }
   }
 
-  @keyframes shine {
-    to {
-      transform: translateX(100%);
-    }
-  }
-
-  @keyframes wave {
-    25% {
-      transform: rotate(-12deg);
-    }
-    60% {
-      transform: rotate(9deg);
-    }
-  }
-
   @keyframes beat {
     15%,
     45% {
@@ -608,11 +791,6 @@
     30% {
       transform: scale(1.05);
     }
-  }
-
-  .sentence {
-    margin: var(--space-2) 0 0;
-    color: var(--ink-muted);
   }
 
   .intro {
@@ -700,10 +878,15 @@
     font-size: 13px;
   }
 
-  .label-links a {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
+  /* The label itself is the Wikipedia link. */
+  .wiki {
+    color: var(--ink);
+    text-decoration-color: var(--accent-text);
+    text-underline-offset: 3px;
+  }
+
+  .wiki:hover {
+    color: var(--accent-text);
   }
 
   /* Footer */
@@ -750,5 +933,15 @@
 
   .heart {
     color: #bf1e2e;
+  }
+
+  footer .link {
+    font-size: inherit;
+  }
+
+  .sound {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
   }
 </style>

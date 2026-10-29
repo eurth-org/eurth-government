@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Unclaimed territory · Governmint</title>
+    <meta name="robots" content="noindex" />
+    <link rel="icon" type="image/png" href="/favicon-64.png" />
+    <style>
+      /* Governmint's 404: no government has claimed this page yet. Light or dark, as the system says. */
+      :root {
+        --surface: #ffffff;
+        --ink: #222222;
+        --ink-muted: #5f5f5f;
+        --accent-text: #1b6fa0;
+        --eurth-blue: #2698d4;
+        color-scheme: light dark;
+      }
+
+      @supports (color: color(display-p3 0 0 0)) {
+        :root {
+          --eurth-blue: color(display-p3 0.2981 0.5884 0.8115);
+        }
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --surface: #002b36;
+          --ink: #fcf6e1;
+          --ink-muted: #a2b0a8;
+          --accent-text: #3eafe7;
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        display: grid;
+        min-height: 100dvh;
+        margin: 0;
+        place-items: center;
+        padding: 24px 16px;
+        background: var(--surface);
+        color: var(--ink);
+        font: 15px/1.45 system-ui, Arial, sans-serif;
+        text-align: center;
+      }
+
+      .globe {
+        width: 96px;
+        height: 96px;
+        margin: 0 auto 16px;
+        background: url('/eurth-globe-sprite.png') 0 0 / 96px auto no-repeat;
+        animation: turn 9.6s steps(240) 1;
+      }
+
+      @keyframes turn {
+        to {
+          background-position: 0 -23040px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .globe {
+          animation: none;
+        }
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        font-size: 28px;
+      }
+
+      p {
+        max-width: 420px;
+        margin: 0 auto 20px;
+        color: var(--ink-muted);
+      }
+
+      .mint {
+        display: inline-block;
+        padding: 8px 16px;
+        border-radius: 6px;
+        background: var(--eurth-blue);
+        color: #ffffff;
+        font-weight: 700;
+        text-decoration: none;
+      }
+
+      .mint:hover {
+        box-shadow: 0 2px 6px rgb(0 0 0 / 0.2);
+      }
+
+      .mint:focus-visible,
+      a:focus-visible {
+        outline: 2px solid var(--accent-text);
+        outline-offset: 2px;
+      }
+
+      small {
+        display: block;
+        margin-top: 24px;
+        color: var(--ink-muted);
+      }
+
+      small a {
+        color: var(--accent-text);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="globe" aria-hidden="true"></div>
+      <h1>Unclaimed territory</h1>
+      <p>
+        No government has claimed this page yet: no flag, no constitution, not even a customs post. Perhaps the map was
+        wrong.
+      </p>
+      <a class="mint" href="/">Mint a government</a>
+      <small>Governmint, by <a href="https://eurth.org/?ref=gov.eurth.org">Eurth</a></small>
+    </main>
+  </body>
+</html>

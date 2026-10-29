@@ -321,6 +321,71 @@ html.vt-shrink::view-transition-new(root) {
   }
 }
 
+/* Delights from ui/fun.ts: coins, a paper plane and a toast, outside the page's layout. */
+.burst-coin {
+  position: fixed;
+  z-index: 50;
+  width: 12px;
+  height: 12px;
+  border: 2px solid #b8740f;
+  border-radius: 50%;
+  background: #f7c548;
+  pointer-events: none;
+}
+
+.paper-plane {
+  position: fixed;
+  z-index: 50;
+  width: 18px;
+  color: var(--eurth-blue);
+  pointer-events: none;
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: var(--space-6);
+  z-index: 60;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-control);
+  background: var(--ink);
+  color: var(--surface);
+  font-weight: 600;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.25);
+  transform: translateX(-50%);
+  animation: toast-in 0.3s cubic-bezier(0.3, 1.4, 0.6, 1);
+}
+
+.toast.leaving {
+  opacity: 0;
+  transform: translate(-50%, 12px);
+  transition:
+    opacity 0.4s,
+    transform 0.4s;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 16px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast,
+  .toast.leaving {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* Smooth, not jerky: in-page jumps glide, and slider fills follow their values. */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -328,4 +393,119 @@ html.vt-shrink::view-transition-new(root) {
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
+}
+
+/* "Nice." (ui/fun.ts), when a slider settles on 69. */
+.nice {
+  position: fixed;
+  z-index: 50;
+  padding: 2px 8px;
+  border-radius: var(--radius-control);
+  background: var(--ink);
+  color: var(--surface);
+  font-size: 13px;
+  font-weight: 700;
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 6px));
+  animation: nice 1.6s ease-out forwards;
+}
+
+@keyframes nice {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, calc(-100% + 4px)) scale(0.8);
+  }
+  12%,
+  75% {
+    opacity: 1;
+    transform: translate(-50%, calc(-100% - 6px)) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, calc(-100% - 14px));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nice {
+    animation: none;
+  }
+}
+
+/* Clicks: buttons press in, and their icons act out what the button does (ui/fun.ts). */
+@media (prefers-reduced-motion: no-preference) {
+  .btn:active,
+  .pill:active {
+    transform: translateY(0) scale(0.96);
+    box-shadow: none;
+  }
+
+  .clicked .icon {
+    animation: click-pop 0.35s cubic-bezier(0.3, 1.6, 0.6, 1);
+  }
+
+  .clicked[data-click='spin-back'] .icon {
+    animation: click-spin-back 0.6s cubic-bezier(0.3, 1.2, 0.5, 1);
+  }
+
+  .clicked[data-click='tumble'] .icon {
+    animation: click-tumble 0.6s cubic-bezier(0.3, 1.2, 0.5, 1);
+  }
+
+  .clicked[data-click='bounce'] .icon {
+    animation: click-bounce 0.5s ease-out;
+  }
+
+  .clicked[data-click='swing-left'] .icon {
+    animation: click-swing-left 0.45s ease-out;
+  }
+
+  .clicked[data-click='swing-right'] .icon {
+    animation: click-swing-right 0.45s ease-out;
+  }
+}
+
+@keyframes click-pop {
+  40% {
+    transform: scale(1.35);
+  }
+}
+
+@keyframes click-spin-back {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+@keyframes click-tumble {
+  30% {
+    transform: translateY(-6px) rotate(-90deg);
+  }
+  70% {
+    transform: translateY(0) rotate(-200deg);
+  }
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+@keyframes click-bounce {
+  30% {
+    transform: translateY(3px) scaleY(0.8);
+  }
+  60% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes click-swing-left {
+  40% {
+    transform: rotate(-60deg);
+  }
+}
+
+@keyframes click-swing-right {
+  40% {
+    transform: rotate(60deg);
+  }
 }

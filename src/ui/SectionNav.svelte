@@ -158,7 +158,7 @@
             style:--swatch={section.swatch}
           >
             <span class="chip-icon"><Icon icon={section.icon} /></span>
-            <span>{section.name}</span>
+            <span class="chip-label" data-label={section.name}>{section.name}</span>
             {#if hitCounts[section.id]}
               <span class="hits" aria-label="{hitCounts[section.id]} search matches">{hitCounts[section.id]}</span>
             {/if}
@@ -168,7 +168,7 @@
       <li class="small-only">
         <a href="#results" aria-current={current === 'results' ? 'location' : undefined}>
           <Icon icon={faFlag} />
-          <span>Result</span>
+          <span class="chip-label" data-label="Result">Result</span>
         </a>
       </li>
     </ul>
@@ -342,7 +342,9 @@
     text-decoration: none;
     white-space: nowrap;
     font-size: 14px;
-    transition: background-color 0.15s;
+    transition:
+      background-color 0.15s,
+      box-shadow 0.25s;
   }
 
   .chips a:hover {
@@ -353,6 +355,26 @@
   .chips a[aria-current] {
     font-weight: 700;
     box-shadow: inset 0 -3px 0 var(--swatch);
+  }
+
+  /* Each label keeps room for its bold self (an invisible bold copy sets the width), so chips
+     don't shift as the current one turns bold. */
+  .chip-label {
+    display: inline-grid;
+  }
+
+  .chip-label::after {
+    content: attr(data-label) / '';
+    height: 0;
+    visibility: hidden;
+    font-weight: 700;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  .chip-label,
+  .chip-label::after {
+    grid-area: 1 / 1;
   }
 
   .chip-icon {

@@ -7,7 +7,7 @@ Governmint is a tool, not a game: you set up a country and it tells you what you
 The Filteries Political Simulator (2016–2018) and its successor StateCrafter answer "which real-world ideology is this?". Governmint answers "what is my country like, and does it hold together?"
 
 1. **Builds a country, doesn't grade a quiz.** The result is a country profile you can paste into a wiki infobox or a forum post.
-2. **No account.** The whole country lives in its link.
+2. **No account.** The whole country lives in its link, and Save keeps a list in your own browser.
 3. **Explains itself.** Every label shows which settings produced it and links to Wikipedia. The rules live in readable data files, so changes are reviewed as pull requests.
 4. **Catches contradictions.** A pacifist state spending 12% of its budget on defence, or a prime minister answerable to a legislature that doesn't exist.
 5. **Search and compare.** 197 real countries and 18 examples to start from or compare against.
@@ -26,7 +26,7 @@ Each phase ships on its own.
 | **2. Government** | The tool: government settings, labels with reasons, scales, contradiction checks, examples, link sharing | Done (preview) |
 | **3. Economy and budget** | Budget shares, then sectors, taxes, GDP, ownership, regulation; economic left and right on the compass | Budget done; the rest to do |
 | **4. Law and society** | What's legal or illegal; rights; a society scale | To do |
-| **5. Sharing** | Markdown and wikitext exports, chart downloads; BBCode, JSON, an image card | Markdown, wikitext and downloads done |
+| **5. Sharing** | Markdown and wikitext exports, chart downloads, saving; BBCode, JSON, an image card | Markdown, wikitext, downloads and saving done |
 | **6. Discover** | Search and compare countries, starting with Eurth's | Real countries done; Eurth's countries to do |
 | **7. Launch** | Replace old Filteries links in Eurth's Worldbuilding Tools docs, announce on the forum and Discord, add to status.eurth.org | To do |
 
@@ -41,6 +41,7 @@ Times in UTC. Pull requests are on [GitHub](https://github.com/eurth-org/eurth-g
 | #1 Preview | 29 Oct 2026, 11:32 | Phase 1 model for government; phase 2 tool; eurth.org look; 18 examples; settings in the link; deploy job in CI |
 | #2 Feedback rounds 1 and 2 | 29 Oct 2026, 14:18 | Feedback 1–26: icons, sticky section bar with search, buttons for short lists, citizenship, 197 real countries, picker, draggable scales, spider chart, compass, Markdown and wikitext, Deluminator, budget and Welfare scale, contrast test |
 | #3 Feedback round 3 | 29 Oct 2026, 15:21 | Feedback 27–57: Eurth blue, Wikipedia links and label icons, one-sentence summary, restricted candidacy, chart downloads, budget pie, grouped and enlargeable compass, find-in-page search, turning globe, this roadmap, suggestions on GitHub Discussions, animated switch icons, small delights, a wobbling shape and a resident spider |
+| #4 Feedback round 4 | 29 Oct 2026, 16:05 | Feedback 58–80: budget legend and treemap, credit on downloads, Random, Save, undo and redo, restore budget, real flags, keyboard shortcuts, plucked edges on the spider chart, smoother movement, sixteen new delights, a 404 page, `?ref` on outgoing links |
 
 ## What's in so far
 
@@ -56,19 +57,22 @@ The update that added each item is in brackets.
 
 **The tool**
 - Settings as buttons or dropdowns, with a one-line explanation of each choice (#1; buttons #2).
-- A sticky section bar: where you are, a progress line, arrows when sections are off to the side, and settings search that works like find-in-page (#2; arrows and find-in-page #3).
-- Start from an example or a real country, searchable by name or type (#2).
-- The result: the name, a one-sentence summary, why each label applies, and what to look at again (#1; summary #3).
+- A sticky section bar: where you are, a progress line, arrows when sections are off to the side, and settings search that works like find-in-page (#2; arrows and find-in-page #3; steady chip widths #4).
+- Start from an example, a real country (with its flag) or a country saved on this device, searchable by name or type (#2; flags and saved #4).
+- Random, Save, Undo and Redo, Reset, and keyboard shortcuts for each (press ?) (#4).
+- The result: the name, a motto, a one-sentence summary, why each label applies (the label itself links to Wikipedia), and what to look at again (#1; summary #3; motto and label links #4).
 - Scales you can drag: they suggest the changes that would move them, and apply them (#2).
-- A spider chart, a compass with examples or real countries as reference points (grouped where they overlap, enlargeable), and a budget chart as bar or pie (#2; grouping, enlarge and pie #3).
-- Copy the link, Markdown for the Eurth.org forum, wikitext for IIWiki, and PNG or SVG downloads of every chart, all in the browser (link #1; Markdown and wikitext #2; downloads #3).
+- A spider chart, a compass with examples or real countries as reference points (grouped where they overlap, enlargeable), and a budget chart as bar, pie or treemap with its legend inside; restore the budget a country started with (#2; grouping, enlarge and pie #3; treemap, legend and restore #4).
+- Copy the link, save on this device, Markdown for the Eurth.org forum, wikitext for IIWiki, and PNG or SVG downloads of every chart with a small gov.eurth.org credit, all in the browser (link #1; Markdown and wikitext #2; downloads #3; saving and credit #4).
+- Charts, scales and the compass glide to new values instead of jumping (#4).
 
 **Look and accessibility**
 - eurth.org's look: Eurth blue top bar, the turning Eurth globe, the forum's light and Solarized dark schemes, Font Awesome icons in Eurth's category colours (#1; icons #2; Eurth blue #3).
 - The Deluminator light/dark switch, with its animated sun and moon (#2; animation restored #3).
-- Small delights: a shine on each new name, fictional country names as placeholder, a waving flag, popping check marks and more, all off for reduced motion (#3).
+- Small delights: a shine on each new name, fictional country names as placeholder, a waving flag, popping check marks and more, all off for reduced motion (#3). Round 4 added sixteen more (see feedback 63) and buttons that act out their click (#4).
 - A contrast test for every colour pair in both themes, with the Eurth-blue brand decisions listed as named exceptions (#2; exceptions #3).
 - The favicon is the Eurth globe, turning where the browser allows (#2; turning #3).
+- Links to other sites carry `?ref=gov.eurth.org`; the logo goes home; a 404 page, "Unclaimed territory" (#4).
 
 ## Feedback log
 
@@ -133,12 +137,35 @@ Every numbered point from the reviews, and the update that did it.
 | 55 | More delightful details | A shine on each freshly minted name, fictional (and Eurth) country names as placeholder, a waving flag, popping check marks, a winding reset arrow, lifting pie slices, growing slider handles, nudging section icons, a beating heart; none for reduced motion (#3) |
 | 56 | Wobble the blue shape, not the web, when its edge is crossed | Done (#3) |
 | 57 | Now and then, a tiny spider that follows the pointer | About one visit in three; leaves with the pointer; none for reduced motion (#3) |
+| 58 | Budget legend beside the chart, with coloured icons | Inside the chart, so downloads include it (#4) |
+| 59 | A small gov.eurth.org credit on downloads | Bottom right of every PNG and SVG (#4) |
+| 60 | Credit the share icon to the late Alex King | In the footer, linking alexking.org, and on the icon (#4) |
+| 61 | Only the touched edge jiggles, once; the spider after three touches | Each edge twangs on its own; the spider comes after three, and the count restarts when it leaves (#4) |
+| 62 | Header buttons on ultra-wide screens | Lined up with the page, at most 1200px wide (#4) |
+| 63 | All sixteen delights | Typewriter names with a coin flip and a "Freshly minted" seal; mottos; crowns and halos; real flags; Random; coins at 100%; "Nice."; a paper plane and toast on copy; a postmark on copied text; an optional coin clink; a whirling globe for "The whole world"; the seasonal yurt; Eurth News headlines; keyboard shortcuts; a 404 page; saved countries (#4) |
+| 64 | The current chip keeps its width when bold | Room for the bold label is kept (#4) |
+| 65 | Smoother movement | Charts, scales and compass glide; checks slide in and out (#4) |
+| 66 | Wikipedia link on the bold label | The label is the link (#4) |
+| 67 | "Start from…" isn't clear | Now "Examples & countries", with a tooltip (#4) |
+| 68 | A Random button | Top right; R on the keyboard (#4) |
+| 69 | "Nice." at 69% | When a scale settles there, not while dragging (#4) |
+| 70 | What's left to do | See Phases and Ideas |
+| 71 | Get back to the original settings or budget | Undo and redo; Restore budget, and Default budget (#4) |
+| 72 | A clearer way to save | Save in the header and in "Save & share" (#4) |
+| 73 | A real country's own flag | Twemoji flags, on the name card and in the picker (#4) |
+| 74 | A log scale for the compass? | No: scores are bounded, the clusters come from shared settings, and grouping and Enlarge handle the overlap |
+| 75 | `?ref=` on outgoing links | `?ref=gov.eurth.org` (#4) |
+| 76 | The globe logo should go home, not to eurth.org | The logo and name link to a fresh Governmint (#4) |
+| 77 | "Nice." on budget sliders too | Done (#4) |
+| 78 | Buttons animate when clicked | They press in, and icons act out the click: the reset arrows wind back, the dice tumble (#4) |
+| 79 | Pie chart legend | Done, as in 58 (#4) |
+| 80 | A treemap for the budget | Done (#4) |
 
 ## Ideas
 
 Not planned yet, but worth keeping:
 
-- From StateCrafter: how closely a country matches named ideologies, quizzes, saved countries.
+- From StateCrafter: how closely a country matches named ideologies, and quizzes.
 - Two countries side by side.
 - A guided mode for beginners.
 - Eurth's own countries in the picker and on the compass, once their data is ready.
