@@ -322,11 +322,11 @@ export const families = {
     },
     {
       id: 'dictatorship',
-      when: { elections: 'none', headOfState: ['president', 'council'] },
+      when: { elections: 'none', headOfState: ['president', 'council'], headOfStateSelection: 'force' },
       label: 'Closed autocracy',
       term: '',
       suffix: 'under a dictatorship',
-      because: 'Nobody in power is chosen by voters.',
+      because: 'Whoever seized power holds it, and nobody in power is chosen by voters.',
     },
     {
       id: 'closed-autocracy',
@@ -334,13 +334,6 @@ export const families = {
       label: 'Closed autocracy',
       term: '',
       because: 'Nobody in power is chosen by voters.',
-    },
-    {
-      id: 'electoral-autocracy',
-      when: { elections: 'managed' },
-      label: 'Electoral autocracy',
-      term: '',
-      because: "Elections are held, but those in power make sure they can't lose.",
     },
     {
       id: 'nothing-to-elect',
@@ -351,7 +344,14 @@ export const families = {
       },
       label: 'Closed autocracy',
       term: '',
-      because: 'Elections may be free, but no office that holds power is filled by them.',
+      because: 'Voters may elect some officials, but none who hold power.',
+    },
+    {
+      id: 'electoral-autocracy',
+      when: { elections: 'managed' },
+      label: 'Electoral autocracy',
+      term: '',
+      because: "Elections are held, but those in power make sure they can't lose.",
     },
     {
       id: 'unelected-ruler',
@@ -365,7 +365,7 @@ export const families = {
     },
     {
       id: 'restricted-democracy',
-      when: { suffrageLimits: { empty: false } },
+      when: { suffrageLimits: { any: ['property', 'education', 'sex', 'ethnicity', 'religion', 'service', 'party'] } },
       label: 'Restricted democracy',
       term: '',
       because: 'Elections are free, but voting is limited by {suffrageLimits}.',
@@ -383,6 +383,13 @@ export const families = {
       label: 'Liberal democracy',
       term: '',
       because: 'Free elections, competing parties and independent courts keep those in power in check.',
+    },
+    {
+      id: 'non-partisan-democracy',
+      when: { parties: 'none', courts: ['review', 'independent'] },
+      label: 'Non-partisan democracy',
+      term: '',
+      because: 'Elections are free, and candidates stand as individuals rather than for parties.',
     },
     {
       id: 'electoral-democracy-weak-courts',

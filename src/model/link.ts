@@ -8,7 +8,7 @@ import type { SettingDef } from './types';
  * of positions (up to 5 options per character, so longer lists take more characters).
  * The leading version number lets the format change without breaking old links.
  */
-const version = '1';
+const version = '2';
 const bitsPerChar = 5;
 
 function charsFor(def: SettingDef): number {

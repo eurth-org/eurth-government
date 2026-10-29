@@ -175,7 +175,7 @@ export const examples: Example[] = [
     legislature: 'assembly',
     electoralSystem: 'majoritarian',
     parties: 'none',
-    suffrageLimits: ['sex', 'ethnicity'],
+    suffrageLimits: ['citizenship', 'sex', 'ethnicity'],
     courts: 'independent',
     religion: 'state-religion',
     conscription: 'universal',
@@ -183,7 +183,7 @@ export const examples: Example[] = [
   }),
   example('technocracy', 'Technocratic republic', {
     headOfStateSelection: 'legislature',
-    suffrageLimits: ['education'],
+    suffrageLimits: ['citizenship', 'education'],
     rulers: 'experts',
   }),
   example('world-federation', 'World federation', {

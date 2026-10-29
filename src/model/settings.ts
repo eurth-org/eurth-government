@@ -325,8 +325,14 @@ export const settings = [
     group: 'Elections',
     label: 'Voting limited by',
     question: 'Besides age, what limits who may vote?',
-    default: [],
+    default: ['citizenship'],
     options: [
+      {
+        id: 'citizenship',
+        label: 'Citizenship',
+        help: 'Only citizens may vote; residents without citizenship may not.',
+        axes: { participation: -1 },
+      },
       {
         id: 'property',
         label: 'Property',
@@ -450,11 +456,11 @@ export const settings = [
     ],
   },
 
-  // Religion, defence and borders
+  // Religion
   {
     id: 'religion',
     kind: 'choice',
-    group: 'Religion, defence and borders',
+    group: 'Religion',
     label: 'Religion',
     question: "What is religion's place in the state?",
     default: 'secular',
@@ -485,10 +491,11 @@ export const settings = [
       },
     ],
   },
+  // Defence and borders
   {
     id: 'foreignPolicy',
     kind: 'choice',
-    group: 'Religion, defence and borders',
+    group: 'Defence and borders',
     label: 'Foreign policy',
     question: 'How does the state use its armed forces abroad?',
     default: 'defensive',
@@ -528,7 +535,7 @@ export const settings = [
   {
     id: 'conscription',
     kind: 'choice',
-    group: 'Religion, defence and borders',
+    group: 'Defence and borders',
     label: 'Military service',
     question: 'Do citizens have to serve in the armed forces?',
     default: 'none',
@@ -541,7 +548,7 @@ export const settings = [
   {
     id: 'immigration',
     kind: 'choice',
-    group: 'Religion, defence and borders',
+    group: 'Defence and borders',
     label: 'Immigration',
     question: 'Who may move to the country?',
     default: 'managed',

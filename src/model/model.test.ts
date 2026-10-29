@@ -134,7 +134,8 @@ group('conditions', () => {
     expect(matches({ suffrageLimits: { any: ['sex', 'property'] } }, base)).toBe(true);
     expect(matches({ suffrageLimits: { none: ['sex'] } }, base)).toBe(false);
     expect(matches({ suffrageLimits: { empty: false } }, base)).toBe(true);
-    expect(matches({ suffrageLimits: { empty: true } }, defaultCountry())).toBe(true);
+    expect(matches({ suffrageLimits: { empty: true } }, country({ suffrageLimits: [] }))).toBe(true);
+    expect(matches({ suffrageLimits: { empty: true } }, defaultCountry())).toBe(false);
   });
 
   it('combine with allOf, anyOf and noneOf', () => {

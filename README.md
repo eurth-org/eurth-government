@@ -12,7 +12,8 @@ Status: preview. Government settings work; economy and law come next. See [ROADM
 - The model in `src/model/` is data plus a small engine: settings, axes, naming rules and contradiction checks. [docs/model.md](docs/model.md) explains it and how to change it.
 - A Cloudflare Worker serves the built files from `dist/` on the `gov.eurth.org` custom domain (`wrangler.jsonc`). It runs no code of its own.
 - `public/_headers` sets security and caching headers, and allows embedding on eurth.org.
-- The look follows eurth.org and the Eurth design system (`src/app.css`), in the visitor's light or dark setting.
+- The look follows eurth.org and the Eurth design system (`src/app.css`), light or dark through the Deluminator-style switch. `src/contrast.test.ts` checks every colour pair against WCAG 2.2 AA, and the top bar against AAA.
+- Icons by [Font Awesome](https://fontawesome.com) (CC BY 4.0); sun and moon by [line-md](https://github.com/cyberalien/line-md) (MIT).
 
 ## Local development
 

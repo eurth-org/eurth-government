@@ -64,6 +64,16 @@ Each option in `settings.ts` can push an axis from -2 to 2. A country's score is
 
 Write labels and reasons in plain British English, one sentence each, in your own words. Nothing may be copied from the Filteries Political Simulator; see the README.
 
+## Real countries
+
+[`countries.ts`](../src/model/countries.ts) describes every UN member, plus Kosovo, Palestine, Taiwan and Vatican City, as of 2026. Each starts from a template (parliamentary republic, constitutional monarchy, one-party state…) and lists how it differs. Institutions follow the constitution; how free elections are and how independent courts are follow the consensus of election observers. Countries between constitutions carry a `note` and may contradict themselves; the tests require every other country to be free of contradictions.
+
+## Hints, compass and exports
+
+- [`suggest.ts`](../src/model/suggest.ts) finds the single changes that move an axis up or down, biggest first, leaving out changes that would add a contradiction. Dragging a scale in the tool shows them.
+- [`compass.ts`](../src/model/compass.ts) turns the axes into a compass: up is authoritarian (participation, competition and checks, reversed), across is progressive to traditional (religion, and openness reversed) until the economy settings arrive.
+- [`formats.ts`](../src/model/formats.ts) writes a country as Markdown for the Eurth.org forum, or as wikitext with `{{Infobox country}}` for IIWiki.
+
 ## Coming later
 
 Economy and budget (phase 3) and law and society (phase 4) add their own settings and axes in the same format.
