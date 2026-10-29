@@ -177,3 +177,41 @@ export function toJson(name: string, country: Country, profile: Profile, link: s
   };
   return `${JSON.stringify(data, null, 2)}\n`;
 }
+
+/** A name Mermaid takes in a title, without the characters its syntax uses. */
+const mermaidSafe = (text: string) => text.replace(/[:[\]"#;{}]/g, '').trim() || 'Country';
+
+/**
+ * The budget as Markdown: a Mermaid pie chart (drawn by GitHub, Obsidian and other places that
+ * know Mermaid) and the same shares as a table, for everywhere else.
+ */
+export function budgetMarkdown(name: string, country: Country, link: string): string {
+  return [
+    `### Budget of ${name}`,
+    '',
+    '```mermaid',
+    'pie showData',
+    `    title ${mermaidSafe(name)}, shares of government spending`,
+    ...budgetIds.filter((id) => country[id] > 0).map((id) => `    "${settingDef(id).label}" : ${country[id]}`),
+    '```',
+    '',
+    '| Area | Share |',
+    '| --- | --- |',
+    ...budget(country).map((r) => `| ${r.label} | ${r.value} |`),
+    '',
+    `<small>Made with [Governmint](${link})</small>`,
+    '',
+  ].join('\n');
+}
+
+/** The budget as JSON: each area's share of government spending, in percent. */
+export function budgetJson(name: string, country: Country, link: string): string {
+  const data = {
+    name,
+    budget: Object.fromEntries(budgetIds.map((id) => [settingDef(id).label, country[id]])),
+    unit: 'percent of government spending',
+    link,
+    madeWith: 'Governmint, https://gov.eurth.org',
+  };
+  return `${JSON.stringify(data, null, 2)}\n`;
+}

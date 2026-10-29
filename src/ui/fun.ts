@@ -26,32 +26,45 @@ export function setSound(on: boolean) {
 
 let audio: AudioContext | null = null;
 
-/** A soft coin clink, made in the browser: a few bright partials that fade fast. */
+/**
+ * A soft coin clink, made in the browser: a few gentle, rounded tones, low and quiet, through a
+ * filter that takes the edge off, fading in a quarter of a second.
+ */
 export function clink() {
   if (!soundOn()) return;
   audio ??= new AudioContext();
   const now = audio.currentTime;
+  const soften = audio.createBiquadFilter();
+  soften.type = 'lowpass';
+  soften.frequency.value = 2400;
+  soften.connect(audio.destination);
   const partials: [number, number, number][] = [
-    [2637, 0, 0.1],
-    [3951, 0.01, 0.06],
-    [5274, 0.02, 0.035],
-    [2793, 0.085, 0.05],
+    [1319, 0, 0.035],
+    [1976, 0.008, 0.016],
+    [1397, 0.07, 0.02],
   ];
   for (const [frequency, delay, level] of partials) {
     const tone = audio.createOscillator();
     const volume = audio.createGain();
+    tone.type = 'sine';
     tone.frequency.value = frequency;
     volume.gain.setValueAtTime(0.0001, now + delay);
-    volume.gain.exponentialRampToValueAtTime(level, now + delay + 0.005);
-    volume.gain.exponentialRampToValueAtTime(0.0001, now + delay + 0.3);
-    tone.connect(volume).connect(audio.destination);
+    volume.gain.exponentialRampToValueAtTime(level, now + delay + 0.012);
+    volume.gain.exponentialRampToValueAtTime(0.0001, now + delay + 0.25);
+    tone.connect(volume).connect(soften);
     tone.start(now + delay);
-    tone.stop(now + delay + 0.32);
+    tone.stop(now + delay + 0.27);
   }
+}
+
+/** Whether a point is on screen: what happens out of sight should make no sound either. */
+function inView(x: number, y: number): boolean {
+  return x >= 0 && y >= 0 && x <= innerWidth && y <= innerHeight;
 }
 
 /** A burst of small coins from a point on the screen. */
 export function coinBurst(x: number, y: number) {
+  if (!inView(x, y)) return;
   clink();
   if (calm()) return;
   for (let i = 0; i < 12; i++) {
@@ -123,6 +136,7 @@ export function toast(text: string) {
  */
 export function nice(at: HTMLElement) {
   const box = at.getBoundingClientRect();
+  if (!inView(box.left + box.width / 2, box.top)) return;
   const note = document.createElement('span');
   note.className = 'nice';
   note.setAttribute('aria-hidden', 'true');

@@ -1,8 +1,9 @@
 /**
- * Whether the Eurth globe keeps turning. It does, unless the visitor stops it in About (the
- * pause WCAG 2.2.2 asks for, for anything that moves on its own) or prefers reduced motion.
+ * Whether the things that keep moving on their own do: the turning Eurth globe and the beating
+ * hearts in the footer. They do, unless the visitor stops them in About (the pause WCAG 2.2.2
+ * asks for) or prefers reduced motion.
  */
-const key = 'governmint:globe';
+const key = 'governmint:motion';
 
 function stored(): boolean {
   try {
@@ -12,10 +13,10 @@ function stored(): boolean {
   }
 }
 
-export const motion = $state({ globe: stored() });
+export const motion = $state({ on: stored() });
 
-export function setGlobe(on: boolean) {
-  motion.globe = on;
+export function setMotion(on: boolean) {
+  motion.on = on;
   try {
     if (on) localStorage.removeItem(key);
     else localStorage.setItem(key, 'still');

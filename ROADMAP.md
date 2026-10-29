@@ -44,7 +44,7 @@ Times in UTC. Pull requests are on [GitHub](https://github.com/eurth-org/eurth-g
 | #4 Feedback round 4 | 29 Oct 2026, 16:21 | Feedback 58–81: budget legend and treemap, credit on downloads, Random, Save, undo and redo, restore budget, real flags, keyboard shortcuts, plucked edges on the spider chart, smoother movement, sixteen new delights, a 404 page, `?ref` on outgoing links, Auto for the theme switch |
 | #5 Feedback round 5 | 29 Oct 2026, 17:42 | Feedback 82–100: a sharing image for link previews, a share window, famous fictional and NationStates nations for Random, the dice beside the name, real countries recognised by name, a tidier header, stepping through a second look, clearer treemap labels, a spider that stays on its web, About in a window and a lighter footer, an accessibility pass |
 | #6 Feedback round 6 | 29 Oct 2026, 19:10 | Feedback 101–113: a globe that winds down instead of freezing, the name as on eurth.org, even header tools, tooltips above the sticky bar, the globe as a way back to the top, budget and compass toolbars, an Export panel with JSON, WebP and Copy image, steady options, outside links in new tabs, a roomier About |
-| #7 Feedback round 7 | 29 Oct 2026, 19:36 | Feedback 114–124: a globe that keeps turning (with a switch), the compass as Markdown with a Mermaid chart and as JSON, Copy text and a checked Copy image, plain chart and format buttons, a steadier name card, a merged footer with a licence and disclaimer, no stored caches |
+| #7 Feedback round 7 | 29 Oct 2026, 19:36 | Feedback 114–133: budget locks with an angry slider, wider treemap tiles, the budget as Markdown and JSON, a softer clink, an Eurth bar at the bottom, a globe that keeps turning (with a switch), the compass as Markdown with a Mermaid chart and as JSON, Copy text and a checked Copy image, plain chart and format buttons, a steadier name card, a merged footer, Apache 2.0 throughout and a disclaimer, no stored caches |
 
 ## What's in so far
 
@@ -66,13 +66,13 @@ The update that added each item is in brackets.
 - Type a real country's name and its real government is a click away, with its flag (#5).
 - The result: the name, a motto, a one-sentence summary, why each label applies (the label itself links to Wikipedia), and what to look at again, stepping through the settings involved (#1; summary #3; motto and label links #4; stepping #5).
 - Scales you can drag: they suggest the changes that would move them, and apply them (#2).
-- A spider chart, a compass with examples or real countries as reference points (grouped where they overlap, enlargeable), and a budget chart as bar, pie or treemap with its legend inside; restore the budget a country started with (#2; grouping, enlarge and pie #3; treemap, legend and restore #4).
+- A spider chart, a compass with examples or real countries as reference points (grouped where they overlap, enlargeable), and a budget chart as bar, pie or treemap with its legend inside; restore the budget a country started with, and lock shares while moving the rest (#2; grouping, enlarge and pie #3; treemap, legend and restore #4; locks #7).
 - Share to the Eurth forum, Reddit, Bluesky, X, Facebook, LinkedIn, Tumblr, WhatsApp, Telegram or email, or the device's share sheet (#5).
 - Copy the link, save on this device, Markdown for the Eurth.org forum, wikitext for IIWiki or JSON for tools, and every chart as PNG, SVG or WebP with a small gov.eurth.org credit, or copied as an image, all in the browser (link #1; Markdown and wikitext #2; downloads #3; saving and credit #4; JSON, WebP and Copy image #6).
 - Charts, scales and the compass glide to new values instead of jumping (#4).
 
 **Look and accessibility**
-- eurth.org's look: Eurth blue top bar, the Eurth globe turning as on eurth.org (with a switch to stop it), the forum's light and Solarized dark schemes, Font Awesome icons in Eurth's category colours (#1; icons #2; Eurth blue #3).
+- eurth.org's look: Eurth blue bars at the top and bottom (the bottom one linking Eurth's forums, map, news and status), the Eurth globe turning as on eurth.org (with a switch to stop it), the forum's light and Solarized dark schemes, Font Awesome icons in Eurth's category colours (#1; icons #2; Eurth blue #3).
 - The Deluminator switch, with its animated sun and moon: light, dark, or Auto to follow the device (#2; animation restored #3; Auto #4).
 - Small delights: a shine on each new name, fictional country names as placeholder, a waving flag, popping check marks and more, all off for reduced motion (#3). Round 4 added sixteen more (see feedback 63) and buttons that act out their click (#4); the footer's hearts beat (#5).
 - About Governmint in a window (the "?" button, the About link or the ? key): what it does, privacy, keyboard shortcuts, sound and ideas. The footer keeps thanks, credits, the licence and Eurth (#5).
@@ -206,12 +206,21 @@ Every numbered point from the reviews, and the update that did it.
 | 116 | Random keeps "Show settings" highlights | Loading any country clears them (#7) |
 | 117 | No check marks on the budget's chart buttons | Done; their icons stay (#7) |
 | 118 | Icons for the export formats | Markdown's own mark, Wikipedia's W for wikitext, a code file for JSON; no check marks (#7) |
-| 119 | Merge the footer text; licence and disclaimer | Merged as proposed, the news line gone, Alex King's line shortened; added © 2026 Eurth with a Creative Commons BY-NC-ND 4.0 notice and badges, and a disclaimer for real countries (#7) |
+| 119 | Merge the footer text; licence and disclaimer | Merged as proposed, the news line gone, Alex King's line shortened; a copyright line and a disclaimer for real countries (#7; licence settled in 125) |
 | 120 | A check mark after Copy image | Done (#7) |
 | 121 | No storage used on GitHub or Cloudflare | Cloudflare: nothing but the site's own files; no KV, R2 or D1 for Governmint. GitHub: no artifacts, releases or packages; CI's npm cache (about 550 MB in 5 caches) is now switched off. Nothing anyone makes is uploaded: downloads and copies stay in the browser, and the page no longer fetches anything from elsewhere (#7) |
 | 122 | The globe stopped turning again | It was resting by design after five seconds; it now keeps turning, as on eurth.org, faster when pointed at. A switch in About stops it (WCAG 2.2.2), and reduced motion keeps it still (#7) |
 | 123 | The compass as Markdown with Mermaid, and JSON | Both, next to the image downloads: a Mermaid quadrant chart with the reference points shown, and the coordinates as JSON (#7) |
 | 124 | Balance About's two columns | About Governmint on the left (what it does, your country, ideas), using it on the right (keyboard, sound and motion) (#7) |
+| 125 | Apache 2.0 for everything; your countries are yours | No Creative Commons notice: "© 2026 Eurth", open source under Apache 2.0, and the countries you make are yours: Governmint keeps no copy and claims no rights to them (#7) |
+| 126 | Lock budget shares; an angry slider when the locks leave no room | A lock beside each share. Locked shares stay put while the rest move; pushing a share past what they leave turns its slider red with a shake, and the locks in the way light up (#7) |
+| 127 | A softer coin sound | Lower, gentler tones, quieter, through a filter that takes the edge off (#7) |
+| 128 | Sounds from somewhere out of sight | The coins and their clink (when a scale reaches 100%) only happen when that scale is on screen; every other sound answers a button you just pressed (#7) |
+| 129 | Treemap labels missing where they'd fit | Tiles are now laid out about twice as wide as tall, so the biggest blocks stack on the left with room for their names, and names wrap onto two lines when a tile is tall enough (#7) |
+| 130 | The budget as Markdown (Mermaid) and JSON | Both, beside the image downloads: a Mermaid pie chart with a table, and the shares as JSON (#7) |
+| 131 | The yurt beside "Made with love"; a copyright icon | Done (#7) |
+| 132 | Hearts that keep beating | A double beat every few seconds while the footer is in view; About's switch now stops the globe and the hearts together (WCAG 2.2.2) (#7) |
+| 133 | A bottom bar with Eurth's sites | Forums, Map, News and Status, in an Eurth blue bar like the one at the top (#7) |
 
 ## Ideas
 

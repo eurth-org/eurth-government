@@ -1,21 +1,19 @@
 <script lang="ts">
-  import {
-    faCreativeCommons,
-    faCreativeCommonsBy,
-    faCreativeCommonsNc,
-    faCreativeCommonsNd,
-    faGithub,
-    faWikipediaW,
-  } from '@fortawesome/free-brands-svg-icons';
+  import { faGithub, faWikipediaW } from '@fortawesome/free-brands-svg-icons';
   import {
     faArrowUpRightFromSquare,
     faBookOpen,
     faCircleInfo,
     faCircleQuestion,
+    faComments,
+    faCopyright,
     faCodeBranch,
     faFileExport,
     faFloppyDisk,
+    faMap,
+    faNewspaper,
     faHeart,
+    faHeartPulse,
     faRedo,
     faScaleBalanced,
     faShareNodes,
@@ -44,6 +42,7 @@
   import Icon from './ui/Icon.svelte';
   import { groupIcons, groupSwatches, panelIcons, ruleIcon, severityIcons } from './ui/icons';
   import Picker from './ui/Picker.svelte';
+  import { motion } from './ui/motion.svelte';
   import { setShortcuts, shortcutsOn } from './ui/prefs';
   import { ref, wikipedia } from './ui/ref';
   import Radar from './ui/Radar.svelte';
@@ -452,6 +451,7 @@
             {hits}
             currentHit={hits[hit]}
             name={shownName}
+            {link}
             onchange={(next) => (country = next)}
           />
         {:else}
@@ -565,13 +565,14 @@
   </section>
 </main>
 
-<footer id="about" bind:this={footer} class:beating>
+<footer id="about" bind:this={footer} class:beating={beating && motion.on}>
   <h2>With thanks</h2>
   <ul class="about">
     <li>
-      <span class="about-icon heart"><Icon icon={faHeart} /></span>
+      <span class="about-icon"><img src={yurt} alt="" width="18" height="18" /></span>
       <p>
-        Made with love by <a href={ref('https://iiwiki.com/w/Orioni')}>Orioni</a> for
+        Made with love <span class="heart"><Icon icon={faHeart} /></span> by
+        <a href={ref('https://iiwiki.com/w/Orioni')}>Orioni</a> for
         <a href={ref('https://eurth.org')}>Eurth, a Worldbuilding &amp; Roleplay Writing Community</a>, and the people
         who live in it. Going strong since 2004, thanks to <a href={ref('https://www.nationstates.net')}>NationStates</a>,
         where Eurth's worldbuilding began. Built a country you like? Give it a world to live in.
@@ -604,18 +605,10 @@
       </p>
     </li>
     <li>
-      <span class="about-icon"><img src={yurt} alt="" width="18" height="18" /></span>
+      <span class="about-icon"><Icon icon={faCopyright} /></span>
       <p>
-        © 2026 Eurth. Governmint's words and data (its labels, explanations, mottos and country summaries) are
-        licensed under
-        <a class="licence" href={ref('https://creativecommons.org/licenses/by-nc-nd/4.0/')}>
-          Creative Commons BY-NC-ND 4.0
-          <span class="cc" aria-hidden="true">
-            <Icon icon={faCreativeCommons} /><Icon icon={faCreativeCommonsBy} /><Icon icon={faCreativeCommonsNc} /><Icon
-              icon={faCreativeCommonsNd}
-            />
-          </span></a
-        >: share them with credit, not for money, and unchanged. The code is open source, as above.
+        © 2026 Eurth. Governmint is open source under the Apache 2.0 licence, as above: use it, change it, share it.
+        The countries you make are yours: Governmint keeps no copy, and claims no rights to them.
       </p>
     </li>
     <li>
@@ -627,6 +620,16 @@
     </li>
   </ul>
 </footer>
+
+<!-- The rest of Eurth, in a bar like the one at the top. -->
+<nav class="bottombar" aria-label="Eurth">
+  <div class="bar">
+    <a href={ref('https://eurth.org')}><Icon icon={faComments} /> Forums</a>
+    <a href={ref('https://map.eurth.org')}><Icon icon={faMap} /> Map</a>
+    <a href={ref('https://news.eurth.org')}><Icon icon={faNewspaper} /> News</a>
+    <a href={ref('https://status.eurth.org')}><Icon icon={faHeartPulse} /> Status</a>
+  </div>
+</nav>
 
 <Picker open={pickerOpen} onpick={load} onclose={() => (pickerOpen = false)} />
 <Info
@@ -719,12 +722,14 @@
 
   @media (prefers-reduced-motion: reduce) {
     .topbar a,
-    .pill-link {
+    .pill-link,
+    .bottombar a {
       transition: none;
     }
 
     .topbar a:hover,
-    .pill-link:hover {
+    .pill-link:hover,
+    .bottombar a:hover {
       transform: none;
     }
   }
@@ -890,14 +895,30 @@
     display: inline-flex;
   }
 
-  /* The footer's hearts beat three times as it comes into view, and again when pointed at. */
+  /* The footer's hearts beat now and then while it's in view (stopped with the globe, in
+     About), and at once when pointed at. */
   @media (prefers-reduced-motion: no-preference) {
     .beating .heart :global(.icon) {
-      animation: beat 0.9s ease-in-out 0.2s 3;
+      animation: beat-now-and-then 3.2s ease-in-out 0.2s infinite;
     }
 
     .about li:hover .heart :global(.icon) {
       animation: beat 0.9s ease-in-out;
+    }
+  }
+
+  /* A double beat, then a rest. */
+  @keyframes beat-now-and-then {
+    5%,
+    15% {
+      transform: scale(1.3);
+    }
+    10% {
+      transform: scale(1.05);
+    }
+    25%,
+    100% {
+      transform: scale(1);
     }
   }
 
@@ -1062,17 +1083,43 @@
     color: #bf1e2e;
   }
 
-  /* The Creative Commons badges, after the licence's name. */
-  .licence {
-    display: inline;
+  /* The bottom bar: Eurth blue, with white pills, as at the top. */
+  .bottombar {
+    background: var(--eurth-blue);
+    padding: 0 var(--space-4);
   }
 
-  .cc {
+  .bottombar .bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-2) 0;
+  }
+
+  .bottombar a {
     display: inline-flex;
-    gap: 2px;
-    margin-left: 4px;
-    font-size: 16px;
-    vertical-align: -2px;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: var(--radius-control);
+    background: #ffffff;
+    color: var(--eurth-blue);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition:
+      box-shadow 0.15s,
+      transform 0.15s;
+  }
+
+  .bottombar a:hover {
+    box-shadow: 0 2px 6px rgb(0 0 0 / 0.25);
+    transform: translateY(-1px);
+  }
+
+  .bottombar a:focus-visible {
+    outline-color: #ffffff;
   }
 
   /* For keyboard users: a way past the header, shown when it has focus (WCAG 2.4.1). */

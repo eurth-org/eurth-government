@@ -11,7 +11,7 @@
     faXmark,
   } from '@fortawesome/free-solid-svg-icons';
   import Icon from './Icon.svelte';
-  import { motion, setGlobe } from './motion.svelte';
+  import { motion, setMotion } from './motion.svelte';
   import { ref } from './ref';
 
   /**
@@ -132,10 +132,10 @@
           <span class="note">A little clink when you save or copy.</span>
         </p>
         <p class="setting">
-          <button class="btn" aria-pressed={motion.globe} onclick={() => setGlobe(!motion.globe)}>
-            Turning globe: {motion.globe ? 'on' : 'off'}
+          <button class="btn" aria-pressed={motion.on} onclick={() => setMotion(!motion.on)}>
+            Globe and hearts: {motion.on ? 'moving' : 'still'}
           </button>
-          <span class="note">The Eurth globe turns, as on eurth.org. Stop it here.</span>
+          <span class="note">The Eurth globe turns and the footer's hearts beat. Stop them here.</span>
         </p>
       </section>
     </div>

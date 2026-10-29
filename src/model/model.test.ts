@@ -2,7 +2,7 @@ import { describe as group, expect, it } from 'vitest';
 import { axes } from './axes';
 import { checks } from './checks';
 import { dependsOn, matches, type Condition } from './conditions';
-import { budgetTotal, setShare, withBudget } from './budget';
+import { budgetTotal, setShare, shareRange, withBudget } from './budget';
 import { defaultCountry, describe, fill, scoreAxes } from './engine';
 import { examples } from './examples';
 import { decodeCountry, encodeCountry } from './link';
@@ -280,5 +280,32 @@ group('links', () => {
 
   it('stay short', () => {
     expect(encodeCountry(defaultCountry()).length).toBeLessThanOrEqual(48);
+  });
+});
+
+group('budget locks', () => {
+  const base = defaultCountry();
+
+  it('keeps locked shares where they are', () => {
+    const after = setShare(base, 'budgetDefence', 20, ['budgetHealth', 'budgetEducation']);
+    expect(after.budgetHealth).toBe(base.budgetHealth);
+    expect(after.budgetEducation).toBe(base.budgetEducation);
+    expect(after.budgetDefence).toBe(20);
+    expect(budgetTotal(after)).toBe(100);
+  });
+
+  it('stops a share at what the locked ones leave', () => {
+    const locked = ['budgetSocial', 'budgetHealth'] as const;
+    const { max } = shareRange(base, 'budgetDefence', locked);
+    expect(max).toBe(100 - base.budgetSocial - base.budgetHealth);
+    const after = setShare(base, 'budgetDefence', 100, locked);
+    expect(after.budgetDefence).toBe(max);
+    expect(budgetTotal(after)).toBe(100);
+  });
+
+  it('fixes the last free share when all the others are locked', () => {
+    const others = budgetIds.filter((b) => b !== 'budgetDefence');
+    expect(shareRange(base, 'budgetDefence', others)).toEqual({ min: base.budgetDefence, max: base.budgetDefence });
+    expect(setShare(base, 'budgetDefence', 50, others)).toEqual(base);
   });
 });

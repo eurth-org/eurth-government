@@ -50,14 +50,14 @@
 
     // Point at (or tab to) the link or button around it to turn it.
     const host = globe.closest<HTMLElement>('a, button');
-    const on = () => want('pointer', motion.globe ? 2.5 : 1);
+    const on = () => want('pointer', motion.on ? 2.5 : 1);
     const off = () => want('pointer', 0);
     host?.addEventListener('pointerenter', on);
     host?.addEventListener('pointerleave', off);
     host?.addEventListener('focus', on);
     host?.addEventListener('blur', off);
 
-    want('always', motion.globe ? 1 : 0);
+    want('always', motion.on ? 1 : 0);
     want('opening', 1);
     const opening = setTimeout(() => want('opening', 0), 5000);
     return () => {
@@ -73,7 +73,7 @@
 
   // Switched on or off in About.
   $effect(() => {
-    const on = motion.globe;
+    const on = motion.on;
     if (turning) want('always', on ? 1 : 0);
   });
 

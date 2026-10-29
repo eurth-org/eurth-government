@@ -2,7 +2,7 @@ import { describe as group, expect, it } from 'vitest';
 import { compassPoint } from './compass';
 import { defaultCountry, describe, scoreAxes } from './engine';
 import { examples } from './examples';
-import { article, sentence, summary, toJson, toMarkdown, toWikitext } from './formats';
+import { article, budgetJson, budgetMarkdown, sentence, summary, toJson, toMarkdown, toWikitext } from './formats';
 import { suggest } from './suggest';
 import { motto } from './motto';
 import { randomCountry } from './random';
@@ -157,5 +157,16 @@ group('compass as text', () => {
     const data = JSON.parse(compassJson('Ruritania', scores, 'none', 'https://gov.eurth.org/?c=x'));
     expect(data.references).toEqual([]);
     expect(data.compass.quadrant).toMatch(/Authoritarian|Libertarian/);
+  });
+});
+
+group('budget as text', () => {
+  it('writes a Mermaid pie chart and JSON', () => {
+    const country = defaultCountry();
+    const md = budgetMarkdown('Ruritania', country, 'https://gov.eurth.org/?c=x');
+    expect(md).toContain('```mermaid\npie showData');
+    expect(md).toContain('"Social protection" : 37');
+    const data = JSON.parse(budgetJson('Ruritania', country, 'https://gov.eurth.org/?c=x'));
+    expect(Object.values(data.budget as Record<string, number>).reduce((a, b) => a + b, 0)).toBe(100);
   });
 });

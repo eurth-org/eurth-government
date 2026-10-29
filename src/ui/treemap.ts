@@ -1,6 +1,8 @@
 /**
  * A squarified treemap (Bruls, Huizing and van Wijk): it fills a rectangle with one tile per
- * item, each tile's area in proportion to its value, keeping the tiles as square as it can.
+ * item, each tile's area in proportion to its value, keeping the tiles as close as it can to
+ * `aspect` (width over height): 1 for squares, 2 for tiles twice as wide, which leaves room
+ * for a label on one line.
  */
 export interface Tile<T> {
   item: T;
@@ -10,7 +12,19 @@ export interface Tile<T> {
   h: number;
 }
 
-export function treemap<T>(items: readonly T[], value: (item: T) => number, x: number, y: number, w: number, h: number): Tile<T>[] {
+export function treemap<T>(
+  items: readonly T[],
+  value: (item: T) => number,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  aspect = 1,
+): Tile<T>[] {
+  // Lay out squares in a space `aspect` times narrower, then stretch it back.
+  if (aspect !== 1) {
+    return treemap(items, value, x / aspect, y, w / aspect, h).map((t) => ({ ...t, x: t.x * aspect, w: t.w * aspect }));
+  }
   const total = items.reduce((sum, item) => sum + Math.max(0, value(item)), 0);
   if (!total) return [];
   const scale = (w * h) / total;
