@@ -1,5 +1,7 @@
 <script lang="ts">
+  import { faCheck } from '@fortawesome/free-solid-svg-icons';
   import type { SettingDef } from '../model/types';
+  import Icon from './Icon.svelte';
 
   let {
     def,
@@ -34,7 +36,7 @@
       <legend>{def.question}</legend>
       <div class="options">
         {#each def.options as option (option.id)}
-          <label class="option">
+          <label class="pill">
             <input
               type={def.kind === 'multi' ? 'checkbox' : 'radio'}
               name={def.id}
@@ -42,6 +44,7 @@
               checked={chosen.includes(option.id)}
               onchange={() => pick(option.id)}
             />
+            <span class="check"><Icon icon={faCheck} /></span>
             <span>{option.label}</span>
           </label>
         {/each}
@@ -62,7 +65,7 @@
   .field {
     margin: 0 calc(-1 * var(--space-2));
     padding: var(--space-2);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-control);
   }
 
   .field + :global(.field) {
@@ -112,42 +115,11 @@
     gap: var(--space-2);
   }
 
-  .option {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    padding: 5px 12px;
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius-sm);
-    background: var(--surface);
-    cursor: pointer;
-  }
-
-  .option input {
-    position: absolute;
-    inset: 0;
-    margin: 0;
-    opacity: 0;
-    cursor: pointer;
-  }
-
-  .option:has(input:checked) {
-    background: var(--accent-fill);
-    border-color: var(--accent-fill);
-    color: var(--on-accent-small);
-    font-weight: 600;
-  }
-
-  .option:has(input:focus-visible) {
-    outline: 2px solid var(--focus-ring);
-    outline-offset: 2px;
-  }
-
   select {
     width: 100%;
     padding: 6px 8px;
     border: 1px solid var(--line-strong);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-control);
     background: var(--surface);
     cursor: pointer;
   }

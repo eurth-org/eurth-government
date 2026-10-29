@@ -36,7 +36,7 @@ function contrast(a: string, b: string): number {
 const light = resolved(declared(css, ':root'));
 const dark = resolved({ ...declared(css, ':root'), ...declared(css, ":root[data-theme='dark']") });
 
-// [foreground, background, minimum]: 4.5 for text, 3 for icons, borders and focus rings, 7 for the top bar.
+// [foreground, background, minimum]: 4.5 for text, 3 for icons, borders and focus rings.
 const pairs: [string, string, number][] = [
   ['ink', 'surface', 4.5],
   ['ink', 'surface-raised', 4.5],
@@ -49,7 +49,10 @@ const pairs: [string, string, number][] = [
   ['accent-text', 'surface', 4.5],
   ['accent-text', 'surface-raised', 4.5],
   ['on-accent-small', 'accent-fill', 4.5],
-  ['on-topbar', 'topbar', 7],
+  ['on-selected', 'selected', 4.5],
+  ['ink', 'hover', 4.5],
+  ['selected-edge', 'surface', 3],
+  ['selected-edge', 'surface-raised', 3],
   ['danger', 'surface-raised', 3],
   ['unusual', 'surface-raised', 3],
   ['accent-fill', 'surface-raised', 3],

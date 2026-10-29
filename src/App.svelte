@@ -7,13 +7,13 @@
     faRotateLeft,
   } from '@fortawesome/free-solid-svg-icons';
   import { tick } from 'svelte';
-  import globe from './assets/eurth-globe.gif';
   import yurt from './assets/eurth-yurt-circle.svg';
   import { defaultCountry, describe } from './model/engine';
   import { decodeCountry, encodeCountry } from './model/link';
   import { familyLabels, type Family } from './model/naming';
   import { settings, type Country, type SettingId } from './model/settings';
   import type { SettingDef } from './model/types';
+  import Budget from './ui/Budget.svelte';
   import Compass from './ui/Compass.svelte';
   import Field from './ui/Field.svelte';
   import Icon from './ui/Icon.svelte';
@@ -89,10 +89,10 @@
 
   // Which section is under the sticky bar, so the bar can show where you are.
   $effect(() => {
-    const ids = [...groups.map((g) => g.id), 'results'];
-    let frame = 0;
+    const narrow = matchMedia('(max-width: 899px)');
     const update = () => {
-      frame = 0;
+      // On wide screens the results sit beside the settings, so only the settings sections count.
+      const ids = [...groups.map((g) => g.id), ...(narrow.matches ? ['results'] : [])];
       const line = 120;
       let found = ids[0]!;
       for (const id of ids) {
@@ -101,12 +101,9 @@
       }
       current = found;
     };
-    const onScroll = () => {
-      if (!frame) frame = requestAnimationFrame(update);
-    };
-    addEventListener('scroll', onScroll, { passive: true });
+    addEventListener('scroll', update, { passive: true });
     update();
-    return () => removeEventListener('scroll', onScroll);
+    return () => removeEventListener('scroll', update);
   });
 
   function pick(next: Country, countryName: string) {
@@ -130,14 +127,14 @@
 
 <header class="header">
   <div class="brand">
-    <img src={globe} alt="" width="36" height="36" />
+    <img src="/eurth-globe.gif" alt="" width="36" height="36" />
     <span class="title">Governmint</span>
     <span class="tagline">Freshly minted governments</span>
     <span class="badge">Preview</span>
   </div>
   <div class="actions">
-    <button onclick={() => (pickerOpen = true)}><Icon icon={faBookOpen} /> Start from…</button>
-    <button onclick={reset}><Icon icon={faRotateLeft} /> Reset</button>
+    <button class="btn" onclick={() => (pickerOpen = true)}><Icon icon={faBookOpen} /> Start from…</button>
+    <button class="btn" onclick={reset}><Icon icon={faRotateLeft} /> Reset</button>
     <ThemeSwitch />
   </div>
 </header>
@@ -150,17 +147,21 @@
       <section class="panel" id={group.id} aria-labelledby="{group.id}-title">
         <h2 id="{group.id}-title">
           <span class="swatch" style:--swatch={group.swatch}></span>
-          <Icon icon={group.icon} />
+          <span class="group-icon" style:color={group.swatch}><Icon icon={group.icon} /></span>
           {group.name}
         </h2>
-        {#each group.defs as def (def.id)}
-          <Field
-            {def}
-            value={country[def.id as SettingId]}
-            flash={flashing.includes(def.id as SettingId)}
-            onchange={(value) => setValue(def.id, value)}
-          />
-        {/each}
+        {#if group.name === 'Budget'}
+          <Budget {country} {flashing} onchange={(next) => (country = next)} />
+        {:else}
+          {#each group.defs as def (def.id)}
+            <Field
+              {def}
+              value={country[def.id as SettingId] as string | string[]}
+              flash={flashing.includes(def.id as SettingId)}
+              onchange={(value) => setValue(def.id, value)}
+            />
+          {/each}
+        {/if}
       </section>
     {/each}
   </main>
@@ -259,9 +260,10 @@
 <Picker open={pickerOpen} onpick={pick} onclose={() => (pickerOpen = false)} />
 
 <style>
-  /* Top bar and header, as on eurth.org */
+  /* Top bar and header, as on eurth.org. The bar is Eurth blue; its links sit on the deeper
+     Eurth blue, because white text on Eurth blue itself is too faint (3.2:1). */
   .topbar {
-    background: var(--topbar);
+    background: var(--eurth-blue);
     min-height: 40px;
     display: flex;
     justify-content: flex-end;
@@ -271,25 +273,42 @@
 
   .topbar nav {
     display: flex;
-    gap: var(--space-6);
+    gap: var(--space-2);
   }
 
   .topbar a {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    color: var(--on-topbar);
+    padding: 3px 10px;
+    border-radius: var(--radius-control);
+    background: var(--selected);
+    color: var(--on-selected);
     font-size: 14px;
     font-weight: 600;
     text-decoration: none;
+    transition:
+      box-shadow 0.15s,
+      transform 0.15s;
   }
 
   .topbar a:hover {
-    text-decoration: underline;
+    box-shadow: 0 2px 6px rgb(0 0 0 / 0.25);
+    transform: translateY(-1px);
   }
 
   .topbar a:focus-visible {
-    outline-color: var(--on-topbar);
+    outline-color: var(--on-selected);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .topbar a {
+      transition: none;
+    }
+
+    .topbar a:hover {
+      transform: none;
+    }
   }
 
   .header {
@@ -339,17 +358,6 @@
   .actions {
     display: flex;
     gap: var(--space-2);
-  }
-
-  .actions button {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    border: 1px solid transparent;
-    border-radius: var(--radius-sm);
-    background: var(--button);
-    cursor: pointer;
   }
 
   /* Layout */
@@ -405,6 +413,10 @@
     flex: none;
   }
 
+  .group-icon {
+    display: inline-flex;
+  }
+
   /* Results */
   .kicker {
     display: block;
@@ -420,7 +432,7 @@
     margin: var(--space-1) 0 var(--space-3);
     padding: 4px 8px;
     border: 1px solid var(--line-strong);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-control);
     background: var(--surface);
     font-weight: 600;
   }

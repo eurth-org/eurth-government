@@ -49,6 +49,13 @@ export const axes = [
     help: 'How large a role the armed forces play, at home and abroad.',
   },
   {
+    id: 'welfare',
+    label: 'Welfare',
+    low: 'Little welfare',
+    high: 'Generous welfare',
+    help: 'How much of the budget goes to social protection, health and education.',
+  },
+  {
     id: 'openness',
     label: 'Openness',
     low: 'Closed',

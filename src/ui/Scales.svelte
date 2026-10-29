@@ -74,7 +74,7 @@
                 <li>
                   <button class="link" onclick={() => onflash([s.setting], true)}>{describeSuggestion(s)}</button>
                   <span class="delta">{s.delta > 0 ? '+' : ''}{s.delta}</span>
-                  <button class="apply" onclick={() => apply(s)}>Apply</button>
+                  <button class="btn btn-primary apply" onclick={() => apply(s)}>Apply</button>
                 </li>
               {/each}
             </ul>
@@ -145,7 +145,7 @@
     margin-top: var(--space-2);
     padding: var(--space-2) var(--space-3);
     border: 1px solid var(--line-strong);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-control);
     background: var(--surface);
     font-size: 14px;
   }
@@ -186,12 +186,6 @@
 
   .apply {
     padding: 2px 10px;
-    border: 0;
-    border-radius: var(--radius-sm);
-    background: var(--accent-fill);
-    color: var(--on-accent-small);
-    font-weight: 700;
-    cursor: pointer;
   }
 
   .dismiss {

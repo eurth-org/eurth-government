@@ -1,3 +1,4 @@
+import { withBudget } from './budget';
 import { defaultCountry } from './engine';
 import type { Country } from './settings';
 
@@ -9,7 +10,9 @@ export interface Example {
 }
 
 function example(id: string, title: string, changes: Partial<Country>): Example {
-  return { id, title, country: { ...defaultCountry(), ...changes } };
+  // Budget shares given here stay as they are; the rest of the budget is scaled to fit.
+  const shares = Object.fromEntries(Object.entries(changes).filter(([key]) => key.startsWith('budget')));
+  return { id, title, country: withBudget({ ...defaultCountry(), ...changes }, shares) };
 }
 
 /**
@@ -29,6 +32,8 @@ export const examples: Example[] = [
     religion: 'established',
   }),
   example('american', 'American-style federal republic', {
+    budgetDefence: 9,
+    budgetHealth: 22,
     territory: 'federal',
     headOfStateSelection: 'people',
     government: 'head-of-state',
@@ -77,6 +82,7 @@ export const examples: Example[] = [
     immigration: 'restrictive',
   }),
   example('hereditary-one-party', 'Hereditary one-party republic', {
+    budgetDefence: 25,
     headOfStateSelection: 'inherited',
     government: 'head-of-state',
     legislature: 'elected',
@@ -101,6 +107,7 @@ export const examples: Example[] = [
     conscription: 'universal',
   }),
   example('absolute-monarchy', 'Absolute monarchy', {
+    budgetDefence: 18,
     headOfState: 'monarch',
     headOfStateSelection: 'inherited',
     government: 'head-of-state',
@@ -145,6 +152,7 @@ export const examples: Example[] = [
     immigration: 'closed',
   }),
   example('junta', 'Military junta', {
+    budgetDefence: 20,
     headOfState: 'council',
     headOfStateSelection: 'force',
     government: 'head-of-state',
@@ -187,6 +195,7 @@ export const examples: Example[] = [
     rulers: 'experts',
   }),
   example('world-federation', 'World federation', {
+    budgetDefence: 1,
     extent: 'world',
     territory: 'federal',
     chambers: 'two',

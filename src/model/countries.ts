@@ -1,3 +1,4 @@
+import { withBudget } from './budget';
 import { defaultCountry } from './engine';
 import type { Country } from './settings';
 
@@ -76,8 +77,14 @@ const strict: Part = { immigration: 'restrictive' };
 const noParties: Part = { parties: 'none' };
 
 function c(code: string, name: string, region: Region, ...parts: Part[]): RealCountry {
-  return { code, name, region, country: Object.assign(defaultCountry(), ...parts) };
+  // Budget shares given in the parts stay as they are; the rest of the budget is scaled to fit.
+  const merged: Country = Object.assign(defaultCountry(), ...parts);
+  const shares = Object.fromEntries(parts.flatMap((p) => Object.entries(p)).filter(([key]) => key.startsWith('budget')));
+  return { code, name, region, country: withBudget(merged, shares) };
 }
+
+/** Defence as a share of government spending, roughly. */
+const defence = (share: number): Part => ({ budgetDefence: share });
 
 function transitional(entry: RealCountry, note: string): RealCountry {
   return { ...entry, note };
@@ -187,7 +194,7 @@ export const countries: RealCountry[] = [
   c('CA', 'Canada', 'Americas', crown, fed, partly, fptp),
   c('CL', 'Chile', 'Americas', pres, two),
   c('CO', 'Colombia', 'Americas', pres, two, lottery),
-  c('CR', 'Costa Rica', 'Americas', pres, est, { foreignPolicy: 'pacifist' }),
+  c('CR', 'Costa Rica', 'Americas', pres, est, defence(0), { foreignPolicy: 'pacifist' }),
   c('CU', 'Cuba', 'Americas', oneParty, draft, strict, { legislature: 'elected' }),
   c('DM', 'Dominica', 'Americas', parl, fptp),
   c('DO', 'Dominican Republic', 'Americas', pres, two),
@@ -210,7 +217,7 @@ export const countries: RealCountry[] = [
   c('JM', 'Jamaica', 'Americas', crown, partly, fptp),
   c('MX', 'Mexico', 'Americas', pres, fed, two, mixed, lottery),
   c('NI', 'Nicaragua', 'Americas', pres, managed, { headOfState: 'council' }),
-  c('PA', 'Panama', 'Americas', pres, mixed, neutral),
+  c('PA', 'Panama', 'Americas', pres, mixed, neutral, defence(0)),
   c('PY', 'Paraguay', 'Americas', pres, two, lottery),
   c('PE', 'Peru', 'Americas', pres, two),
   c('KN', 'Saint Kitts and Nevis', 'Americas', crown, fed, fptp),
@@ -218,7 +225,7 @@ export const countries: RealCountry[] = [
   c('VC', 'Saint Vincent and the Grenadines', 'Americas', crown, fptp),
   c('SR', 'Suriname', 'Americas', execParl),
   c('TT', 'Trinidad and Tobago', 'Americas', parl, partly, fptp),
-  c('US', 'United States', 'Americas', pres, fed, two, fptp, active),
+  c('US', 'United States', 'Americas', pres, fed, two, fptp, active, defence(9), { budgetHealth: 22 }),
   c('UY', 'Uruguay', 'Americas', pres, two),
   c('VE', 'Venezuela', 'Americas', pres, fed, mixed, managed, draft),
 
@@ -241,9 +248,9 @@ export const countries: RealCountry[] = [
   c('BT', 'Bhutan', 'Asia', crown, two, fptp, est),
   c('BN', 'Brunei', 'Asia', absCrown, islam, strict),
   c('KH', 'Cambodia', 'Asia', crown, partly, managed, est, { headOfStateSelection: 'electors' }),
-  c('CN', 'China', 'Asia', oneParty, strict, { religion: 'state-atheism' }),
+  c('CN', 'China', 'Asia', oneParty, strict, defence(5), { religion: 'state-atheism' }),
   c('GE', 'Georgia', 'Asia', parl, managed, lottery),
-  c('IN', 'India', 'Asia', parl, fed, partly, fptp),
+  c('IN', 'India', 'Asia', parl, fed, partly, fptp, defence(9)),
   c('ID', 'Indonesia', 'Asia', pres, two),
   c('JP', 'Japan', 'Asia', crown, two, mixed, strict),
   c('KZ', 'Kazakhstan', 'Asia', presPm, partly, mixed, managed, draft),
@@ -254,13 +261,13 @@ export const countries: RealCountry[] = [
   c('MN', 'Mongolia', 'Asia', parlPop, mixed),
   c('MM', 'Myanmar', 'Asia', execParl, partly, fptp, managed, draft, { rulers: 'military' }),
   c('NP', 'Nepal', 'Asia', parl, fed, partly, mixed),
-  c('KP', 'North Korea', 'Asia', oneParty, draft, {
+  c('KP', 'North Korea', 'Asia', oneParty, draft, defence(25), {
     headOfStateSelection: 'inherited',
     legislature: 'elected',
     religion: 'state-atheism',
     immigration: 'closed',
   }),
-  c('PK', 'Pakistan', 'Asia', parl, fed, partly, fptp, managed, islam),
+  c('PK', 'Pakistan', 'Asia', parl, fed, partly, fptp, managed, islam, defence(14)),
   c('PH', 'Philippines', 'Asia', pres, two, mixed),
   c('SG', 'Singapore', 'Asia', parlPop, fptp, indep, draft, { elections: 'managed' }),
   c('KR', 'South Korea', 'Asia', presPm, mixed, draft),
@@ -291,7 +298,7 @@ export const countries: RealCountry[] = [
   c('DE', 'Germany', 'Europe', parl, fed, partly, mixed),
   c('GR', 'Greece', 'Europe', parl, est, draft),
   c('HU', 'Hungary', 'Europe', parl, mixed),
-  c('IS', 'Iceland', 'Europe', parlPop, est),
+  c('IS', 'Iceland', 'Europe', parlPop, est, defence(0)),
   c('IE', 'Ireland', 'Europe', parlPop, partly, neutral),
   c('IT', 'Italy', 'Europe', parl, two, mixed),
   c('XK', 'Kosovo', 'Europe', parl),
@@ -309,7 +316,7 @@ export const countries: RealCountry[] = [
   c('PL', 'Poland', 'Europe', semi, two),
   c('PT', 'Portugal', 'Europe', semi),
   c('RO', 'Romania', 'Europe', semi, two),
-  c('RU', 'Russia', 'Europe', semi, fed, partly, mixed, managed, draft, { foreignPolicy: 'expansionist' }),
+  c('RU', 'Russia', 'Europe', semi, fed, partly, mixed, managed, draft, defence(22), { foreignPolicy: 'expansionist' }),
   c('SM', 'San Marino', 'Europe', est, { headOfState: 'council', government: 'council' }),
   c('RS', 'Serbia', 'Europe', parlPop),
   c('SK', 'Slovakia', 'Europe', parlPop),
@@ -317,7 +324,7 @@ export const countries: RealCountry[] = [
   c('ES', 'Spain', 'Europe', crown, devolved, two),
   c('SE', 'Sweden', 'Europe', crown, indep, lottery),
   c('CH', 'Switzerland', 'Europe', fed, two, neutral, draft, { headOfState: 'council', government: 'council' }),
-  c('UA', 'Ukraine', 'Europe', semi, draft),
+  c('UA', 'Ukraine', 'Europe', semi, draft, defence(45)),
   c('GB', 'United Kingdom', 'Europe', crown, devolved, partly, fptp, indep, est, active),
   c('VA', 'Vatican City', 'Europe', {
     extent: 'city',
@@ -345,14 +352,14 @@ export const countries: RealCountry[] = [
     religion: 'state-religion',
   }),
   c('IQ', 'Iraq', 'Middle East', parl, fed, islam),
-  c('IL', 'Israel', 'Middle East', parl, indep, est, draft, active),
+  c('IL', 'Israel', 'Middle East', parl, indep, est, draft, active, defence(12)),
   c('JO', 'Jordan', 'Middle East', semiCrown, partly, mixed, managed, islam, draft),
   c('KW', 'Kuwait', 'Middle East', absCrown, islam, draft, strict, { legislature: 'none' }),
   c('LB', 'Lebanon', 'Middle East', parl, est),
   c('OM', 'Oman', 'Middle East', absCrown, islam, strict, { elections: 'managed' }),
   c('PS', 'Palestine', 'Middle East', presPm, managed, islam, { legislature: 'none' }),
   c('QA', 'Qatar', 'Middle East', absCrown, islam, draft, strict),
-  c('SA', 'Saudi Arabia', 'Middle East', absCrown, islam, active, strict, { courts: 'religious' }),
+  c('SA', 'Saudi Arabia', 'Middle East', absCrown, islam, active, strict, defence(22), { courts: 'religious' }),
   transitional(
     c('SY', 'Syria', 'Middle East', execParl, islam, {
       headOfStateSelection: 'electors',

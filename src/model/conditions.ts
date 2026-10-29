@@ -9,8 +9,15 @@ type MultiTest<V extends string> =
   | { readonly none: readonly V[] }
   | { readonly empty: boolean };
 
+/** Tests for a budget share, in percent: strictly above or below. */
+type ShareTest = { readonly above?: number; readonly below?: number };
+
 type Test<Id extends SettingId> =
-  SettingDefOf<Id> extends { kind: 'multi' } ? MultiTest<OptionId<Id>> : ChoiceTest<OptionId<Id>>;
+  SettingDefOf<Id> extends { kind: 'multi' }
+    ? MultiTest<OptionId<Id>>
+    : SettingDefOf<Id> extends { kind: 'share' }
+      ? ShareTest
+      : ChoiceTest<OptionId<Id>>;
 
 type SettingTests = { readonly [Id in SettingId]?: Test<Id> };
 
@@ -32,7 +39,8 @@ type AnyTest =
   | { readonly not: string | readonly string[] }
   | { readonly any: readonly string[] }
   | { readonly none: readonly string[] }
-  | { readonly empty: boolean };
+  | { readonly empty: boolean }
+  | ShareTest;
 
 const combinators = new Set<string>(['allOf', 'anyOf', 'noneOf']);
 
@@ -44,7 +52,13 @@ function asList(value: string | readonly string[]): readonly string[] {
   return isList(value) ? value : [value];
 }
 
-function passes(test: AnyTest, value: string | readonly string[]): boolean {
+function passes(test: AnyTest, value: string | readonly string[] | number): boolean {
+  if (typeof value === 'number') {
+    if (typeof test !== 'object' || isList(test) || !('above' in test || 'below' in test)) {
+      throw new Error(`Test ${JSON.stringify(test)} doesn't fit a budget share`);
+    }
+    return (test.above === undefined || value > test.above) && (test.below === undefined || value < test.below);
+  }
   if (!isList(value)) {
     if (typeof test === 'string') return value === test;
     if (isList(test)) return test.includes(value);

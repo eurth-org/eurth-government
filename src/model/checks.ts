@@ -145,4 +145,34 @@ export const checks = [
     severity: 'unusual',
     message: 'A world government has nowhere for immigrants to come from, unless you count other planets.',
   },
+  {
+    id: 'pacifist-big-army',
+    when: { foreignPolicy: 'pacifist', budgetDefence: { above: 5 } },
+    severity: 'unusual',
+    message: 'A state that has given up war spends {budgetDefence} of its budget on defence.',
+  },
+  {
+    id: 'expansion-on-a-shoestring',
+    when: { foreignPolicy: 'expansionist', budgetDefence: { below: 3 } },
+    severity: 'unusual',
+    message: 'Expanding by force on {budgetDefence} of the budget is ambitious.',
+  },
+  {
+    id: 'conscripts-without-a-budget',
+    when: { conscription: 'universal', budgetDefence: { below: 2 } },
+    severity: 'unusual',
+    message: 'Everyone serves in the armed forces, but defence gets only {budgetDefence} of the budget.',
+  },
+  {
+    id: 'no-schools',
+    when: { budgetEducation: { below: 3 } },
+    severity: 'unusual',
+    message: 'Education gets {budgetEducation} of the budget: schools will be private, religious or scarce.',
+  },
+  {
+    id: 'no-courts-or-police',
+    when: { budgetOrder: { below: 1 } },
+    severity: 'unusual',
+    message: 'Public order gets {budgetOrder} of the budget: who runs the courts and the police?',
+  },
 ] as const satisfies readonly CheckDef[];

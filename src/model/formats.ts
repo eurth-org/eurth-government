@@ -1,6 +1,6 @@
 import { picked, settingDef, type Profile } from './engine';
 import { familyLabels, type Family } from './naming';
-import type { Country, SettingId } from './settings';
+import { budgetIds, type Country, type SettingId } from './settings';
 
 /** One readable line per topic, shared by every export format. */
 export interface Fact {
@@ -54,6 +54,14 @@ export function facts(country: Country): Fact[] {
   ];
 }
 
+/** The budget, biggest share first. */
+export function budget(country: Country): Fact[] {
+  return budgetIds
+    .map((id) => ({ label: settingDef(id).label, share: country[id] }))
+    .sort((a, b) => b.share - a.share)
+    .map(({ label, share }) => ({ label, value: `${share}%` }));
+}
+
 export function summary(name: string, profile: Profile): string {
   return `${name} is ${article(lower(profile.name))} and ${article(lower(profile.labels.regime.label))}.`;
 }
@@ -72,6 +80,12 @@ export function toMarkdown(name: string, country: Country, profile: Profile, lin
     '| | |',
     '| --- | --- |',
     ...rows.map((r) => `| ${r.label} | ${r.value} |`),
+    '',
+    '**Budget**, as shares of government spending:',
+    '',
+    '| Area | Share |',
+    '| --- | --- |',
+    ...budget(country).map((r) => `| ${r.label} | ${r.value} |`),
     '',
     `<small>Made with [Governmint](${link})</small>`,
     '',
@@ -121,6 +135,13 @@ export function toWikitext(name: string, country: Country, profile: Profile, lin
     familyOrder.map((f) => profile.labels[f].because).join(' '),
     '',
     ...facts(country).map((f) => `* '''${f.label}:''' ${f.value}`),
+    '',
+    '=== Budget ===',
+    'Shares of government spending:',
+    '{| class="wikitable"',
+    '! Area !! Share',
+    ...budget(country).flatMap((r) => ['|-', `| ${r.label} || ${r.value}`]),
+    '|}',
     '',
     `<!-- Made with Governmint: ${link} -->`,
     '',

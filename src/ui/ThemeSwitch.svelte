@@ -67,6 +67,9 @@
           {
             duration: 500,
             easing: grow ? 'cubic-bezier(.25,.55,.45,1)' : 'cubic-bezier(.55,0,.75,.45)',
+            // Hold the last frame: without it the old page shows again for a moment before the
+            // transition ends, a white flash when going dark.
+            fill: 'forwards',
             pseudoElement: grow ? '::view-transition-new(root)' : '::view-transition-old(root)',
           },
         );
@@ -94,7 +97,7 @@
 
 <button
   bind:this={button}
-  class="switch"
+  class="btn switch"
   aria-pressed={dark}
   aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
   title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
@@ -108,16 +111,10 @@
 
 <style>
   .switch {
-    display: inline-grid;
-    place-items: center;
-    width: 36px;
+    justify-content: center;
+    width: 38px;
     height: 34px;
     padding: 0;
-    border: 1px solid transparent;
-    border-radius: var(--radius-sm);
-    background: var(--button);
-    color: var(--ink);
-    cursor: pointer;
   }
 
   .switch :global(svg) {

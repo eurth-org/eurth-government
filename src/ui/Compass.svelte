@@ -1,9 +1,11 @@
 <script lang="ts">
+  import { faCheck } from '@fortawesome/free-solid-svg-icons';
   import { axes } from '../model/axes';
   import { compassAxes, compassPoint, quadrants } from '../model/compass';
   import { countries } from '../model/countries';
   import { scoreAxes, type AxisScore } from '../model/engine';
   import { examples } from '../model/examples';
+  import Icon from './Icon.svelte';
 
   let { scores }: { scores: AxisScore[] } = $props();
 
@@ -72,8 +74,9 @@
 
 <div class="modes" role="radiogroup" aria-label="Reference points">
   {#each [['examples', 'Examples'], ['countries', 'Real countries'], ['none', 'None']] as [value, text] (value)}
-    <label class="mode">
+    <label class="pill mode">
       <input type="radio" name="compass-mode" {value} bind:group={mode} />
+      <span class="check"><Icon icon={faCheck} /></span>
       <span>{text}</span>
     </label>
   {/each}
@@ -148,32 +151,8 @@
   }
 
   .mode {
-    position: relative;
     padding: 3px 10px;
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius-sm);
     font-size: 13px;
-    cursor: pointer;
-  }
-
-  .mode input {
-    position: absolute;
-    inset: 0;
-    margin: 0;
-    opacity: 0;
-    cursor: pointer;
-  }
-
-  .mode:has(input:checked) {
-    background: var(--accent-fill);
-    border-color: var(--accent-fill);
-    color: var(--on-accent-small);
-    font-weight: 600;
-  }
-
-  .mode:has(input:focus-visible) {
-    outline: 2px solid var(--focus-ring);
-    outline-offset: 2px;
   }
 
   svg {

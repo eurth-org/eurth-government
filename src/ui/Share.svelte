@@ -12,8 +12,16 @@
   let copied = $state<'link' | Format | null>(null);
 
   const formats: { id: Format; label: string; help: string }[] = [
-    { id: 'markdown', label: 'Eurth.org forum', help: 'Markdown for a forum post, with a table.' },
-    { id: 'wikitext', label: 'IIWiki', help: 'Wikitext with an {{Infobox country}} and a Government section.' },
+    {
+      id: 'markdown',
+      label: 'Markdown',
+      help: 'For a post on the Eurth.org forum: a summary, the institutions and the budget as tables.',
+    },
+    {
+      id: 'wikitext',
+      label: 'Wikitext',
+      help: 'For IIWiki: an {{Infobox country}}, a Government section and a budget table.',
+    },
   ];
 
   const text = $derived(
@@ -27,7 +35,7 @@
   }
 </script>
 
-<button class="primary" onclick={() => copy('link')}>
+<button class="btn btn-primary" onclick={() => copy('link')}>
   <Icon icon={copied === 'link' ? faCheck : faLink} />
   {copied === 'link' ? 'Link copied' : 'Copy link'}
 </button>
@@ -35,8 +43,9 @@
 
 <div class="formats" role="radiogroup" aria-label="Format">
   {#each formats as f (f.id)}
-    <label class="format">
+    <label class="pill">
       <input type="radio" name="share-format" value={f.id} bind:group={format} />
+      <span class="check"><Icon icon={faCheck} /></span>
       <span>{f.label}</span>
     </label>
   {/each}
@@ -44,29 +53,12 @@
 <p class="help">{formats.find((f) => f.id === format)!.help}</p>
 <label class="visually-hidden" for="share-text">{format === 'markdown' ? 'Markdown' : 'Wikitext'}</label>
 <textarea id="share-text" readonly rows="9" value={text}></textarea>
-<button onclick={() => copy(format)}>
+<button class="btn" onclick={() => copy(format)}>
   <Icon icon={copied === format ? faCheck : faCopy} />
   {copied === format ? 'Copied' : 'Copy'}
 </button>
 
 <style>
-  button {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    padding: 6px 12px;
-    border: 0;
-    border-radius: var(--radius-sm);
-    background: var(--button);
-    cursor: pointer;
-  }
-
-  .primary {
-    background: var(--accent-fill);
-    color: var(--on-accent-small);
-    font-weight: 700;
-  }
-
   .help {
     margin: var(--space-1) 0 var(--space-3);
     color: var(--ink-muted);
@@ -78,41 +70,13 @@
     gap: var(--space-2);
   }
 
-  .format {
-    position: relative;
-    padding: 4px 12px;
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-  }
-
-  .format input {
-    position: absolute;
-    inset: 0;
-    margin: 0;
-    opacity: 0;
-    cursor: pointer;
-  }
-
-  .format:has(input:checked) {
-    background: var(--accent-fill);
-    border-color: var(--accent-fill);
-    color: var(--on-accent-small);
-    font-weight: 600;
-  }
-
-  .format:has(input:focus-visible) {
-    outline: 2px solid var(--focus-ring);
-    outline-offset: 2px;
-  }
-
   textarea {
     display: block;
     width: 100%;
     margin-bottom: var(--space-2);
     padding: var(--space-2);
     border: 1px solid var(--line-strong);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-control);
     background: var(--surface);
     font-family: ui-monospace, Menlo, monospace;
     font-size: 12px;

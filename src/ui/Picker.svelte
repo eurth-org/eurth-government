@@ -62,7 +62,7 @@
 <dialog bind:this={dialog} onclose={onclose} aria-labelledby="picker-title">
   <div class="top">
     <h2 id="picker-title"><Icon icon={faBookOpen} /> Start from an example or a real country</h2>
-    <button class="close" aria-label="Close" onclick={() => dialog.close()}><Icon icon={faXmark} /></button>
+    <button class="btn close" aria-label="Close" onclick={() => dialog.close()}><Icon icon={faXmark} /></button>
   </div>
   <div class="search">
     <Icon icon={faMagnifyingGlass} />
@@ -160,14 +160,6 @@
     font-size: 18px;
   }
 
-  .close {
-    padding: 6px 10px;
-    border: 0;
-    border-radius: var(--radius-sm);
-    background: var(--button);
-    cursor: pointer;
-  }
-
   .search {
     display: flex;
     align-items: center;
@@ -175,7 +167,7 @@
     margin: 0 var(--space-4) var(--space-3);
     padding: 0 var(--space-3);
     border: 1px solid var(--line-strong);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-control);
     color: var(--ink-muted);
   }
 
@@ -244,14 +236,15 @@
     width: 100%;
     padding: 6px var(--space-2);
     border: 0;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-control);
     background: transparent;
     text-align: left;
     cursor: pointer;
+    transition: background-color 0.15s;
   }
 
   li button:hover {
-    background: var(--button);
+    background: var(--hover);
   }
 
   .title {

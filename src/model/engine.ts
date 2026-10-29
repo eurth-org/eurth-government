@@ -56,9 +56,10 @@ export function settingDef(id: SettingId): SettingDef {
   return def;
 }
 
-/** The options picked for a setting, as a list even for pick-one settings. */
+/** The options picked for a setting, as a list even for pick-one settings. Budget shares have none. */
 export function picked(country: Country, id: SettingId): string[] {
   const value = country[id];
+  if (typeof value === 'number') return [];
   return Array.isArray(value) ? [...value] : [value as string];
 }
 
@@ -73,11 +74,11 @@ function listInWords(items: string[]): string {
   return `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
 }
 
-/** Replaces `{settingId}` with the chosen option labels, lower-cased. */
+/** Replaces `{settingId}` with the chosen option labels, lower-cased, or a budget share as "12%". */
 export function fill(text: string, country: Country): string {
   return text.replace(/\{(\w+)\}/g, (_, id: string) => {
     const settingId = id as SettingId;
-    settingDef(settingId);
+    if (settingDef(settingId).kind === 'share') return `${country[settingId]}%`;
     return listInWords(picked(country, settingId).map((o) => optionLabel(settingId, o).toLowerCase()));
   });
 }
@@ -121,6 +122,18 @@ export function scoreAxes(country: Country): AxisScore[] {
     let total = 0;
     const contributions: AxisContribution[] = [];
     for (const def of settings as readonly SettingDef[]) {
+      if (def.kind === 'share') {
+        const effect = def.axes?.[axis];
+        if (!effect) continue;
+        const step = (share: number) => Math.max(-2, Math.min(2, (share - effect.neutral) / effect.per));
+        low += step(0);
+        high += step(100);
+        const share = country[def.id as SettingId] as number;
+        const value = Math.round(step(share) * 100) / 100;
+        total += value;
+        if (value !== 0) contributions.push({ setting: def.id as SettingId, option: `${share}%`, value });
+        continue;
+      }
       const values = def.options.map((o) => o.axes?.[axis] ?? 0);
       if (def.kind === 'choice') {
         low += Math.min(...values);

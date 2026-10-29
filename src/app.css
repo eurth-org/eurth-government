@@ -3,11 +3,15 @@
    follows the system. Every text pair meets WCAG 2.2 AA (contrast.test.ts checks them). */
 :root {
   --eurth-blue: #2698d4;
+  --eurth-blue-deep: #1b6fa0;
   --night: #002b36;
   --parchment: #fcf6e1;
-  /* A deeper Eurth blue for the top bar, so white text reaches 7:1 (AAA). */
-  --topbar: #105a85;
-  --on-topbar: #ffffff;
+  /* White text needs the deeper Eurth blue (5.5:1); on Eurth blue itself it reaches only 3.2:1.
+     Used for selected options, primary buttons and the top bar's links. */
+  --selected: var(--eurth-blue-deep);
+  --on-selected: #ffffff;
+  --selected-edge: var(--selected);
+  --hover: #e6f1f8;
 
   --surface: #ffffff;
   --surface-raised: #f8f8f8;
@@ -35,7 +39,8 @@
   --space-8: 32px;
 
   --radius-sm: 2px;
-  --radius-panel: 6px;
+  --radius-control: 6px;
+  --radius-panel: 8px;
   --nav-height: 52px;
 
   color-scheme: light;
@@ -61,6 +66,8 @@
   --danger: #f07c63;
   --unusual: #f7a541;
   --flash: #6b6a1f;
+  --selected-edge: #3eafe7;
+  --hover: #164a57;
   color-scheme: dark;
 }
 
@@ -78,6 +85,8 @@
     --danger: #f07c63;
     --unusual: #f7a541;
     --flash: #6b6a1f;
+    --selected-edge: #3eafe7;
+    --hover: #164a57;
     color-scheme: dark;
   }
 }
@@ -140,6 +149,93 @@ html.vt-shrink::view-transition-old(root) {
 
 html.vt-shrink::view-transition-new(root) {
   z-index: 1;
+}
+
+/* Buttons and option pills: slightly rounded, lifting a little on hover. */
+.btn,
+.pill {
+  border-radius: var(--radius-control);
+  transition:
+    background-color 0.15s,
+    border-color 0.15s,
+    box-shadow 0.15s,
+    transform 0.15s;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid transparent;
+  background: var(--button);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.pill input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.btn:hover,
+.pill:hover {
+  background: var(--hover);
+  border-color: var(--selected-edge);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.15);
+  transform: translateY(-1px);
+}
+
+/* Selected options and primary buttons: white on the deeper Eurth blue. */
+.btn-primary,
+.btn-primary:hover,
+.pill:has(input:checked),
+.pill:has(input:checked):hover {
+  background: var(--selected);
+  border-color: var(--selected-edge);
+  color: var(--on-selected);
+  font-weight: 700;
+}
+
+/* The check mark in front of a selected option. */
+.pill .check {
+  display: none;
+}
+
+.pill:has(input:checked) .check {
+  display: inline-flex;
+}
+
+.pill:has(input:focus-visible) {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .pill {
+    transition: none;
+  }
+
+  .btn:hover,
+  .pill:hover {
+    transform: none;
+  }
 }
 
 .visually-hidden {

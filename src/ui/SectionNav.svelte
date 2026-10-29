@@ -21,6 +21,22 @@
   let timer: ReturnType<typeof setTimeout> | undefined;
   let list: HTMLUListElement;
 
+  // How far down the page you are, as a thin bar along the bottom of the sticky bar.
+  let progress = $state(0);
+  $effect(() => {
+    const update = () => {
+      const max = document.documentElement.scrollHeight - innerHeight;
+      progress = max > 0 ? Math.min(100, (scrollY / max) * 100) : 0;
+    };
+    update();
+    addEventListener('scroll', update, { passive: true });
+    addEventListener('resize', update);
+    return () => {
+      removeEventListener('scroll', update);
+      removeEventListener('resize', update);
+    };
+  });
+
   function search() {
     clearTimeout(timer);
     timer = setTimeout(() => (found = query.trim() ? onsearch(query.trim()) : 0), 250);
@@ -58,9 +74,13 @@
     <ul class="chips" bind:this={list}>
       {#each sections as section (section.id)}
         <li>
-          <a href="#{section.id}" aria-current={current === section.id ? 'location' : undefined}>
-            <span class="swatch" style:--swatch={section.swatch}></span>
-            <Icon icon={section.icon} />
+          <a
+            href="#{section.id}"
+            aria-current={current === section.id ? 'location' : undefined}
+            style:--swatch={section.swatch}
+          >
+            <span class="swatch"></span>
+            <span class="chip-icon"><Icon icon={section.icon} /></span>
             <span>{section.name}</span>
           </a>
         </li>
@@ -74,6 +94,7 @@
     </ul>
   </div>
   <p class="name small-only">{name}</p>
+  <div class="progress" aria-hidden="true"><span style:width="{progress}%"></span></div>
 </nav>
 
 <style>
@@ -101,7 +122,7 @@
     flex: none;
     padding: 0 var(--space-2);
     border: 1px solid var(--line-strong);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-control);
     background: var(--surface);
     color: var(--ink-muted);
   }
@@ -135,7 +156,7 @@
     padding: 2px;
     list-style: none;
     overflow-x: auto;
-    scrollbar-width: thin;
+    scrollbar-width: none;
   }
 
   .chips a {
@@ -143,21 +164,39 @@
     align-items: center;
     gap: 6px;
     padding: 6px 10px;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-control);
     color: var(--ink);
     text-decoration: none;
     white-space: nowrap;
     font-size: 14px;
+    transition: background-color 0.15s;
   }
 
   .chips a:hover {
-    background: var(--button);
+    background: var(--hover);
   }
 
+  /* Where you are: the current section's chip, underlined in its own colour. */
   .chips a[aria-current] {
     background: var(--button);
     font-weight: 700;
-    box-shadow: inset 0 -2px 0 var(--accent-fill);
+    box-shadow: inset 0 -3px 0 var(--swatch);
+  }
+
+  .chip-icon {
+    display: inline-flex;
+    color: var(--swatch);
+  }
+
+  .progress {
+    height: 3px;
+    background: var(--line);
+  }
+
+  .progress span {
+    display: block;
+    height: 100%;
+    background: var(--eurth-blue);
   }
 
   .swatch {
