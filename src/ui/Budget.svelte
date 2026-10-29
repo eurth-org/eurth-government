@@ -11,9 +11,19 @@
   let {
     country,
     flashing,
+    hits = [],
+    currentHit,
     name,
     onchange,
-  }: { country: Country; flashing: SettingId[]; name: string; onchange: (country: Country) => void } = $props();
+  }: {
+    country: Country;
+    flashing: SettingId[];
+    /** Search matches, highlighted until the search is cleared. */
+    hits?: SettingId[];
+    currentHit?: SettingId;
+    name: string;
+    onchange: (country: Country) => void;
+  } = $props();
 
   const lines = budgetIds.map((id) => ({
     id,
@@ -122,7 +132,13 @@
 
 <ul class="lines">
   {#each lines as line (line.id)}
-    <li class="line" class:flash={flashing.includes(line.id)} id="field-{line.id}">
+    <li
+      class="line"
+      class:flash={flashing.includes(line.id)}
+      class:matched={hits.includes(line.id)}
+      class:current={currentHit === line.id}
+      id="field-{line.id}"
+    >
       <span class="icon" style:color={line.colour}><Icon icon={line.icon} /></span>
       <label for="share-{line.id}">{line.def.label}</label>
       <output for="share-{line.id}">{country[line.id]}%</output>
@@ -261,6 +277,15 @@
     margin: 0;
     color: var(--ink-muted);
     font-size: 13px;
+  }
+
+  .matched {
+    background: var(--flash);
+  }
+
+  .current {
+    background: var(--flash);
+    box-shadow: 0 0 0 2px var(--focus-ring);
   }
 
   .flash {

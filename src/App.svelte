@@ -79,17 +79,39 @@
     }
   }
 
-  function search(query: string): number {
-    const words = query.toLowerCase().split(/\s+/);
-    const found = defs.filter((d) => {
-      const text = [d.label, d.question, d.group, ...d.options.flatMap((o) => [o.label, o.help])].join(' ').toLowerCase();
-      return words.every((w) => text.includes(w));
-    });
-    flash(
-      found.map((d) => d.id as SettingId),
-      true,
-    );
-    return found.length;
+  // Search works like find-in-page: every match stays highlighted while the search box has
+  // text, and the visitor steps through them one at a time.
+  let hits = $state<SettingId[]>([]);
+  let hit = $state(0);
+  const hitCounts = $derived(
+    Object.fromEntries(groups.map((g) => [g.id, g.defs.filter((d) => hits.includes(d.id as SettingId)).length])),
+  );
+
+  function search(query: string) {
+    const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+    hits = words.length
+      ? defs
+          .filter((d) => {
+            const text = [d.label, d.question, d.group, d.kind === 'share' ? d.help : '', ...d.options.flatMap((o) => [o.label, o.help])]
+              .join(' ')
+              .toLowerCase();
+            return words.every((w) => text.includes(w));
+          })
+          .map((d) => d.id as SettingId)
+      : [];
+    hit = 0;
+    showHit();
+  }
+
+  function step(direction: 1 | -1) {
+    if (!hits.length) return;
+    hit = (hit + direction + hits.length) % hits.length;
+    showHit();
+  }
+
+  function showHit() {
+    const id = hits[hit];
+    if (id) document.getElementById(`field-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
   // Which section is under the sticky bar, so the bar can show where you are.
@@ -144,7 +166,16 @@
   </div>
 </header>
 
-<SectionNav sections={groups} {current} name={profile.name} onsearch={search} />
+<SectionNav
+  sections={groups}
+  {current}
+  name={profile.name}
+  {hitCounts}
+  hitCount={hits.length}
+  {hit}
+  onsearch={search}
+  onstep={step}
+/>
 
 <div class="layout">
   <main class="settings">
@@ -155,13 +186,15 @@
           {group.name}
         </h2>
         {#if group.name === 'Budget'}
-          <Budget {country} {flashing} name={shownName} onchange={(next) => (country = next)} />
+          <Budget {country} {flashing} {hits} currentHit={hits[hit]} name={shownName} onchange={(next) => (country = next)} />
         {:else}
           {#each group.defs as def (def.id)}
             <Field
               {def}
               value={country[def.id as SettingId] as string | string[]}
               flash={flashing.includes(def.id as SettingId)}
+              matched={hits.includes(def.id as SettingId)}
+              current={hits[hit] === def.id}
               onchange={(value) => setValue(def.id, value)}
             />
           {/each}

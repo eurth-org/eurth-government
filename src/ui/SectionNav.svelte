@@ -1,7 +1,9 @@
 <script lang="ts">
   import {
+    faChevronDown,
     faChevronLeft,
     faChevronRight,
+    faChevronUp,
     faFlag,
     faMagnifyingGlass,
     type IconDefinition,
@@ -19,11 +21,25 @@
     sections,
     current,
     name,
+    hitCounts,
+    hitCount,
+    hit,
     onsearch,
-  }: { sections: Section[]; current: string; name: string; onsearch: (query: string) => number } = $props();
+    onstep,
+  }: {
+    sections: Section[];
+    current: string;
+    name: string;
+    /** Search matches per section. */
+    hitCounts: Record<string, number>;
+    hitCount: number;
+    /** Which match the visitor is on, from 0. */
+    hit: number;
+    onsearch: (query: string) => void;
+    onstep: (direction: 1 | -1) => void;
+  } = $props();
 
   let query = $state('');
-  let found = $state(0);
   let timer: ReturnType<typeof setTimeout> | undefined;
   let list: HTMLUListElement;
 
@@ -65,7 +81,16 @@
 
   function search() {
     clearTimeout(timer);
-    timer = setTimeout(() => (found = query.trim() ? onsearch(query.trim()) : 0), 250);
+    timer = setTimeout(() => onsearch(query.trim()), 250);
+  }
+
+  // Enter goes to the next match, Shift+Enter to the previous; Escape clears the search.
+  function keys(event: KeyboardEvent) {
+    if (event.key === 'Escape') {
+      query = '';
+      clearTimeout(timer);
+      onsearch('');
+    }
   }
 
   // Keep the current section's chip in view when the list scrolls sideways. Only the list
@@ -87,14 +112,35 @@
       role="search"
       onsubmit={(e) => {
         e.preventDefault();
-        found = query.trim() ? onsearch(query.trim()) : 0;
+        clearTimeout(timer);
+        if (!hitCount) onsearch(query.trim());
+        else onstep((e.submitter as HTMLElement | null)?.dataset.step === '-1' ? -1 : 1);
       }}
     >
       <label class="visually-hidden" for="setting-search">Search settings</label>
       <Icon icon={faMagnifyingGlass} />
-      <input id="setting-search" type="search" placeholder="Search settings" bind:value={query} oninput={search} />
+      <input
+        id="setting-search"
+        type="search"
+        placeholder="Search settings"
+        bind:value={query}
+        oninput={search}
+        onkeydown={(e) => {
+          keys(e);
+          if (e.key === 'Enter' && e.shiftKey) {
+            e.preventDefault();
+            onstep(-1);
+          }
+        }}
+      />
       {#if query.trim()}
-        <span class="found" aria-live="polite">{found === 1 ? '1 match' : `${found} matches`}</span>
+        <span class="found" aria-live="polite">{hitCount ? `${hit + 1} of ${hitCount}` : 'No matches'}</span>
+        <button class="step" type="button" aria-label="Previous match" disabled={!hitCount} onclick={() => onstep(-1)}>
+          <Icon icon={faChevronUp} />
+        </button>
+        <button class="step" type="submit" aria-label="Next match" disabled={!hitCount}>
+          <Icon icon={faChevronDown} />
+        </button>
       {/if}
     </form>
     <div class="chips-wrap" class:more-left={more.left} class:more-right={more.right}>
@@ -113,6 +159,9 @@
           >
             <span class="chip-icon"><Icon icon={section.icon} /></span>
             <span>{section.name}</span>
+            {#if hitCounts[section.id]}
+              <span class="hits" aria-label="{hitCounts[section.id]} search matches">{hitCounts[section.id]}</span>
+            {/if}
           </a>
         </li>
       {/each}
@@ -184,6 +233,41 @@
   .found {
     font-size: 13px;
     white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .step {
+    display: inline-grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-control);
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  .step:hover:not(:disabled) {
+    background: var(--hover);
+  }
+
+  .step:disabled {
+    color: var(--ink-muted);
+    cursor: default;
+  }
+
+  /* How many search matches a section holds. */
+  .hits {
+    min-width: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: var(--flash);
+    color: var(--ink);
+    font-size: 12px;
+    font-weight: 700;
+    text-align: center;
   }
 
   .chips {
