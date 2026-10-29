@@ -153,6 +153,8 @@
       <input
         id="setting-search"
         class:hidden={reviewing}
+        maxlength="100"
+        autocomplete="off"
         type="search"
         placeholder="Search settings"
         bind:value={query}

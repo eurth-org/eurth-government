@@ -1,3 +1,5 @@
+import { fileName } from '../model/text';
+
 /**
  * Saves a chart as SVG or PNG, entirely in the browser. The page styles charts with CSS
  * variables, so the copy gets each element's computed colours and sizes written in, and wide
@@ -83,6 +85,8 @@ function standalone(svg: SVGSVGElement): { text: string; width: number; height: 
 }
 
 function save(blob: Blob, filename: string) {
+  const dot = filename.lastIndexOf('.');
+  filename = `${fileName(filename.slice(0, dot))}${filename.slice(dot)}`;
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;

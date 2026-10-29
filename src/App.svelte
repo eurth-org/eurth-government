@@ -16,6 +16,7 @@
     faHeartPulse,
     faRedo,
     faScaleBalanced,
+    faUserShield,
     faShareNodes,
     faUndo,
   } from '@fortawesome/free-solid-svg-icons';
@@ -26,6 +27,7 @@
   import { countries } from './model/countries';
   import { randomName } from './model/names';
   import { randomCountry } from './model/random';
+  import { cleanName } from './model/text';
   import { decodeCountry, encodeCountry } from './model/link';
   import { familyLabels, type Family } from './model/naming';
   import { settings, type Country, type SettingId } from './model/settings';
@@ -66,7 +68,12 @@
 
   const params = new URLSearchParams(location.search);
   let country = $state<Country>(params.get('c') ? decodeCountry(params.get('c')!) : defaultCountry());
-  let name = $state(params.get('n') ?? '');
+  // Names are cleaned wherever they come from (model/text.ts): typed, linked or saved.
+  let name = $state(cleanName(params.get('n') ?? ''));
+  $effect(() => {
+    const clean = cleanName(name);
+    if (clean !== name) name = clean;
+  });
   // A real country's flag (its ISO code), shown on the name card and kept in the link.
   let flag = $state<string | undefined>(/^[a-z]{2}$/.test(params.get('f') ?? '') ? params.get('f')! : undefined);
   // The flag belongs to the country's name: rename the country and the flag goes.
@@ -609,6 +616,14 @@
       <p>
         © 2026 Eurth. Governmint is open source under the Apache 2.0 licence, as above: use it, change it, share it.
         The countries you make are yours: Governmint keeps no copy, and claims no rights to them.
+      </p>
+    </li>
+    <li>
+      <span class="about-icon"><Icon icon={faUserShield} /></span>
+      <p>
+        No Google Analytics, no trackers, no cookies, and no data to sell: there's nowhere to type your contact
+        details. What Governmint remembers (light or dark, sound, your saved countries) stays in your own browser, on
+        your device.
       </p>
     </li>
     <li>

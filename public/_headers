@@ -1,5 +1,11 @@
+# Security headers for every page. The Content-Security-Policy lets only Governmint's own files
+# run, plus the one small script in index.html that sets light or dark before the page paints,
+# allowed by its hash (src/headers.test.ts checks the hash still matches). Styles may be inline,
+# for Svelte's style attributes and the 404 page.
 /*
-  Content-Security-Policy: frame-ancestors 'self' https://eurth.org https://*.eurth.org;
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-GTl0qtVKeRgQv1GgfwzfpJ4jPpO7LCwNHCYbdvlh0as='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self' https://eurth.org https://*.eurth.org; upgrade-insecure-requests
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()
+  Cross-Origin-Opener-Policy: same-origin
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
 

@@ -3,7 +3,9 @@
   import { onDestroy, untrack } from 'svelte';
   import type { Profile } from '../model/engine';
   import { sentence } from '../model/formats';
+  import coin from '../assets/eurth-coin.svg';
   import { motto } from '../model/motto';
+  import { nameLimit } from '../model/text';
   import Icon from './Icon.svelte';
 
   /**
@@ -81,6 +83,9 @@
   <input
     id="country-name"
     class="name-input"
+    maxlength={nameLimit}
+    autocomplete="off"
+    spellcheck="false"
     {placeholder}
     bind:value={name}
     onfocus={suggestNames}
@@ -105,10 +110,8 @@
 <div class="card" bind:clientHeight={cardHeight}>
   {#key minted}
     <span class="coin" class:flipping={minted > 0 && !calm} aria-hidden="true">
-      <span class="face front">
-        {#if flag}<img src="/flags/{flag}.svg" alt="" />{:else}<Icon icon={faFlag} />{/if}
-      </span>
-      <span class="face back"><img src="/apple-touch-icon.png" alt="" /></span>
+      <span class="face front"><img src={coin} alt="" /></span>
+      <span class="face back"><img src={coin} alt="" /></span>
     </span>
   {/key}
   <div class="title">
@@ -280,7 +283,7 @@
     display: inline-block;
   }
 
-  /* A coin with the flag on one side and the yurt on the other, flipped once per new name. */
+  /* The Eurth coin, flipped once per new name. */
   .coin {
     position: relative;
     grid-column: 1;
@@ -292,23 +295,17 @@
     transform-style: preserve-3d;
   }
 
+  /* The Eurth coin (assets/eurth-coin.svg), in the style of Twemoji's coin. */
   .face {
     position: absolute;
     inset: 0;
-    display: grid;
-    place-items: center;
-    border: 2px solid #b8740f;
-    border-radius: 50%;
-    background: #f7c548;
-    color: #7a4a00;
-    font-size: 11px;
     backface-visibility: hidden;
   }
 
   .face img {
+    display: block;
     width: 100%;
     height: 100%;
-    border-radius: 50%;
   }
 
   .back {

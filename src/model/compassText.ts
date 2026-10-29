@@ -2,6 +2,7 @@ import { compassAxes, compassPoint, quadrants } from './compass';
 import { countries } from './countries';
 import { scoreAxes, type AxisScore } from './engine';
 import { examples } from './examples';
+import { markdownText } from './text';
 
 /** Which reference points the compass shows beside the country. */
 export type CompassMode = 'examples' | 'countries' | 'none';
@@ -40,7 +41,7 @@ const unit = (value: number) => ((value + 100) / 200).toFixed(3);
 export function compassMarkdown(name: string, scores: AxisScore[], mode: CompassMode, link: string): string {
   const here = compassPoint(scores);
   return [
-    `### ${name} on the compass`,
+    `### ${markdownText(name)} on the compass`,
     '',
     '```mermaid',
     'quadrantChart',

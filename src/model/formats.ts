@@ -2,6 +2,7 @@ import { axes } from './axes';
 import { picked, settingDef, type Profile } from './engine';
 import { familyLabels, type Family } from './naming';
 import { budgetIds, type Country, type SettingId } from './settings';
+import { markdownText, wikiText } from './text';
 
 /** One readable line per topic, shared by every export format. */
 export interface Fact {
@@ -76,7 +77,8 @@ export function summary(name: string, profile: Profile): string {
 }
 
 /** Markdown for the Eurth.org forum (Discourse). */
-export function toMarkdown(name: string, country: Country, profile: Profile, link: string): string {
+export function toMarkdown(rawName: string, country: Country, profile: Profile, link: string): string {
+  const name = markdownText(rawName);
   const rows = [
     ...familyOrder.map((f) => ({ label: familyLabels[f], value: profile.labels[f].label })),
     ...facts(country),
@@ -117,7 +119,8 @@ const governmentTitles: Record<string, string> = {
 };
 
 /** Wikitext for IIWiki (or any MediaWiki), using the common {{Infobox country}} template. */
-export function toWikitext(name: string, country: Country, profile: Profile, link: string): string {
+export function toWikitext(rawName: string, country: Country, profile: Profile, link: string): string {
+  const name = wikiText(rawName);
   const infobox: [string, string][] = [
     ['conventional_long_name', name],
     ['common_name', name],
@@ -187,7 +190,7 @@ const mermaidSafe = (text: string) => text.replace(/[:[\]"#;{}]/g, '').trim() ||
  */
 export function budgetMarkdown(name: string, country: Country, link: string): string {
   return [
-    `### Budget of ${name}`,
+    `### Budget of ${markdownText(name)}`,
     '',
     '```mermaid',
     'pie showData',

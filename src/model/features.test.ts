@@ -170,3 +170,31 @@ group('budget as text', () => {
     expect(Object.values(data.budget as Record<string, number>).reduce((a, b) => a + b, 0)).toBe(100);
   });
 });
+
+group('text people type', () => {
+  it('keeps names clean and short', async () => {
+    const { cleanName, nameLimit } = await import('./text');
+    expect(cleanName('Ruri‮tania\u0000')).toBe('Ruritania');
+    expect(cleanName('x'.repeat(200))).toHaveLength(nameLimit);
+    expect(cleanName("Robert'); DROP TABLE countries;--")).toBe("Robert'); DROP TABLE countries;--");
+  });
+
+  it('keeps names as plain text in Markdown and wikitext', async () => {
+    const { toMarkdown: md, toWikitext: wiki } = await import('./formats');
+    const country = defaultCountry();
+    const profile = describe(country);
+    const name = '<script>alert(1)</script> [link](x) | }} {{Delete';
+    const markdown = md(name, country, profile, 'https://gov.eurth.org/?c=x');
+    expect(markdown).not.toContain('<script>');
+    expect(markdown).toContain('\\[link\\](x) \\|');
+    const wikitext = wiki(name, country, profile, 'https://gov.eurth.org/?c=x');
+    expect(wikitext).toContain('<nowiki><script>alert(1)</script> [link](x) | }} {{Delete</nowiki>');
+    expect(wikitext).not.toMatch(/= <script>/);
+  });
+
+  it('makes safe file names', async () => {
+    const { fileName } = await import('./text');
+    expect(fileName('../../etc/passwd budget')).toBe('....etcpasswd budget');
+    expect(fileName('  ')).toBe('governmint');
+  });
+});
