@@ -5,13 +5,11 @@
     faBookOpen,
     faCircleInfo,
     faCodeBranch,
-    faDice,
     faFloppyDisk,
     faHeart,
     faKeyboard,
     faLightbulb,
     faRedo,
-    faRotateLeft,
     faShareNodes,
     faUndo,
     faUserShield,
@@ -22,6 +20,8 @@
   import { slide } from 'svelte/transition';
   import yurt from './assets/eurth-yurt-circle.svg';
   import { defaultCountry, describe } from './model/engine';
+  import { countries } from './model/countries';
+  import { randomName } from './model/names';
   import { randomCountry } from './model/random';
   import { decodeCountry, encodeCountry } from './model/link';
   import { familyLabels, type Family } from './model/naming';
@@ -57,6 +57,7 @@
   }));
   const familyOrder: Family[] = ['structure', 'system', 'form', 'regime', 'rulers'];
   const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const mod = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl+';
 
   const params = new URLSearchParams(location.search);
   let country = $state<Country>(params.get('c') ? decodeCountry(params.get('c')!) : defaultCountry());
@@ -171,11 +172,14 @@
   // text, and the visitor steps through them one at a time.
   let hits = $state<SettingId[]>([]);
   let hit = $state(0);
+  // Settings picked out by a check or a label, stepped through like search matches.
+  let review = $state<string | null>(null);
   const hitCounts = $derived(
     Object.fromEntries(groups.map((g) => [g.id, g.defs.filter((d) => hits.includes(d.id as SettingId)).length])),
   );
 
   function search(query: string) {
+    review = null;
     const words = query.toLowerCase().split(/\s+/).filter(Boolean);
     hits = words.length
       ? defs
@@ -195,6 +199,20 @@
     if (!hits.length) return;
     hit = (hit + direction + hits.length) % hits.length;
     showHit();
+  }
+
+  /** Picks out settings to look at again: highlighted until closed, one at a time. */
+  function show(ids: SettingId[], label: string) {
+    review = label;
+    hits = [...ids];
+    hit = 0;
+    showHit();
+    flash(ids.slice(0, 1), false);
+  }
+
+  function closeReview() {
+    review = null;
+    hits = [];
   }
 
   function showHit() {
@@ -229,14 +247,21 @@
     baseline = $state.snapshot(next) as Country;
   }
 
-  const fictional = ['Ruritania', 'Freedonia', 'Grand Fenwick', 'Elbonia', 'Genovia', 'Borduria', 'Kreplachistan', 'Molvania'];
+  // Random: a random government with the name of a famous fictional nation, credited.
   function random() {
-    load(randomCountry(), fictional[Math.floor(Math.random() * fictional.length)]!);
+    const picked = randomName();
+    load(randomCountry(), picked.name);
+    toast(`${picked.name}, from ${picked.from}.`);
   }
 
-  function reset() {
-    load(defaultCountry(), '');
-  }
+  // Typed the name of a real country? Offer its real government, with its flag.
+  const fold = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+  const realMatch = $derived.by(() => {
+    if (flag || !name.trim()) return undefined;
+    const typed = fold(name);
+    return countries.find((c) => fold(c.name) === typed);
+  });
+
 
   // Save: kept on this device, and the link copied, since the link is what travels.
   async function saveCountry() {
@@ -296,10 +321,14 @@
     switch (event.key) {
       case '/':
         event.preventDefault();
+        closeReview();
         document.getElementById('setting-search')?.focus();
         break;
       case '?':
         shortcutsOpen = true;
+        break;
+      case 'Escape':
+        closeReview();
         break;
       case 'e':
       case 'E':
@@ -347,25 +376,19 @@
       <span class="badge">Preview</span>
     </div>
     <div class="actions">
-      <button class="btn" onclick={() => (pickerOpen = true)} title="Start from an example or a real country (E)">
-        <Icon icon={faBookOpen} /> Examples &amp; countries
-      </button>
-      <button class="btn" data-click="tumble" onclick={random} title="Roll a random country (R)">
-        <Icon icon={faDice} /> Random
-      </button>
-      <button class="btn btn-primary" data-click="bounce" onclick={saveCountry} title="Save on this device and copy the link (S)">
-        <Icon icon={faFloppyDisk} /> Save
+      <button class="btn" onclick={() => (pickerOpen = true)} data-tip="Start from an example or a real country (E)">
+        <Icon icon={faBookOpen} /> Examples<span class="wide-only">&nbsp;&amp; countries</span>
       </button>
       <span class="history">
-        <button class="btn icon-only" data-click="swing-left" onclick={undo} disabled={!canUndo} aria-label="Undo" title="Undo (⌘Z)">
+        <button class="btn icon-only" data-click="swing-left" onclick={undo} disabled={!canUndo} aria-label="Undo" data-tip="Undo ({mod}Z)">
           <Icon icon={faUndo} />
         </button>
-        <button class="btn icon-only" data-click="swing-right" onclick={redo} disabled={!future.length} aria-label="Redo" title="Redo (⇧⌘Z)">
+        <button class="btn icon-only" data-click="swing-right" onclick={redo} disabled={!future.length} aria-label="Redo" data-tip="Redo (⇧{mod}Z)">
           <Icon icon={faRedo} />
         </button>
       </span>
-      <button class="btn reset" data-click="spin-back" onclick={reset} title="Back to the default country">
-        <Icon icon={faRotateLeft} /> Reset
+      <button class="btn btn-primary" data-click="bounce" onclick={saveCountry} data-tip="Save on this device and copy the link (S)">
+        <Icon icon={faFloppyDisk} /> Save
       </button>
       <ThemeSwitch />
     </div>
@@ -379,8 +402,10 @@
   {hitCounts}
   hitCount={hits.length}
   {hit}
+  {review}
   onsearch={search}
   onstep={step}
+  onclose={closeReview}
 />
 
 <div class="layout">
@@ -419,7 +444,15 @@
 
   <aside class="results" id="results">
     <section class="panel summary">
-      <NameCard bind:name {profile} seed={code} {flag} />
+      <NameCard
+        bind:name
+        {profile}
+        seed={code}
+        {flag}
+        onrandom={random}
+        real={realMatch && { name: realMatch.name, flag: realMatch.code.toLowerCase() }}
+        onreal={() => realMatch && load(structuredClone(realMatch.country), realMatch.name, realMatch.code.toLowerCase())}
+      />
     </section>
 
     {#if profile.checks.length}
@@ -433,7 +466,9 @@
                 {check.severity === 'conflict' ? 'Contradiction' : 'Unusual'}
               </span>
               {check.message}
-              <button class="link" onclick={() => flash(check.dependsOn, true)}>Show settings</button>
+              <button class="link" onclick={() => show(check.dependsOn, check.severity === 'conflict' ? 'Contradiction' : 'Unusual')}>
+                Show settings{check.dependsOn.length > 1 ? ` (${check.dependsOn.length})` : ''}
+              </button>
             </li>
           {/each}
         </ul>
@@ -456,7 +491,7 @@
               </p>
               <p class="because">{label.because}</p>
               <p class="label-links">
-                <button class="link" onclick={() => flash(label.dependsOn, true)}>
+                <button class="link" onclick={() => show(label.dependsOn, `${familyLabels[family]}: based on`)}>
                   Based on: {label.dependsOn.map((id) => defs.find((d) => d.id === id)?.label ?? id).join(', ')}
                 </button>
               </p>
@@ -697,6 +732,12 @@
     gap: var(--space-2);
   }
 
+  @media (max-width: 480px) {
+    .wide-only {
+      display: none;
+    }
+  }
+
   .history {
     display: inline-flex;
     gap: 2px;
@@ -769,15 +810,7 @@
   }
 
   @media (prefers-reduced-motion: no-preference) {
-    /* The reset arrow winds back when you point at it, the heart beats. */
-    .reset :global(.icon) {
-      transition: transform 0.4s ease-out;
-    }
-
-    .reset:hover :global(.icon) {
-      transform: rotate(-200deg);
-    }
-
+    /* The heart beats. */
     .about li:hover .beat :global(.icon) {
       animation: beat 0.8s ease-in-out;
     }

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { faCrown, faFlag } from '@fortawesome/free-solid-svg-icons';
+  import { faArrowRight, faCrown, faDice, faFlag } from '@fortawesome/free-solid-svg-icons';
   import { onDestroy, untrack } from 'svelte';
   import type { Profile } from '../model/engine';
   import { sentence } from '../model/formats';
@@ -9,14 +9,27 @@
   /**
    * The country's name card. New names are freshly minted: they type themselves out, a coin
    * flips and a seal stamps down. Monarchies get a crown on the flag, theocracies a halo, and a
-   * real country its own flag. None of the movement happens for reduced motion.
+   * real country its own flag. None of the movement happens for reduced motion. The dice beside
+   * the name roll a random country; typing a real country's name offers its real government.
    */
   let {
     name = $bindable(),
     profile,
     seed,
     flag,
-  }: { name: string; profile: Profile; seed: string; flag?: string } = $props();
+    onrandom,
+    real,
+    onreal,
+  }: {
+    name: string;
+    profile: Profile;
+    seed: string;
+    flag?: string;
+    onrandom: () => void;
+    /** The real country whose name was typed, if any. */
+    real?: { name: string; flag: string };
+    onreal: () => void;
+  } = $props();
 
   const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const monarchy = $derived(/monarch/i.test(profile.labels.form.label));
@@ -80,16 +93,30 @@
   </span>
   Country name
 </label>
-<input
-  id="country-name"
-  class="name-input"
-  {placeholder}
-  bind:value={name}
-  onfocus={suggestNames}
-  onblur={stopSuggesting}
-/>
+<div class="name-row">
+  <input
+    id="country-name"
+    class="name-input"
+    {placeholder}
+    bind:value={name}
+    onfocus={suggestNames}
+    onblur={stopSuggesting}
+  />
+  <button class="btn btn-primary dice" data-click="tumble" aria-label="Roll a random country" data-tip="Roll a random country (R)" onclick={onrandom}>
+    <Icon icon={faDice} />
+  </button>
+</div>
+{#if real}
+  <button class="real" onclick={onreal}>
+    <img src="/flags/{real.flag}.svg" alt="" width="16" height="16" />
+    <span>Real country: load its actual government</span>
+    <span class="visually-hidden">({real.name})</span>
+    <Icon icon={faArrowRight} />
+  </button>
+{/if}
 
-<div class="title-row">
+<!-- The coin hangs beside the name, the motto and the summary, so all three share one edge. -->
+<div class="card">
   {#key minted}
     <span class="coin" class:flipping={minted > 0 && !calm} aria-hidden="true">
       <span class="face front">
@@ -98,20 +125,22 @@
       <span class="face back"><img src="/apple-touch-icon.png" alt="" /></span>
     </span>
   {/key}
-  <h1>
-    <span class="visually-hidden" aria-live="polite">{profile.name}</span>
+  <div class="title">
+    <h1>
+      <span class="visually-hidden" aria-live="polite">{profile.name}</span>
+      {#key minted}
+        <span class="minted" aria-hidden="true">{typed}</span>
+      {/key}
+    </h1>
     {#key minted}
-      <span class="minted" aria-hidden="true">{typed}</span>
+      {#if minted > 0 && !calm}
+        <span class="seal" aria-hidden="true">Freshly minted</span>
+      {/if}
     {/key}
-  </h1>
-  {#key minted}
-    {#if minted > 0 && !calm}
-      <span class="seal" aria-hidden="true">Freshly minted</span>
-    {/if}
-  {/key}
+  </div>
+  <p class="motto">“{motto(profile, seed)}”</p>
+  <p class="sentence">{sentence(name.trim() || 'This country', profile)}</p>
 </div>
-<p class="motto">“{motto(profile, seed)}”</p>
-<p class="sentence">{sentence(name.trim() || 'This country', profile)}</p>
 
 <style>
   .kicker {
@@ -163,21 +192,70 @@
     top: -13px;
   }
 
-  .name-input {
-    width: 100%;
+  /* The name field and the dice, joined into one control of one height. */
+  .name-row {
+    display: flex;
     margin: var(--space-1) 0 var(--space-3);
+  }
+
+  .name-input {
+    flex: 1;
+    min-width: 0;
     padding: 4px 8px;
     border: 1px solid var(--line-strong);
-    border-radius: var(--radius-control);
+    border-right: 0;
+    border-radius: var(--radius-control) 0 0 var(--radius-control);
     background: var(--surface);
     font-weight: 600;
   }
 
-  .title-row {
-    position: relative;
+  .dice {
+    padding: 0 12px;
+    border-radius: 0 var(--radius-control) var(--radius-control) 0;
+    font-size: 16px;
+  }
+
+  .dice:hover {
+    transform: none;
+  }
+
+  /* Typed a real country's name: its real government is a click away. */
+  .real {
     display: flex;
-    align-items: flex-start;
-    gap: var(--space-2);
+    align-items: center;
+    gap: 6px;
+    margin: calc(-1 * var(--space-2)) 0 var(--space-3);
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--accent-text);
+    font-size: 13px;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .real:hover {
+    text-decoration: underline;
+  }
+
+  .real img {
+    width: 16px;
+    height: 16px;
+  }
+
+  .card {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr);
+    column-gap: var(--space-2);
+  }
+
+  .card > :not(.coin) {
+    grid-column: 2;
+  }
+
+  .title {
+    position: relative;
   }
 
   h1 {
@@ -194,7 +272,9 @@
   /* A coin with the flag on one side and the yurt on the other, flipped once per new name. */
   .coin {
     position: relative;
-    flex: none;
+    grid-column: 1;
+    grid-row: 1 / span 3;
+    align-self: start;
     width: 24px;
     height: 24px;
     margin-top: 3px;

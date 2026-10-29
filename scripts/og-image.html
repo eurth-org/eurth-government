@@ -1,0 +1,124 @@
+<!doctype html>
+<!--
+  Governmint's social sharing image (public/og.png): 1200 × 630, the size Facebook, Reddit,
+  LinkedIn, X, Bluesky, Mastodon, Discord, Slack and WhatsApp all accept. The title sits in the
+  middle, so square crops (Reddit's thumbnails) keep it. To make the PNG again:
+
+  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --hide-scrollbars \
+    --window-size=1200,630 --screenshot=public/og.png scripts/og-image.html
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      html,
+      body {
+        width: 1200px;
+        height: 630px;
+        margin: 0;
+        overflow: hidden;
+      }
+
+      body {
+        position: relative;
+        background: #ffffff;
+        color: #222222;
+        font-family: system-ui, Arial, sans-serif;
+      }
+
+      /* Eurth blue, as the brand gives it, along the top as on eurth.org. */
+      .bar {
+        position: absolute;
+        inset: 0 0 auto;
+        height: 18px;
+        background: color(display-p3 0.2981 0.5884 0.8115);
+      }
+
+      /* A spider chart behind the title: the web in grey, a country's shape in Eurth blue. */
+      .web {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 760px;
+        height: 760px;
+        transform: translate(-50%, -46%);
+      }
+
+      main {
+        position: absolute;
+        inset: 18px 0 0;
+        display: grid;
+        place-content: center;
+        justify-items: center;
+        text-align: center;
+      }
+
+      .yurt {
+        width: 112px;
+        height: 112px;
+        margin-bottom: 18px;
+        border: 6px solid #f7c548;
+        border-radius: 50%;
+        box-shadow: 0 0 0 3px #b8740f;
+      }
+
+      /* A white halo keeps the words clear of the web behind them. */
+      h1,
+      p {
+        text-shadow:
+          0 0 10px #ffffff,
+          0 0 4px #ffffff,
+          0 0 2px #ffffff;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 112px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        line-height: 1;
+      }
+
+      p {
+        margin: 14px 0 0;
+        color: #4d4d4d;
+        font-size: 40px;
+      }
+
+      .site {
+        margin-top: 26px;
+        padding: 8px 22px;
+        border-radius: 10px;
+        background: color(display-p3 0.2981 0.5884 0.8115);
+        color: #ffffff;
+        font-size: 30px;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bar"></div>
+    <svg class="web" viewBox="-110 -110 220 220" aria-hidden="true">
+      <g fill="none" stroke="#e2e2e2" stroke-width="0.6">
+        <polygon points="0,-100 70.7,-70.7 100,0 70.7,70.7 0,100 -70.7,70.7 -100,0 -70.7,-70.7" />
+        <polygon points="0,-75 53,-53 75,0 53,53 0,75 -53,53 -75,0 -53,-53" />
+        <polygon points="0,-50 35.4,-35.4 50,0 35.4,35.4 0,50 -35.4,35.4 -50,0 -35.4,-35.4" />
+        <polygon points="0,-25 17.7,-17.7 25,0 17.7,17.7 0,25 -17.7,17.7 -25,0 -17.7,-17.7" />
+        <path d="M0 0L0 -100M0 0L70.7 -70.7M0 0L100 0M0 0L70.7 70.7M0 0L0 100M0 0L-70.7 70.7M0 0L-100 0M0 0L-70.7 -70.7" />
+      </g>
+      <polygon
+        points="0,-82 49.5,-49.5 64,0 56.6,56.6 0,46 -38.9,38.9 -88,0 -45.3,-45.3"
+        fill="rgb(38 152 212 / 0.1)"
+        stroke="rgb(38 152 212 / 0.35)"
+        stroke-width="1.6"
+        stroke-linejoin="round"
+      />
+    </svg>
+    <main>
+      <img class="yurt" src="../src/assets/eurth-yurt-circle.svg" alt="" />
+      <h1>Governmint</h1>
+      <p>Freshly minted governments</p>
+      <div class="site">gov.eurth.org</div>
+    </main>
+  </body>
+</html>
