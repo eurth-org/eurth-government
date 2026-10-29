@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { faCheck, faCopy } from '@fortawesome/free-solid-svg-icons';
+  import { faMarkdown, faWikipediaW } from '@fortawesome/free-brands-svg-icons';
+  import { faCheck, faCopy, faFileCode, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
   import type { Profile } from '../model/engine';
   import { toJson, toMarkdown, toWikitext } from '../model/formats';
   import type { Country } from '../model/settings';
@@ -13,20 +14,23 @@
   let format = $state<Format>('markdown');
   let copied = $state(false);
 
-  const formats: { id: Format; label: string; help: string }[] = [
+  const formats: { id: Format; label: string; icon: IconDefinition; help: string }[] = [
     {
       id: 'markdown',
       label: 'Markdown',
+      icon: faMarkdown,
       help: 'For a post on the Eurth.org forum: a summary, the institutions and the budget as tables.',
     },
     {
       id: 'wikitext',
       label: 'Wikitext',
+      icon: faWikipediaW,
       help: 'For IIWiki: an {{Infobox country}}, a Government section and a budget table.',
     },
     {
       id: 'json',
       label: 'JSON',
+      icon: faFileCode,
       help: 'For tools and spreadsheets: the labels, institutions, budget, scales and checks, plus the raw settings.',
     },
   ];
@@ -47,9 +51,9 @@
 
 <div class="formats" role="radiogroup" aria-label="Format">
   {#each formats as f (f.id)}
-    <label class="pill">
+    <label class="pill plain">
       <input type="radio" name="export-format" value={f.id} bind:group={format} />
-      <span class="check"><Icon icon={faCheck} /></span>
+      <Icon icon={f.icon} />
       <span class="steady" data-text={f.label}>{f.label}</span>
     </label>
   {/each}
@@ -68,12 +72,25 @@
     {/if}
   {/key}
 </div>
-<button class="btn" onclick={copy}>
-  <Icon icon={copied ? faCheck : faCopy} />
-  {copied ? 'Copied' : 'Copy'}
-</button>
+<div class="copy-row">
+  <button class="btn" onclick={copy}>
+    <Icon icon={copied ? faCheck : faCopy} />
+    {copied ? 'Copied' : 'Copy text'}
+  </button>
+</div>
 
 <style>
+  /* Like the charts' "Download as" row, with "Copy image". */
+  .copy-row {
+    display: flex;
+    margin-top: var(--space-2);
+    font-size: 13px;
+  }
+
+  .copy-row .btn {
+    padding: 3px 10px;
+  }
+
   .help {
     margin: var(--space-1) 0 var(--space-3);
     color: var(--ink-muted);

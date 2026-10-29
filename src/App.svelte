@@ -1,5 +1,12 @@
 <script lang="ts">
-  import { faGithub, faWikipediaW } from '@fortawesome/free-brands-svg-icons';
+  import {
+    faCreativeCommons,
+    faCreativeCommonsBy,
+    faCreativeCommonsNc,
+    faCreativeCommonsNd,
+    faGithub,
+    faWikipediaW,
+  } from '@fortawesome/free-brands-svg-icons';
   import {
     faArrowUpRightFromSquare,
     faBookOpen,
@@ -10,6 +17,7 @@
     faFloppyDisk,
     faHeart,
     faRedo,
+    faScaleBalanced,
     faShareNodes,
     faUndo,
   } from '@fortawesome/free-solid-svg-icons';
@@ -30,7 +38,6 @@
   import Field from './ui/Field.svelte';
   import { clink, setSound, soundOn, toast } from './ui/fun';
   import Globe from './ui/Globe.svelte';
-  import Headline from './ui/Headline.svelte';
   import Info from './ui/Info.svelte';
   import NameCard from './ui/NameCard.svelte';
   import { save } from './ui/saved';
@@ -244,6 +251,7 @@
     flagFor = countryName;
     flag = countryFlag;
     baseline = $state.snapshot(next) as Country;
+    closeReview();
   }
 
   // Random: a random government with the name of a famous fictional nation, credited.
@@ -539,7 +547,7 @@
 
     <section class="panel" aria-labelledby="compass-title">
       <h2 id="compass-title"><Icon icon={panelIcons.compass} /> Compass</h2>
-      <Compass scores={profile.axes} name={shownName} />
+      <Compass scores={profile.axes} name={shownName} {link} />
     </section>
 
     <section class="panel" aria-labelledby="share-title">
@@ -561,26 +569,19 @@
   <h2>With thanks</h2>
   <ul class="about">
     <li>
-      <span class="about-icon"><img src={yurt} alt="" width="18" height="18" /></span>
-      <p>
-        <a href={ref('https://eurth.org')}>Made by Eurth, a Worldbuilding &amp; Roleplay Writing Community</a>. Built
-        a country you like? Give it a world to live in.
-      </p>
-    </li>
-    <Headline />
-    <li>
       <span class="about-icon heart"><Icon icon={faHeart} /></span>
       <p>
-        Made with love by <a href={ref('https://iiwiki.com/w/Orioni')}>Orioni</a>, for Eurth and the people who live
-        in it, going strong since 2004. Thanks to <a href={ref('https://www.nationstates.net')}>NationStates</a>,
-        where Eurth's worldbuilding began.
+        Made with love by <a href={ref('https://iiwiki.com/w/Orioni')}>Orioni</a> for
+        <a href={ref('https://eurth.org')}>Eurth, a Worldbuilding &amp; Roleplay Writing Community</a>, and the people
+        who live in it. Going strong since 2004, thanks to <a href={ref('https://www.nationstates.net')}>NationStates</a>,
+        where Eurth's worldbuilding began. Built a country you like? Give it a world to live in.
       </p>
     </li>
     <li>
       <span class="about-icon"><Icon icon={faShareNodes} /></span>
       <p>
         The share icon was designed by the late, great <a href={ref('https://alexking.org')}>Alex King</a>. We never
-        met him, but his work shaped how the web shares things, and how Orioni thinks about design.
+        met him, but his work shaped how the web shares things.
         <span class="heart"><Icon icon={faHeart} label="with love" /></span>
       </p>
     </li>
@@ -600,6 +601,28 @@
         <a href={ref('https://github.com/cyberalien/line-md')}>line-md</a> (MIT); flags by
         <a href={ref('https://github.com/jdecked/twemoji')}>Twemoji</a> (CC BY 4.0). Open source under the
         <a href={ref('https://github.com/eurth-org/eurth-government/blob/main/LICENSE')}>Apache 2.0 licence</a>.
+      </p>
+    </li>
+    <li>
+      <span class="about-icon"><img src={yurt} alt="" width="18" height="18" /></span>
+      <p>
+        © 2026 Eurth. Governmint's words and data (its labels, explanations, mottos and country summaries) are
+        licensed under
+        <a class="licence" href={ref('https://creativecommons.org/licenses/by-nc-nd/4.0/')}>
+          Creative Commons BY-NC-ND 4.0
+          <span class="cc" aria-hidden="true">
+            <Icon icon={faCreativeCommons} /><Icon icon={faCreativeCommonsBy} /><Icon icon={faCreativeCommonsNc} /><Icon
+              icon={faCreativeCommonsNd}
+            />
+          </span></a
+        >: share them with credit, not for money, and unchanged. The code is open source, as above.
+      </p>
+    </li>
+    <li>
+      <span class="about-icon"><Icon icon={faScaleBalanced} /></span>
+      <p>
+        Governmint is a worldbuilding tool, made for fiction and fun. Its pictures of real countries are simplified and
+        approximate, as of 2026: not an assessment of any government, and not legal or political advice.
       </p>
     </li>
   </ul>
@@ -849,6 +872,11 @@
     padding: var(--space-4);
   }
 
+  /* Nothing in the name card (the stamp, the coin) may reach past its edges and shake the page. */
+  .summary {
+    overflow: clip;
+  }
+
   h2 {
     display: flex;
     align-items: center;
@@ -1032,6 +1060,19 @@
 
   .heart {
     color: #bf1e2e;
+  }
+
+  /* The Creative Commons badges, after the licence's name. */
+  .licence {
+    display: inline;
+  }
+
+  .cc {
+    display: inline-flex;
+    gap: 2px;
+    margin-left: 4px;
+    font-size: 16px;
+    vertical-align: -2px;
   }
 
   /* For keyboard users: a way past the header, shown when it has focus (WCAG 2.4.1). */

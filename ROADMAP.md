@@ -43,7 +43,8 @@ Times in UTC. Pull requests are on [GitHub](https://github.com/eurth-org/eurth-g
 | #3 Feedback round 3 | 29 Oct 2026, 15:21 | Feedback 27–57: Eurth blue, Wikipedia links and label icons, one-sentence summary, restricted candidacy, chart downloads, budget pie, grouped and enlargeable compass, find-in-page search, turning globe, this roadmap, suggestions on GitHub Discussions, animated switch icons, small delights, a wobbling shape and a resident spider |
 | #4 Feedback round 4 | 29 Oct 2026, 16:21 | Feedback 58–81: budget legend and treemap, credit on downloads, Random, Save, undo and redo, restore budget, real flags, keyboard shortcuts, plucked edges on the spider chart, smoother movement, sixteen new delights, a 404 page, `?ref` on outgoing links, Auto for the theme switch |
 | #5 Feedback round 5 | 29 Oct 2026, 17:42 | Feedback 82–100: a sharing image for link previews, a share window, famous fictional and NationStates nations for Random, the dice beside the name, real countries recognised by name, a tidier header, stepping through a second look, clearer treemap labels, a spider that stays on its web, About in a window and a lighter footer, an accessibility pass |
-| #6 Feedback round 6 | 29 Oct 2026, 17:54 | Feedback 101–113: a globe that winds down instead of freezing, the name as on eurth.org, even header tools, tooltips above the sticky bar, the globe as a way back to the top, budget and compass toolbars, an Export panel with JSON, WebP and Copy image, steady options, outside links in new tabs, a roomier About |
+| #6 Feedback round 6 | 29 Oct 2026, 19:10 | Feedback 101–113: a globe that winds down instead of freezing, the name as on eurth.org, even header tools, tooltips above the sticky bar, the globe as a way back to the top, budget and compass toolbars, an Export panel with JSON, WebP and Copy image, steady options, outside links in new tabs, a roomier About |
+| #7 Feedback round 7 | 29 Oct 2026, 19:36 | Feedback 114–124: a globe that keeps turning (with a switch), the compass as Markdown with a Mermaid chart and as JSON, Copy text and a checked Copy image, plain chart and format buttons, a steadier name card, a merged footer with a licence and disclaimer, no stored caches |
 
 ## What's in so far
 
@@ -71,7 +72,7 @@ The update that added each item is in brackets.
 - Charts, scales and the compass glide to new values instead of jumping (#4).
 
 **Look and accessibility**
-- eurth.org's look: Eurth blue top bar, the turning Eurth globe, the forum's light and Solarized dark schemes, Font Awesome icons in Eurth's category colours (#1; icons #2; Eurth blue #3).
+- eurth.org's look: Eurth blue top bar, the Eurth globe turning as on eurth.org (with a switch to stop it), the forum's light and Solarized dark schemes, Font Awesome icons in Eurth's category colours (#1; icons #2; Eurth blue #3).
 - The Deluminator switch, with its animated sun and moon: light, dark, or Auto to follow the device (#2; animation restored #3; Auto #4).
 - Small delights: a shine on each new name, fictional country names as placeholder, a waving flag, popping check marks and more, all off for reduced motion (#3). Round 4 added sixteen more (see feedback 63) and buttons that act out their click (#4); the footer's hearts beat (#5).
 - About Governmint in a window (the "?" button, the About link or the ? key): what it does, privacy, keyboard shortcuts, sound and ideas. The footer keeps thanks, credits, the licence and Eurth (#5).
@@ -200,6 +201,17 @@ Every numbered point from the reviews, and the update that did it.
 | 111 | Outside links in a new tab | All of them, with a note for screen readers (#6) |
 | 112 | Options change width when chosen | Room is kept for the check mark and the bold text, so nothing moves (#6) |
 | 113 | About: Close scrolls away, more text hidden below, too narrow | Title and Close stay put, the bottom fades while there's more, and on a desktop it's wide, in two columns (#6) |
+| 114 | Export's Copy like the compass's Copy image | "Copy text", in the same small style and row (#7) |
+| 115 | The stamp jerks the page on phones, and the sticky sidebar | The name card now clips its stamp and coin, so they can't widen the page, and grows or shrinks smoothly when a new name needs more or fewer lines (#7) |
+| 116 | Random keeps "Show settings" highlights | Loading any country clears them (#7) |
+| 117 | No check marks on the budget's chart buttons | Done; their icons stay (#7) |
+| 118 | Icons for the export formats | Markdown's own mark, Wikipedia's W for wikitext, a code file for JSON; no check marks (#7) |
+| 119 | Merge the footer text; licence and disclaimer | Merged as proposed, the news line gone, Alex King's line shortened; added © 2026 Eurth with a Creative Commons BY-NC-ND 4.0 notice and badges, and a disclaimer for real countries (#7) |
+| 120 | A check mark after Copy image | Done (#7) |
+| 121 | No storage used on GitHub or Cloudflare | Cloudflare: nothing but the site's own files; no KV, R2 or D1 for Governmint. GitHub: no artifacts, releases or packages; CI's npm cache (about 550 MB in 5 caches) is now switched off. Nothing anyone makes is uploaded: downloads and copies stay in the browser, and the page no longer fetches anything from elsewhere (#7) |
+| 122 | The globe stopped turning again | It was resting by design after five seconds; it now keeps turning, as on eurth.org, faster when pointed at. A switch in About stops it (WCAG 2.2.2), and reduced motion keeps it still (#7) |
+| 123 | The compass as Markdown with Mermaid, and JSON | Both, next to the image downloads: a Mermaid quadrant chart with the reference points shown, and the coordinates as JSON (#7) |
+| 124 | Balance About's two columns | About Governmint on the left (what it does, your country, ideas), using it on the right (keyboard, sound and motion) (#7) |
 
 ## Ideas
 

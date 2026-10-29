@@ -2,7 +2,6 @@
   import {
     faChartPie,
     faChartSimple,
-    faCheck,
     faClockRotateLeft,
     faRotateLeft,
     faTableCellsLarge,
@@ -142,21 +141,18 @@
 <!-- Chart types on the left; ways back to an earlier budget on the right. -->
 <div class="toolbar">
   <div class="chart-modes" role="radiogroup" aria-label="Chart">
-    <label class="pill mode">
+    <label class="pill plain mode">
       <input type="radio" name="budget-chart" value="bar" bind:group={chart} />
-      <span class="check"><Icon icon={faCheck} /></span>
       <Icon icon={faChartSimple} />
       <span class="steady" data-text="Bar">Bar</span>
     </label>
-    <label class="pill mode">
+    <label class="pill plain mode">
       <input type="radio" name="budget-chart" value="pie" bind:group={chart} />
-      <span class="check"><Icon icon={faCheck} /></span>
       <Icon icon={faChartPie} />
       <span class="steady" data-text="Pie">Pie</span>
     </label>
-    <label class="pill mode">
+    <label class="pill plain mode">
       <input type="radio" name="budget-chart" value="treemap" bind:group={chart} />
-      <span class="check"><Icon icon={faCheck} /></span>
       <Icon icon={faTableCellsLarge} />
       <span class="steady" data-text="Treemap">Treemap</span>
     </label>

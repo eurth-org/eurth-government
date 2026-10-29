@@ -2,9 +2,8 @@
   import { cubicOut } from 'svelte/easing';
   import { Tween } from 'svelte/motion';
   import { compassAxes, compassPoint, quadrants } from '../model/compass';
-  import { countries } from '../model/countries';
-  import { scoreAxes, type AxisScore } from '../model/engine';
-  import { examples } from '../model/examples';
+  import type { AxisScore } from '../model/engine';
+  import { compassReferences } from '../model/compassText';
 
   export type Mode = 'examples' | 'countries' | 'none';
 
@@ -24,9 +23,9 @@
   const pad = 38;
 
   const refs = {
-    examples: examples.map((e) => ({ name: e.title.replace(/-style\b/, ''), ...compassPoint(scoreAxes(e.country)) })),
-    countries: countries.map((c) => ({ name: c.name, ...compassPoint(scoreAxes(c.country)) })),
-    none: [] as { name: string; x: number; y: number }[],
+    examples: compassReferences('examples'),
+    countries: compassReferences('countries'),
+    none: compassReferences('none'),
   };
 
   const here = $derived(compassPoint(scores));

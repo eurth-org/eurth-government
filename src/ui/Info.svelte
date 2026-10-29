@@ -11,6 +11,7 @@
     faXmark,
   } from '@fortawesome/free-solid-svg-icons';
   import Icon from './Icon.svelte';
+  import { motion, setGlobe } from './motion.svelte';
   import { ref } from './ref';
 
   /**
@@ -72,63 +73,72 @@
     <button class="btn close" aria-label="Close" onclick={() => dialog.close()}><Icon icon={faXmark} /></button>
   </div>
   <div class="body" class:more bind:this={body} onscroll={measure}>
+    <!-- Two columns on a desktop: about Governmint on the left, using it on the right. -->
+    <div class="column">
+      <section aria-labelledby="info-what">
+        <h3 id="info-what"><Icon icon={faCircleInfo} /> What it does</h3>
+        <p>
+          Set up a country and Governmint names the kind of state you've made, explains why, and points out where the
+          settings contradict each other. This preview covers government and the budget; the economy and law come next.
+        </p>
+        <p>
+          Start from an example or a real country, or roll the dice beside the name. Drag a scale to see which settings
+          would move it, and follow "Show settings" to step through what a check is about.
+        </p>
+      </section>
 
-  <section aria-labelledby="info-what">
-    <h3 id="info-what"><Icon icon={faCircleInfo} /> What it does</h3>
-    <p>
-      Set up a country and Governmint names the kind of state you've made, explains why, and points out where the
-      settings contradict each other. This preview covers government and the budget; the economy and law come next.
-    </p>
-    <p>
-      Start from an example or a real country, or roll the dice beside the name. Drag a scale to see which settings
-      would move it, and follow "Show settings" to step through what a check is about.
-    </p>
-  </section>
+      <section aria-labelledby="info-yours">
+        <h3 id="info-yours"><Icon icon={faUserShield} /> Your country stays yours</h3>
+        <p>
+          A country lives in its link: copy it to share it or come back later. Save also keeps a list in this browser.
+          Nothing is stored anywhere else, and there's no account.
+        </p>
+      </section>
 
-  <section aria-labelledby="info-yours">
-    <h3 id="info-yours"><Icon icon={faUserShield} /> Your country stays yours</h3>
-    <p>
-      A country lives in its link: copy it to share it or come back later. Save also keeps a list in this browser.
-      Nothing is stored anywhere else, and there's no account.
-    </p>
-  </section>
+      <section aria-labelledby="info-ideas">
+        <h3 id="info-ideas"><Icon icon={faLightbulb} /> Ideas</h3>
+        <p>
+          Fellow worldbuilder?
+          <a href={ref('https://github.com/eurth-org/eurth-government/discussions/categories/ideas')}>
+            <Icon icon={faGithub} /> Table a motion for the roadmap</a
+          >
+          on GitHub. No quorum required.
+        </p>
+      </section>
+    </div>
+    <div class="column">
+      <section aria-labelledby="info-keys">
+        <h3 id="info-keys"><Icon icon={faKeyboard} /> Keyboard</h3>
+        <dl>
+          {#each keys as [combo, what] (what)}
+            <div>
+              <dt>{#each combo as key, i (i)}<kbd>{key}</kbd>{/each}</dt>
+              <dd>{what}</dd>
+            </div>
+          {/each}
+        </dl>
+        <p class="setting">
+          <button class="btn" aria-pressed={shortcuts} onclick={ontoggleshortcuts}>
+            Single-key shortcuts: {shortcuts ? 'on' : 'off'}
+          </button>
+          <span class="note">Turn them off if you use speech input, so a spoken word can't set one off.</span>
+        </p>
+      </section>
 
-  <section aria-labelledby="info-keys">
-    <h3 id="info-keys"><Icon icon={faKeyboard} /> Keyboard</h3>
-    <dl>
-      {#each keys as [combo, what] (what)}
-        <div>
-          <dt>{#each combo as key, i (i)}<kbd>{key}</kbd>{/each}</dt>
-          <dd>{what}</dd>
-        </div>
-      {/each}
-    </dl>
-    <p class="setting">
-      <button class="btn" aria-pressed={shortcuts} onclick={ontoggleshortcuts}>
-        Single-key shortcuts: {shortcuts ? 'on' : 'off'}
-      </button>
-      <span class="note">Turn them off if you use speech input, so a spoken word can't set one off.</span>
-    </p>
-  </section>
-
-  <section aria-labelledby="info-sound">
-    <h3 id="info-sound"><Icon icon={sound ? faVolumeHigh : faVolumeXmark} /> Sound</h3>
-    <p class="setting">
-      <button class="btn" aria-pressed={sound} onclick={ontogglesound}>Coin clink: {sound ? 'on' : 'off'}</button>
-      <span class="note">A little clink when you save or copy.</span>
-    </p>
-  </section>
-
-  <section aria-labelledby="info-ideas">
-    <h3 id="info-ideas"><Icon icon={faLightbulb} /> Ideas</h3>
-    <p>
-      Fellow worldbuilder?
-      <a href={ref('https://github.com/eurth-org/eurth-government/discussions/categories/ideas')}>
-        <Icon icon={faGithub} /> Table a motion for the roadmap</a
-      >
-      on GitHub. No quorum required.
-    </p>
-  </section>
+      <section aria-labelledby="info-sound">
+        <h3 id="info-sound"><Icon icon={sound ? faVolumeHigh : faVolumeXmark} /> Sound and motion</h3>
+        <p class="setting">
+          <button class="btn" aria-pressed={sound} onclick={ontogglesound}>Coin clink: {sound ? 'on' : 'off'}</button>
+          <span class="note">A little clink when you save or copy.</span>
+        </p>
+        <p class="setting">
+          <button class="btn" aria-pressed={motion.globe} onclick={() => setGlobe(!motion.globe)}>
+            Turning globe: {motion.globe ? 'on' : 'off'}
+          </button>
+          <span class="note">The Eurth globe turns, as on eurth.org. Stop it here.</span>
+        </p>
+      </section>
+    </div>
   </div>
 </dialog>
 
@@ -154,19 +164,21 @@
   .body {
     overflow-y: auto;
     padding: 0 var(--space-4) var(--space-4);
-    columns: 2 380px;
-    column-gap: var(--space-8);
+  }
+
+  @media (min-width: 820px) {
+    .body {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: var(--space-8);
+    }
   }
 
   .body.more {
     mask-image: linear-gradient(to bottom, #000 calc(100% - 56px), transparent);
   }
 
-  section {
-    break-inside: avoid;
-  }
-
-  section:first-child h3 {
+  .column > section:first-child h3 {
     margin-top: var(--space-1);
   }
 

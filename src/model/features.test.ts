@@ -142,3 +142,20 @@ group('JSON export', () => {
     expect(data.link).toBe('https://gov.eurth.org/?c=x');
   });
 });
+
+group('compass as text', () => {
+  it('writes a Mermaid quadrant chart and JSON', async () => {
+    const { compassJson, compassMarkdown } = await import('./compassText');
+    const scores = describe(defaultCountry()).axes;
+    const md = compassMarkdown('Ruritania: the Kingdom', scores, 'examples', 'https://gov.eurth.org/?c=x');
+    expect(md).toContain('```mermaid\nquadrantChart');
+    expect(md).toContain('    Ruritania the Kingdom: [');
+    for (const point of md.matchAll(/: \[([\d.]+), ([\d.]+)\]/g)) {
+      expect(Number(point[1])).toBeGreaterThanOrEqual(0);
+      expect(Number(point[2])).toBeLessThanOrEqual(1);
+    }
+    const data = JSON.parse(compassJson('Ruritania', scores, 'none', 'https://gov.eurth.org/?c=x'));
+    expect(data.references).toEqual([]);
+    expect(data.compass.quadrant).toMatch(/Authoritarian|Libertarian/);
+  });
+});

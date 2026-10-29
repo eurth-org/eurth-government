@@ -91,6 +91,11 @@ function save(blob: Blob, filename: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+/** A text file (Markdown, JSON) made in the browser. */
+export function downloadText(text: string, filename: string, type: string) {
+  save(new Blob([text], { type }), filename);
+}
+
 export function downloadSvg(svg: SVGSVGElement, name: string) {
   save(new Blob([standalone(svg).text], { type: 'image/svg+xml' }), `${name}.svg`);
 }
