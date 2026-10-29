@@ -13,6 +13,8 @@ The Filteries Political Simulator (2016–2018) and its successor StateCrafter a
 5. **Search and compare.** 197 real countries and 18 examples to start from or compare against.
 6. **Works everywhere.** Mobile-first, light and dark, contrast checked by tests.
 
+Have an idea? [Table a motion in Ideas](https://github.com/eurth-org/eurth-government/discussions/categories/ideas) on GitHub Discussions.
+
 ## Phases
 
 Each phase ships on its own.
@@ -38,7 +40,7 @@ Times in UTC. Pull requests are on [GitHub](https://github.com/eurth-org/eurth-g
 | gov.eurth.org (`e8e29dd`) | 29 Oct 2026, 09:22 | Live on gov.eurth.org through Cloudflare |
 | #1 Preview | 29 Oct 2026, 11:32 | Phase 1 model for government; phase 2 tool; eurth.org look; 18 examples; settings in the link; deploy job in CI |
 | #2 Feedback rounds 1 and 2 | 29 Oct 2026, 14:18 | Feedback 1–26: icons, sticky section bar with search, buttons for short lists, citizenship, 197 real countries, picker, draggable scales, spider chart, compass, Markdown and wikitext, Deluminator, budget and Welfare scale, contrast test |
-| #3 Feedback round 3 | In review since 29 Oct 2026, 14:56 (live as a preview) | Feedback 27–52: Eurth blue, Wikipedia links and label icons, one-sentence summary, restricted candidacy, chart downloads, budget pie, grouped and enlargeable compass, find-in-page search, turning globe, this roadmap |
+| #3 Feedback round 3 | In review since 29 Oct 2026, 14:56 (live as a preview) | Feedback 27–53: Eurth blue, Wikipedia links and label icons, one-sentence summary, restricted candidacy, chart downloads, budget pie, grouped and enlargeable compass, find-in-page search, turning globe, this roadmap, suggestions on GitHub Discussions |
 
 ## What's in so far
 
@@ -125,6 +127,7 @@ Every numbered point from the reviews, and the update that did it.
 | 50 | White top-bar buttons with Eurth blue text | Done (#3) |
 | 51 | Keep track of it all here | This file (#3) |
 | 52 | Which update added what, and when | The Updates table and the brackets above (#3) |
+| 53 | Let people suggest roadmap items | GitHub Discussions with an Ideas category, linked from the footer and here (#3) |
 
 ## Ideas
 

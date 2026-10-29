@@ -6,6 +6,7 @@
     faCircleInfo,
     faCodeBranch,
     faHeart,
+    faLightbulb,
     faRotateLeft,
     faUserShield,
   } from '@fortawesome/free-solid-svg-icons';
@@ -303,6 +304,14 @@
         Made with love by <a href="https://iiwiki.com/w/Orioni">Orioni</a>, for Eurth and the people who live in it,
         going strong since 2004. Thanks to <a href="https://www.nationstates.net">NationStates</a>, where Eurth's
         worldbuilding began.
+      </p>
+    </li>
+    <li>
+      <span class="about-icon"><Icon icon={faLightbulb} /></span>
+      <p>
+        Fellow worldbuilder?
+        <a href="https://github.com/eurth-org/eurth-government/discussions/categories/ideas">Table a motion for the roadmap</a>
+        on GitHub. No quorum required.
       </p>
     </li>
     <li>
