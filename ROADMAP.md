@@ -41,7 +41,7 @@ Times in UTC. Pull requests are on [GitHub](https://github.com/eurth-org/eurth-g
 | #1 Preview | 29 Oct 2026, 11:32 | Phase 1 model for government; phase 2 tool; eurth.org look; 18 examples; settings in the link; deploy job in CI |
 | #2 Feedback rounds 1 and 2 | 29 Oct 2026, 14:18 | Feedback 1–26: icons, sticky section bar with search, buttons for short lists, citizenship, 197 real countries, picker, draggable scales, spider chart, compass, Markdown and wikitext, Deluminator, budget and Welfare scale, contrast test |
 | #3 Feedback round 3 | 29 Oct 2026, 15:21 | Feedback 27–57: Eurth blue, Wikipedia links and label icons, one-sentence summary, restricted candidacy, chart downloads, budget pie, grouped and enlargeable compass, find-in-page search, turning globe, this roadmap, suggestions on GitHub Discussions, animated switch icons, small delights, a wobbling shape and a resident spider |
-| #4 Feedback round 4 | 29 Oct 2026, 16:05 | Feedback 58–80: budget legend and treemap, credit on downloads, Random, Save, undo and redo, restore budget, real flags, keyboard shortcuts, plucked edges on the spider chart, smoother movement, sixteen new delights, a 404 page, `?ref` on outgoing links |
+| #4 Feedback round 4 | 29 Oct 2026, 16:05 | Feedback 58–81: budget legend and treemap, credit on downloads, Random, Save, undo and redo, restore budget, real flags, keyboard shortcuts, plucked edges on the spider chart, smoother movement, sixteen new delights, a 404 page, `?ref` on outgoing links, Auto for the theme switch |
 
 ## What's in so far
 
@@ -68,7 +68,7 @@ The update that added each item is in brackets.
 
 **Look and accessibility**
 - eurth.org's look: Eurth blue top bar, the turning Eurth globe, the forum's light and Solarized dark schemes, Font Awesome icons in Eurth's category colours (#1; icons #2; Eurth blue #3).
-- The Deluminator light/dark switch, with its animated sun and moon (#2; animation restored #3).
+- The Deluminator switch, with its animated sun and moon: light, dark, or Auto to follow the device (#2; animation restored #3; Auto #4).
 - Small delights: a shine on each new name, fictional country names as placeholder, a waving flag, popping check marks and more, all off for reduced motion (#3). Round 4 added sixteen more (see feedback 63) and buttons that act out their click (#4).
 - A contrast test for every colour pair in both themes, with the Eurth-blue brand decisions listed as named exceptions (#2; exceptions #3).
 - The favicon is the Eurth globe, turning where the browser allows (#2; turning #3).
@@ -160,6 +160,7 @@ Every numbered point from the reviews, and the update that did it.
 | 78 | Buttons animate when clicked | They press in, and icons act out the click: the reset arrows wind back, the dice tumble (#4) |
 | 79 | Pie chart legend | Done, as in 58 (#4) |
 | 80 | A treemap for the budget | Done (#4) |
+| 81 | Night mode: detect the device, remember the choice, and an Auto option | It always detected and remembered; now the switch also has Auto, as on Eurth's forum. Each click moves on: flip, keep, back to Auto. The tooltip says which comes next (#4) |
 
 ## Ideas
 
