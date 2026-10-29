@@ -233,7 +233,6 @@ Every numbered point from the reviews, and the update that did it.
 
 Not planned yet, but worth keeping:
 
-- From StateCrafter: how closely a country matches named ideologies, and quizzes.
 - Two countries side by side.
 - A guided mode for beginners.
 - Eurth's own countries in the picker and on the compass, once their data is ready.
