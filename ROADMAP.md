@@ -33,7 +33,7 @@ Each phase ships on its own.
 
 | Phase | What | Outcome |
 | --- | --- | --- |
-| **0. Groundwork** | Repo, licence, static site, Worker config, CI | Placeholder page live at government.eurth.org |
+| **0. Groundwork** | Repo, licence, static site, Worker config, CI | Placeholder page live at gov.eurth.org |
 | **1. Model on paper** | Settings, axes and naming rules as data files in our own words, with test cases ("these settings make a parliamentary monarchy") | The model every later phase builds on |
 | **2. Government** | Government settings, the labels with explanations, settings in the link | A first version people can try |
 | **3. Economy and budget** | Sectors, taxes, spending, GDP balance, charts | Economy covered |

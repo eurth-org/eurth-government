@@ -7,5 +7,5 @@
     "directory": "./dist",
     "not_found_handling": "single-page-application"
   },
-  "routes": [{ "pattern": "government.eurth.org", "custom_domain": true }]
+  "routes": [{ "pattern": "gov.eurth.org", "custom_domain": true }]
 }
