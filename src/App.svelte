@@ -6,6 +6,7 @@
     faCircleInfo,
     faCircleQuestion,
     faCodeBranch,
+    faFileExport,
     faFloppyDisk,
     faHeart,
     faRedo,
@@ -25,6 +26,7 @@
   import type { SettingDef } from './model/types';
   import Budget from './ui/Budget.svelte';
   import Compass from './ui/Compass.svelte';
+  import Export from './ui/Export.svelte';
   import Field from './ui/Field.svelte';
   import { clink, setSound, soundOn, toast } from './ui/fun';
   import Globe from './ui/Globe.svelte';
@@ -478,15 +480,19 @@
         <h2 id="checks-title"><Icon icon={panelIcons.checks} /> Worth a second look</h2>
         <ul class="checks">
           {#each profile.checks as check (check.id)}
+            {@const kind = check.severity === 'conflict' ? 'Contradiction' : 'Unusual'}
+            <!-- Laid out like "Why this name": the icon in its own column, the words lined up beside it. -->
             <li class={check.severity} transition:slide={{ duration: calm ? 0 : 200 }}>
-              <span class="severity">
-                <Icon icon={severityIcons[check.severity]} />
-                {check.severity === 'conflict' ? 'Contradiction' : 'Unusual'}
-              </span>
-              {check.message}
-              <button class="link" onclick={() => show(check.dependsOn, check.severity === 'conflict' ? 'Contradiction' : 'Unusual')}>
-                Show settings{check.dependsOn.length > 1 ? ` (${check.dependsOn.length})` : ''}
-              </button>
+              <span class="severity-icon"><Icon icon={severityIcons[check.severity]} /></span>
+              <div>
+                <p class="severity">{kind}</p>
+                <p class="because">{check.message}</p>
+                <p class="label-links">
+                  <button class="link" onclick={() => show(check.dependsOn, kind)}>
+                    Show settings{check.dependsOn.length > 1 ? ` (${check.dependsOn.length})` : ''}
+                  </button>
+                </p>
+              </div>
             </li>
           {/each}
         </ul>
@@ -503,9 +509,9 @@
             <div>
               <p class="label-title">
                 {familyLabels[family]}:
-                <a class="wiki" href={wikipedia(label.wiki)} target="_blank" rel="noopener" title="{label.wiki} on Wikipedia">
+                <a class="wiki" href={wikipedia(label.wiki)} title="{label.wiki} on Wikipedia">
                   <strong>{label.label}</strong>
-                  <span class="visually-hidden">(Wikipedia, opens in a new tab)</span>
+                  <span class="visually-hidden">(Wikipedia)</span>
                 </a>
               </p>
               <p class="because">{label.because}</p>
@@ -541,7 +547,12 @@
         <span title="The share icon, designed by the late, great Alex King"><Icon icon={faShareNodes} /></span>
         Save &amp; share
       </h2>
-      <Share name={shownName} {country} {profile} {link} onsave={saveCountry} />
+      <Share name={shownName} {profile} {link} onsave={saveCountry} />
+    </section>
+
+    <section class="panel" aria-labelledby="export-title">
+      <h2 id="export-title"><Icon icon={faFileExport} /> Export</h2>
+      <Export name={shownName} {country} {profile} {link} />
     </section>
   </section>
 </main>
@@ -607,7 +618,10 @@
 <style>
   /* Top bar and header, as on eurth.org. The bar is Eurth blue; its links are white pills with
      Eurth blue text, so the bar stays two colours (a brand exception in contrast.test.ts). */
+  /* The bars stack above the sticky section bar (z-index 2), so their tooltips show over it. */
   .topbar {
+    position: relative;
+    z-index: 4;
     background: var(--eurth-blue);
     padding: 0 var(--space-4);
   }
@@ -693,6 +707,8 @@
   }
 
   .header {
+    position: relative;
+    z-index: 3;
     background: var(--header);
     padding: var(--space-2) var(--space-4);
   }
@@ -719,11 +735,18 @@
     border-radius: var(--radius-control);
   }
 
+  /* The name as eurth.org writes its own: heavy capitals in Eurth blue (large text, 3:1 is enough). */
   .title {
     margin: 0;
-    font-size: 22px;
-    font-weight: 700;
-    line-height: 1.2;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    line-height: 1.1;
+    text-transform: uppercase;
+  }
+
+  .title .home {
+    color: var(--eurth-blue);
   }
 
   .tagline {
@@ -766,8 +789,15 @@
     gap: 2px;
   }
 
+  /* Every header tool is the same height; the icon-only ones are square. */
+  .actions .btn {
+    height: 36px;
+  }
+
   .icon-only {
-    padding: 6px 9px;
+    justify-content: center;
+    width: 36px;
+    padding: 0;
   }
 
   .actions .btn:disabled {
@@ -864,25 +894,34 @@
     padding: 0;
     list-style: none;
     display: grid;
-    gap: var(--space-3);
+    gap: var(--space-4);
+  }
+
+  .checks li {
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    gap: var(--space-2);
+  }
+
+  .severity-icon {
+    padding-top: 2px;
+    font-size: 16px;
   }
 
   .severity {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    margin-right: var(--space-1);
+    margin: 0;
+    color: var(--ink-muted);
     font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
   }
 
-  .unusual .severity :global(.icon) {
+  .unusual .severity-icon {
     color: var(--unusual);
   }
 
-  .conflict .severity :global(.icon) {
+  .conflict .severity-icon {
     color: var(--danger);
   }
 

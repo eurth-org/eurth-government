@@ -2,7 +2,7 @@ import { describe as group, expect, it } from 'vitest';
 import { compassPoint } from './compass';
 import { defaultCountry, describe, scoreAxes } from './engine';
 import { examples } from './examples';
-import { article, sentence, summary, toMarkdown, toWikitext } from './formats';
+import { article, sentence, summary, toJson, toMarkdown, toWikitext } from './formats';
 import { suggest } from './suggest';
 import { motto } from './motto';
 import { randomCountry } from './random';
@@ -126,5 +126,19 @@ group('fictional names for Random', () => {
     for (const n of fictionalNames) expect(n.from.length).toBeGreaterThan(3);
     const real = new Set(countries.map((c) => c.name.toLowerCase()));
     expect(names.filter((n) => real.has(n.toLowerCase()))).toEqual([]);
+  });
+});
+
+group('JSON export', () => {
+  it('holds the profile and the raw settings', () => {
+    const country = defaultCountry();
+    const profile = describe(country);
+    const data = JSON.parse(toJson('Ruritania', country, profile, 'https://gov.eurth.org/?c=x'));
+    expect(data.name).toBe('Ruritania');
+    expect(data.government).toBe(profile.name);
+    expect(Object.values(data.budget as Record<string, number>).reduce((a, b) => a + b, 0)).toBe(100);
+    expect(Object.keys(data.scales)).toHaveLength(profile.axes.length);
+    expect(data.settings).toEqual(country);
+    expect(data.link).toBe('https://gov.eurth.org/?c=x');
   });
 });

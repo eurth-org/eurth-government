@@ -34,6 +34,13 @@
     ontoggleshortcuts: () => void;
   } = $props();
   let dialog: HTMLDialogElement;
+  let body = $state<HTMLDivElement>();
+
+  // Is there more below? Then the bottom edge fades, as a hint to scroll.
+  let more = $state(false);
+  function measure() {
+    if (body) more = body.scrollTop + body.clientHeight < body.scrollHeight - 4;
+  }
 
   const mac = /Mac|iPhone|iPad/.test(navigator.platform);
   const mod = mac ? '⌘' : 'Ctrl';
@@ -52,14 +59,19 @@
   $effect(() => {
     if (open && !dialog.open) dialog.showModal();
     if (!open && dialog.open) dialog.close();
+    if (open) requestAnimationFrame(measure);
   });
 </script>
 
+<svelte:window onresize={measure} />
+
 <dialog bind:this={dialog} onclose={onclose} aria-labelledby="info-title">
+  <!-- The title and Close stay in view; only the text below scrolls. -->
   <div class="top">
     <h2 id="info-title"><Icon icon={faCircleQuestion} /> About Governmint</h2>
     <button class="btn close" aria-label="Close" onclick={() => dialog.close()}><Icon icon={faXmark} /></button>
   </div>
+  <div class="body" class:more bind:this={body} onscroll={measure}>
 
   <section aria-labelledby="info-what">
     <h3 id="info-what"><Icon icon={faCircleInfo} /> What it does</h3>
@@ -117,18 +129,45 @@
       on GitHub. No quorum required.
     </p>
   </section>
+  </div>
 </dialog>
 
 <style>
+  /* Wide enough on a desktop to read everything at a glance, in two columns; one column on
+     a phone, where the text scrolls under a fixed title and Close. */
   dialog {
-    width: min(560px, calc(100vw - 2 * var(--space-4)));
-    max-height: min(760px, calc(100dvh - 2 * var(--space-4)));
-    padding: var(--space-4);
+    width: min(980px, calc(100vw - 2 * var(--space-4)));
+    max-height: min(820px, calc(100dvh - 2 * var(--space-4)));
+    padding: 0;
     border: 1px solid var(--line);
     border-radius: var(--radius-panel);
     background: var(--surface-raised);
     color: var(--ink);
+    overflow: hidden;
+  }
+
+  dialog[open] {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .body {
     overflow-y: auto;
+    padding: 0 var(--space-4) var(--space-4);
+    columns: 2 380px;
+    column-gap: var(--space-8);
+  }
+
+  .body.more {
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 56px), transparent);
+  }
+
+  section {
+    break-inside: avoid;
+  }
+
+  section:first-child h3 {
+    margin-top: var(--space-1);
   }
 
   dialog::backdrop {
@@ -137,9 +176,10 @@
 
   .top {
     display: flex;
+    flex: none;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: var(--space-2);
+    padding: var(--space-4) var(--space-4) var(--space-2);
   }
 
   h2,

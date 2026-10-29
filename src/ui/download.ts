@@ -95,7 +95,8 @@ export function downloadSvg(svg: SVGSVGElement, name: string) {
   save(new Blob([standalone(svg).text], { type: 'image/svg+xml' }), `${name}.svg`);
 }
 
-export async function downloadPng(svg: SVGSVGElement, name: string, scale = 3) {
+/** The chart drawn on a canvas, `scale` times its size, as a PNG or WebP. */
+async function render(svg: SVGSVGElement, type: string, scale = 3): Promise<Blob> {
   const { text, width, height } = standalone(svg);
   const image = new Image();
   image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(text)}`;
@@ -104,5 +105,29 @@ export async function downloadPng(svg: SVGSVGElement, name: string, scale = 3) {
   canvas.width = width * scale;
   canvas.height = height * scale;
   canvas.getContext('2d')?.drawImage(image, 0, 0, canvas.width, canvas.height);
-  canvas.toBlob((blob) => blob && save(blob, `${name}.png`), 'image/png');
+  return new Promise((resolve, reject) =>
+    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('No image'))), type, 0.92),
+  );
 }
+
+export async function downloadImage(svg: SVGSVGElement, name: string, format: 'png' | 'webp') {
+  save(await render(svg, `image/${format}`), `${name}.${format}`);
+}
+
+/** Puts the chart on the clipboard as a PNG, to paste into a chat, a post or a document. */
+export function copyImage(svg: SVGSVGElement): Promise<void> {
+  return navigator.clipboard.write([new ClipboardItem({ 'image/png': render(svg, 'image/png') })]);
+}
+
+/** Whether this browser can make WebP images (Safari, for one, can't yet). */
+export const canWebp = (() => {
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = 1;
+    return canvas.toDataURL('image/webp').startsWith('data:image/webp');
+  } catch {
+    return false;
+  }
+})();
+
+export const canCopyImage = typeof ClipboardItem !== 'undefined' && typeof navigator.clipboard?.write === 'function';

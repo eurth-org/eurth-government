@@ -139,22 +139,50 @@
   Each area's share of all government spending. Move one and the others make room, so the total stays at 100%.
 </p>
 
-<div class="chart-modes" role="radiogroup" aria-label="Chart">
-  <label class="pill mode">
-    <input type="radio" name="budget-chart" value="bar" bind:group={chart} />
-    <span class="check"><Icon icon={faCheck} /></span>
-    <Icon icon={faChartSimple} /> Bar
-  </label>
-  <label class="pill mode">
-    <input type="radio" name="budget-chart" value="pie" bind:group={chart} />
-    <span class="check"><Icon icon={faCheck} /></span>
-    <Icon icon={faChartPie} /> Pie
-  </label>
-  <label class="pill mode">
-    <input type="radio" name="budget-chart" value="treemap" bind:group={chart} />
-    <span class="check"><Icon icon={faCheck} /></span>
-    <Icon icon={faTableCellsLarge} /> Treemap
-  </label>
+<!-- Chart types on the left; ways back to an earlier budget on the right. -->
+<div class="toolbar">
+  <div class="chart-modes" role="radiogroup" aria-label="Chart">
+    <label class="pill mode">
+      <input type="radio" name="budget-chart" value="bar" bind:group={chart} />
+      <span class="check"><Icon icon={faCheck} /></span>
+      <Icon icon={faChartSimple} />
+      <span class="steady" data-text="Bar">Bar</span>
+    </label>
+    <label class="pill mode">
+      <input type="radio" name="budget-chart" value="pie" bind:group={chart} />
+      <span class="check"><Icon icon={faCheck} /></span>
+      <Icon icon={faChartPie} />
+      <span class="steady" data-text="Pie">Pie</span>
+    </label>
+    <label class="pill mode">
+      <input type="radio" name="budget-chart" value="treemap" bind:group={chart} />
+      <span class="check"><Icon icon={faCheck} /></span>
+      <Icon icon={faTableCellsLarge} />
+      <span class="steady" data-text="Treemap">Treemap</span>
+    </label>
+  </div>
+  <div class="budget-actions">
+    <button
+      class="btn"
+      data-click="spin-back"
+      disabled={same(baseline)}
+      data-tip="Back to the budget this country started with"
+      onclick={() => onchange(withBudget(country, budgetOf(baseline)))}
+    >
+      <Icon icon={faClockRotateLeft} /> Restore budget
+    </button>
+    {#if !baselineIsDefault}
+      <button
+        class="btn"
+        data-click="spin-back"
+        disabled={same(fresh)}
+        data-tip="Governmint's default shares"
+        onclick={() => onchange(withBudget(country, budgetOf(fresh)))}
+      >
+        <Icon icon={faRotateLeft} /> Default budget
+      </button>
+    {/if}
+  </div>
 </div>
 
 <div class="chart" bind:this={wrapper} role="presentation" onpointerleave={() => (tip = null)}>
@@ -260,28 +288,6 @@
   {/each}
 </ul>
 
-<div class="budget-actions">
-  <button
-    class="btn"
-    data-click="spin-back"
-    disabled={same(baseline)}
-    title="Back to the budget this country started with"
-    onclick={() => onchange(withBudget(country, budgetOf(baseline)))}
-  >
-    <Icon icon={faClockRotateLeft} /> Restore budget
-  </button>
-  {#if !baselineIsDefault}
-    <button
-      class="btn"
-      data-click="spin-back"
-      disabled={same(fresh)}
-      title="Governmint's default shares"
-      onclick={() => onchange(withBudget(country, budgetOf(fresh)))}
-    >
-      <Icon icon={faRotateLeft} /> Default budget
-    </button>
-  {/if}
-</div>
 
 <style>
   .intro {
@@ -290,14 +296,23 @@
     font-size: 13px;
   }
 
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+  }
+
   .chart-modes {
     display: flex;
+    flex-wrap: wrap;
     gap: var(--space-2);
-    margin-bottom: var(--space-2);
   }
 
   .mode {
-    padding: 3px 10px;
+    --pad: 10px;
+    padding-block: 3px;
     font-size: 13px;
   }
 
@@ -385,6 +400,11 @@
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-2);
+  }
+
+  .budget-actions .btn {
+    padding: 3px 10px;
+    font-size: 13px;
   }
 
   .budget-actions .btn:disabled {

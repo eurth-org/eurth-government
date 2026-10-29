@@ -30,13 +30,17 @@
       <label class="pill mode">
         <input type="radio" name={group} {value} bind:group={mode} />
         <span class="check"><Icon icon={faCheck} /></span>
-        <span>{text}</span>
+        <span class="steady" data-text={text}>{text}</span>
       </label>
     {/each}
   </div>
 {/snippet}
 
-{@render modePicker('compass-mode')}
+<!-- Reference points on the left, Enlarge on the right. -->
+<div class="toolbar">
+  {@render modePicker('compass-mode')}
+  <button class="btn enlarge" onclick={() => dialog.showModal()}><Icon icon={faExpand} /> Enlarge</button>
+</div>
 <CompassChart {scores} {mode} bind:svg={small} />
 
 <dl class="explain">
@@ -57,10 +61,7 @@
   </div>
 </dl>
 
-<div class="actions">
-  <button class="btn" onclick={() => dialog.showModal()}><Icon icon={faExpand} /> Enlarge</button>
-  <Download svg={() => small} name="{name} compass" />
-</div>
+<Download svg={() => small} name="{name} compass" />
 
 <dialog bind:this={dialog} aria-labelledby="compass-large-title">
   <div class="top">
@@ -73,15 +74,32 @@
 </dialog>
 
 <style>
-  .modes {
+  .toolbar {
     display: flex;
     flex-wrap: wrap;
+    justify-content: space-between;
     gap: var(--space-2);
     margin-bottom: var(--space-2);
   }
 
-  .mode {
+  .modes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  dialog .modes {
+    margin-bottom: var(--space-2);
+  }
+
+  .enlarge {
     padding: 3px 10px;
+    font-size: 13px;
+  }
+
+  .mode {
+    --pad: 10px;
+    padding-block: 3px;
     font-size: 13px;
   }
 
@@ -108,18 +126,6 @@
   dd {
     display: inline;
     margin: 0;
-  }
-
-  .actions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--space-3);
-    margin-top: var(--space-3);
-  }
-
-  .actions :global(.download) {
-    margin-top: 0;
   }
 
   dialog {
