@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { faCrown, faFlag } from '@fortawesome/free-solid-svg-icons';
+  import { faArrowRight, faCrown, faDice, faFlag } from '@fortawesome/free-solid-svg-icons';
   import { onDestroy, untrack } from 'svelte';
   import type { Profile } from '../model/engine';
   import { sentence } from '../model/formats';
@@ -9,14 +9,27 @@
   /**
    * The country's name card. New names are freshly minted: they type themselves out, a coin
    * flips and a seal stamps down. Monarchies get a crown on the flag, theocracies a halo, and a
-   * real country its own flag. None of the movement happens for reduced motion.
+   * real country its own flag. None of the movement happens for reduced motion. The dice beside
+   * the name roll a random country; typing a real country's name offers its real government.
    */
   let {
     name = $bindable(),
     profile,
     seed,
     flag,
-  }: { name: string; profile: Profile; seed: string; flag?: string } = $props();
+    onrandom,
+    real,
+    onreal,
+  }: {
+    name: string;
+    profile: Profile;
+    seed: string;
+    flag?: string;
+    onrandom: () => void;
+    /** The real country whose name was typed, if any. */
+    real?: { name: string; flag: string };
+    onreal: () => void;
+  } = $props();
 
   const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const monarchy = $derived(/monarch/i.test(profile.labels.form.label));
@@ -37,35 +50,18 @@
     placeholder = 'Your country';
   }
 
-  // Typewriter: the new name types itself out in about a third of a second.
-  let typed = $state(untrack(() => profile.name));
+  // A new name is minted: it types itself out (a CSS reveal over the one copy of the name, so
+  // screen readers and read-aloud tools get it once), the coin flips and the seal stamps down.
   let minted = $state(0);
-  let typing: ReturnType<typeof setInterval> | undefined;
   let previous = untrack(() => profile.name);
   $effect(() => {
     const next = profile.name;
     if (next === previous) return;
     previous = next;
     minted += 1;
-    clearInterval(typing);
-    if (calm) {
-      typed = next;
-      return;
-    }
-    let shown = 0;
-    const step = Math.max(1, Math.ceil(next.length / 18));
-    typed = '';
-    typing = setInterval(() => {
-      shown = Math.min(next.length, shown + step);
-      typed = next.slice(0, shown);
-      if (shown >= next.length) clearInterval(typing);
-    }, 18);
   });
 
-  onDestroy(() => {
-    clearInterval(typing);
-    clearInterval(suggesting);
-  });
+  onDestroy(() => clearInterval(suggesting));
 </script>
 
 <label class="kicker" for="country-name">
@@ -80,16 +76,30 @@
   </span>
   Country name
 </label>
-<input
-  id="country-name"
-  class="name-input"
-  {placeholder}
-  bind:value={name}
-  onfocus={suggestNames}
-  onblur={stopSuggesting}
-/>
+<div class="name-row">
+  <input
+    id="country-name"
+    class="name-input"
+    {placeholder}
+    bind:value={name}
+    onfocus={suggestNames}
+    onblur={stopSuggesting}
+  />
+  <button class="btn btn-primary dice" data-click="tumble" aria-label="Roll a random country" data-tip="Roll a random country (R)" onclick={onrandom}>
+    <Icon icon={faDice} />
+  </button>
+</div>
+{#if real}
+  <button class="real" onclick={onreal}>
+    <img src="/flags/{real.flag}.svg" alt="" width="16" height="16" />
+    <span>Real country: load its actual government</span>
+    <span class="visually-hidden">({real.name})</span>
+    <Icon icon={faArrowRight} />
+  </button>
+{/if}
 
-<div class="title-row">
+<!-- The coin hangs beside the name, the motto and the summary, so all three share one edge. -->
+<div class="card">
   {#key minted}
     <span class="coin" class:flipping={minted > 0 && !calm} aria-hidden="true">
       <span class="face front">
@@ -98,20 +108,21 @@
       <span class="face back"><img src="/apple-touch-icon.png" alt="" /></span>
     </span>
   {/key}
-  <h1>
-    <span class="visually-hidden" aria-live="polite">{profile.name}</span>
+  <div class="title">
+    <h2 class="government" aria-live="polite">
+      {#key minted}
+        <span class="minted" class:typing={minted > 0 && !calm}>{profile.name}</span>
+      {/key}
+    </h2>
     {#key minted}
-      <span class="minted" aria-hidden="true">{typed}</span>
+      {#if minted > 0 && !calm}
+        <span class="seal" aria-hidden="true">Freshly minted</span>
+      {/if}
     {/key}
-  </h1>
-  {#key minted}
-    {#if minted > 0 && !calm}
-      <span class="seal" aria-hidden="true">Freshly minted</span>
-    {/if}
-  {/key}
+  </div>
+  <p class="motto">“{motto(profile, seed)}”</p>
+  <p class="sentence">{sentence(name.trim() || 'This country', profile)}</p>
 </div>
-<p class="motto">“{motto(profile, seed)}”</p>
-<p class="sentence">{sentence(name.trim() || 'This country', profile)}</p>
 
 <style>
   .kicker {
@@ -163,28 +174,88 @@
     top: -13px;
   }
 
-  .name-input {
-    width: 100%;
+  /* The name field and the dice, joined into one control of one height. */
+  .name-row {
+    display: flex;
     margin: var(--space-1) 0 var(--space-3);
+  }
+
+  .name-input {
+    flex: 1;
+    min-width: 0;
     padding: 4px 8px;
     border: 1px solid var(--line-strong);
-    border-radius: var(--radius-control);
+    border-right: 0;
+    border-radius: var(--radius-control) 0 0 var(--radius-control);
     background: var(--surface);
     font-weight: 600;
   }
 
-  .title-row {
-    position: relative;
-    display: flex;
-    align-items: flex-start;
-    gap: var(--space-2);
+  .dice {
+    padding: 0 12px;
+    border-radius: 0 var(--radius-control) var(--radius-control) 0;
+    font-size: 16px;
   }
 
-  h1 {
+  .dice:hover {
+    transform: none;
+  }
+
+  /* Typed a real country's name: its real government is a click away. */
+  .real {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: calc(-1 * var(--space-2)) 0 var(--space-3);
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--accent-text);
+    font-size: 13px;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .real:hover {
+    text-decoration: underline;
+  }
+
+  .real img {
+    width: 16px;
+    height: 16px;
+  }
+
+  .card {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr);
+    column-gap: var(--space-2);
+  }
+
+  .card > :not(.coin) {
+    grid-column: 2;
+  }
+
+  .title {
+    position: relative;
+  }
+
+  .government {
     margin: 0;
     font-size: 24px;
     line-height: 1.25;
     min-height: 1.25em;
+  }
+
+  /* The typewriter: the name is uncovered from left to right, a few letters at a time. */
+  .typing {
+    animation: type 0.45s steps(16, end);
+  }
+
+  @keyframes type {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
   }
 
   .minted {
@@ -194,7 +265,9 @@
   /* A coin with the flag on one side and the yurt on the other, flipped once per new name. */
   .coin {
     position: relative;
-    flex: none;
+    grid-column: 1;
+    grid-row: 1 / span 3;
+    align-self: start;
     width: 24px;
     height: 24px;
     margin-top: 3px;

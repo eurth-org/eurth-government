@@ -56,8 +56,9 @@
   function pluck(i: number, event: PointerEvent) {
     touches += 1;
     if (touches >= 3 && !spider && !calm) {
-      target = toChart(event);
-      spider = { x: 0, y: -radius, turn: 180 };
+      target = onWeb(toChart(event));
+      spider = { ...home, turn: 180 };
+      since = performance.now();
       crawl();
     }
     if (calm) return;
@@ -90,13 +91,27 @@
   let svg = $state<SVGSVGElement>();
   let hovered = $state<number | null>(null);
 
-  // The spider crawls after the pointer at its own pace, on a thread from the top of the web.
-  // It leaves when the pointer does, and the count of twangs starts again.
+  // The spider crawls after the pointer at its own pace, on a thread from the top of the web,
+  // and never off the web. After a while it loses interest and climbs back up its thread. It
+  // also leaves when the pointer does; either way, the count of twangs starts again.
   const [spiderWidth, , , , spiderPath] = faSpider.icon;
+  const home = { x: 0, y: -radius };
+  const patience = 7000;
   let spider = $state<{ x: number; y: number; turn: number } | null>(null);
   let touches = 0;
   let target = { x: 0, y: 0 };
+  let since = 0;
   let frame = 0;
+
+  /** The point brought inside the web: as far out as the outer ring allows in its direction. */
+  function onWeb(p: { x: number; y: number }): { x: number; y: number } {
+    const r = Math.hypot(p.x, p.y);
+    if (!r) return p;
+    const sector = (Math.PI * 2) / count;
+    const turn = (((Math.atan2(p.y, p.x) - angle(0)) % sector) + sector) % sector;
+    const edge = (radius * Math.cos(sector / 2)) / Math.cos(turn - sector / 2);
+    return r <= edge ? p : { x: (p.x / r) * edge, y: (p.y / r) * edge };
+  }
 
   function toChart(event: PointerEvent): { x: number; y: number } {
     const matrix = svg?.getScreenCTM();
@@ -109,11 +124,19 @@
   }
 
   function crawl() {
-    frame = requestAnimationFrame(() => {
+    frame = requestAnimationFrame((now) => {
       if (!spider) return;
-      const dx = target.x - spider.x;
-      const dy = target.y - spider.y;
+      const bored = now - since > patience;
+      const goal = bored ? home : target;
+      const dx = goal.x - spider.x;
+      const dy = goal.y - spider.y;
       const distance = Math.hypot(dx, dy);
+      if (bored && distance <= 0.5) {
+        // Home: up the thread and gone.
+        spider = null;
+        touches = 0;
+        return;
+      }
       if (distance > 0.5) {
         const step = Math.min(distance, 1.6);
         spider = {
@@ -149,7 +172,7 @@
   viewBox="-200 -135 400 270"
   role="img"
   aria-label="Spider chart: {summary}"
-  onpointermove={(e) => spider && (target = toChart(e))}
+  onpointermove={(e) => spider && (target = onWeb(toChart(e)))}
   onpointerleave={leave}
 >
   <g class="web">

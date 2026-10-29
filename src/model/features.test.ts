@@ -116,3 +116,15 @@ group('mottos', () => {
     }
   });
 });
+
+group('fictional names for Random', () => {
+  it('are unique, credited, and not real countries', async () => {
+    const { fictionalNames } = await import('./names');
+    const { countries } = await import('./countries');
+    const names = fictionalNames.map((n) => n.name);
+    expect(new Set(names).size).toBe(names.length);
+    for (const n of fictionalNames) expect(n.from.length).toBeGreaterThan(3);
+    const real = new Set(countries.map((c) => c.name.toLowerCase()));
+    expect(names.filter((n) => real.has(n.toLowerCase()))).toEqual([]);
+  });
+});

@@ -6,6 +6,7 @@
     faChevronUp,
     faFlag,
     faMagnifyingGlass,
+    faXmark,
     type IconDefinition,
   } from '@fortawesome/free-solid-svg-icons';
   import Icon from './Icon.svelte';
@@ -24,8 +25,10 @@
     hitCounts,
     hitCount,
     hit,
+    review = null,
     onsearch,
     onstep,
+    onclose,
   }: {
     sections: Section[];
     current: string;
@@ -35,11 +38,18 @@
     hitCount: number;
     /** Which match the visitor is on, from 0. */
     hit: number;
+    /**
+     * Settings picked out elsewhere (a check's "Show settings", a label's "Based on"), named
+     * here. They stay highlighted, and the visitor steps through them, until closed.
+     */
+    review?: string | null;
     onsearch: (query: string) => void;
     onstep: (direction: 1 | -1) => void;
+    onclose: () => void;
   } = $props();
 
   let query = $state('');
+  const reviewing = $derived(!!review && !query.trim());
   let timer: ReturnType<typeof setTimeout> | undefined;
   let list: HTMLUListElement;
 
@@ -119,8 +129,12 @@
     >
       <label class="visually-hidden" for="setting-search">Search settings</label>
       <Icon icon={faMagnifyingGlass} />
+      {#if reviewing}
+        <span class="review">{review}</span>
+      {/if}
       <input
         id="setting-search"
+        class:hidden={reviewing}
         type="search"
         placeholder="Search settings"
         bind:value={query}
@@ -133,13 +147,18 @@
           }
         }}
       />
-      {#if query.trim()}
+      {#if query.trim() || reviewing}
         <span class="found" aria-live="polite">{hitCount ? `${hit + 1} of ${hitCount}` : 'No matches'}</span>
-        <button class="step" type="button" aria-label="Previous match" disabled={!hitCount} onclick={() => onstep(-1)}>
+        <button class="step" type="button" aria-label="Previous" disabled={!hitCount} onclick={() => onstep(-1)}>
           <Icon icon={faChevronUp} />
         </button>
-        <button class="step" type="submit" aria-label="Next match" disabled={!hitCount}>
+        <button class="step" type="submit" aria-label="Next" disabled={!hitCount}>
           <Icon icon={faChevronDown} />
+        </button>
+      {/if}
+      {#if reviewing}
+        <button class="step" type="button" aria-label="Done" onclick={onclose}>
+          <Icon icon={faXmark} />
         </button>
       {/if}
     </form>
@@ -228,6 +247,21 @@
   .search:focus-within {
     outline: 2px solid var(--focus-ring);
     outline-offset: 2px;
+  }
+
+  /* While stepping through picked-out settings, their name stands in for the search box. */
+  .review {
+    max-width: 11rem;
+    padding: 6px 0;
+    overflow: hidden;
+    color: var(--ink);
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .search input.hidden {
+    display: none;
   }
 
   .found {

@@ -509,3 +509,46 @@ html.vt-shrink::view-transition-new(root) {
     transform: rotate(60deg);
   }
 }
+
+/* Tooltips for buttons: data-tip holds the text (aria-label carries it for screen readers).
+   They appear under the button at once, aligned to its right edge so they stay on screen, stay
+   while pointed at, and go with Escape (WCAG 1.4.13). */
+[data-tip] {
+  position: relative;
+}
+
+[data-tip]:hover::after,
+[data-tip]:focus-visible::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  padding: 3px 8px;
+  border-radius: var(--radius-control);
+  background: var(--ink);
+  color: var(--surface);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+/* Escape hides tooltips until the pointer moves again (ui/fun.ts). */
+.tips-hidden [data-tip]::after {
+  display: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-tip]:hover::after,
+  [data-tip]:focus-visible::after {
+    animation: tip-in 0.15s ease-out;
+  }
+}
+
+@keyframes tip-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+}

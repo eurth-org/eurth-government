@@ -80,6 +80,19 @@
 
   const tiles = $derived(treemap(parts, (p) => p.share, 0, 0, 440, 220));
 
+  /**
+   * Text on a tile: white, unless white falls below WCAG's 3:1 on that colour (the minimum for
+   * bold labels and graphics), and then near-black.
+   */
+  function ink(hex: string): string {
+    const channel = (i: number) => {
+      const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    };
+    const light = 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5);
+    return 1.05 / (light + 0.05) >= 3 ? '#ffffff' : '#1c1c1c';
+  }
+
   function show(event: PointerEvent, label: string, share: number) {
     const box = wrapper.getBoundingClientRect();
     tip = { text: `${label}: ${share}%`, x: event.clientX - box.left, y: event.clientY - box.top };
@@ -188,21 +201,24 @@
     <svg bind:this={svg} viewBox="0 0 440 324" role="img" aria-label="Budget: {summary}">
       {#each tiles as tile (tile.item.id)}
         {@const part = tile.item}
-        <g
-          class="part tile"
-          role="presentation"
-          onpointermove={(e) => show(e, part.def.label, part.exact)}
-        >
-          <rect x={tile.x} y={tile.y} width={tile.w} height={tile.h} fill={part.colour}
+        {@const colour = ink(part.colour)}
+        <g class="part tile" role="presentation" onpointermove={(e) => show(e, part.def.label, part.exact)}>
+          <rect x={tile.x + 1} y={tile.y + 1} width={Math.max(0, tile.w - 2)} height={Math.max(0, tile.h - 2)} rx="3" fill={part.colour}
             ><title>{part.def.label}: {part.exact}%</title></rect
           >
-          {#if tile.w >= 44 && tile.h >= 40}
-            <svg x={tile.x + 7} y={tile.y + 7} width="14" height="14" viewBox={part.glyph.box}>
-              <path d={part.glyph.d} class="tile-glyph" />
+          <!-- The icon first, as there's room: then the share beside it (or under it), then the name. -->
+          {#if tile.w >= 26 && tile.h >= 26}
+            {@const beside = tile.w >= 62 && tile.h >= 30}
+            <svg x={tile.x + 8} y={tile.y + 8} width="15" height="15" viewBox={part.glyph.box}>
+              <path d={part.glyph.d} fill={colour} />
             </svg>
-            <text class="tile-share" x={tile.x + 7} y={tile.y + 32}>{part.exact}%</text>
-            {#if tile.w >= 104 && tile.h >= 56}
-              <text class="tile-label" x={tile.x + 7} y={tile.y + 48}>{part.def.label}</text>
+            {#if beside}
+              <text class="tile-share" x={tile.x + 28} y={tile.y + 16} fill={colour}>{part.exact}%</text>
+              {#if tile.h >= 50 && part.def.label.length * 6.8 + 16 <= tile.w}
+                <text class="tile-label" x={tile.x + 8} y={tile.y + 37} fill={colour}>{part.def.label}</text>
+              {/if}
+            {:else if tile.w >= 38 && tile.h >= 50}
+              <text class="tile-share" x={tile.x + 8} y={tile.y + 36} fill={colour}>{part.exact}%</text>
             {/if}
           {/if}
         </g>
@@ -289,18 +305,17 @@
     position: relative;
   }
 
+  /* Charts line up with the buttons above them, on the left. */
   .chart > svg {
     display: block;
     width: 100%;
     max-width: 540px;
     height: auto;
-    margin: 0 auto;
     overflow: visible;
   }
 
   rect.part,
-  path.part,
-  .tile rect {
+  path.part {
     stroke: var(--surface-raised);
     stroke-width: 1;
   }
@@ -345,14 +360,10 @@
     text-anchor: end;
   }
 
-  /* Labels on the treemap's tiles: white, with a dark edge so they read on every colour. */
+  /* Labels on the treemap's tiles, in white or near-black, whichever reads better. */
   .tile-share,
   .tile-label {
-    fill: #ffffff;
-    stroke: rgb(0 0 0 / 0.45);
-    stroke-width: 3px;
-    stroke-linejoin: round;
-    paint-order: stroke;
+    dominant-baseline: middle;
     pointer-events: none;
   }
 
@@ -366,8 +377,8 @@
     font-weight: 600;
   }
 
-  .tile-glyph {
-    fill: #ffffff;
+  .tile svg {
+    pointer-events: none;
   }
 
   .budget-actions {

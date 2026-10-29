@@ -142,7 +142,7 @@
   bind:this={button}
   class="btn switch"
   aria-label="Theme: {label}"
-  title={label}
+  data-tip={label}
   onclick={toggle}
   onpointerenter={() => (drawn += 1)}
 >
