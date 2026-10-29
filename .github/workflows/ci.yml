@@ -18,3 +18,25 @@ jobs:
       - run: npm run check
       - run: npm test
       - run: npm run build
+
+  # Every push to main that passes the checks goes live on gov.eurth.org.
+  deploy:
+    needs: check
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    concurrency: deploy
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Deploy to gov.eurth.org
+        if: env.CLOUDFLARE_API_TOKEN != ''
+        run: npm run deploy
+      - name: Skip without a token
+        if: env.CLOUDFLARE_API_TOKEN == ''
+        run: echo "::warning::No CLOUDFLARE_API_TOKEN secret, so nothing was deployed. See README, Deployment."

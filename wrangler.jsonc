@@ -2,6 +2,8 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "eurth-government",
+  // The Cloudflare account that holds the eurth.org zone. Not a secret.
+  "account_id": "0954ead81ed9fd06d343580d95902280",
   "compatibility_date": "2026-09-01",
   "assets": {
     "directory": "./dist",

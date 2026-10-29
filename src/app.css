@@ -1,5 +1,5 @@
-/* Tokens from the Eurth design system (tokens.json, October 2026).
-   Light is the forum's light scheme, dark is "Night"; the page follows the visitor's setting. */
+/* Tokens from the Eurth design system, matching eurth.org: the forum's light scheme,
+   and its Solarized dark scheme ("Night"). The page follows the visitor's setting. */
 :root {
   --eurth-blue: #2698d4;
   --night: #002b36;
@@ -7,18 +7,20 @@
 
   --surface: #ffffff;
   --surface-raised: #f8f8f8;
+  --header: #ffffff;
   --line: #e9e9e9;
   --line-strong: #646464;
   --ink: #222222;
   --ink-muted: #646464;
+  --button: #e9e9e9;
   --accent-fill: var(--eurth-blue);
   --on-accent-small: var(--night);
   --accent-text: #1b6fa0;
   --focus-ring: var(--accent-text);
+  --danger: #c80001;
+  --unusual: #f7941d;
 
-  --font-serif: 'Libre Baskerville', Baskerville, Georgia, serif;
-  --font-sans: 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --font-sans: system-ui, Arial, sans-serif;
 
   --space-1: 4px;
   --space-2: 8px;
@@ -26,12 +28,9 @@
   --space-4: 16px;
   --space-6: 24px;
   --space-8: 32px;
-  --space-12: 48px;
-  --space-16: 64px;
 
   --radius-sm: 2px;
-  --radius-md: 12px;
-  --radius-full: 9999px;
+  --radius-panel: 6px;
 
   color-scheme: light dark;
 }
@@ -40,11 +39,14 @@
   :root {
     --surface: var(--night);
     --surface-raised: #0d353f;
+    --header: var(--night);
     --line: #193f47;
     --line-strong: #798c88;
     --ink: var(--parchment);
     --ink-muted: #97a59d;
+    --button: #193f47;
     --accent-text: #3eafe7;
+    --danger: #e45735;
   }
 }
 
@@ -63,13 +65,19 @@ body {
   background: var(--surface);
   color: var(--ink);
   font-family: var(--font-sans);
-  font-size: 16px;
-  line-height: 24px;
-  -webkit-font-smoothing: antialiased;
+  font-size: 15px;
+  line-height: 1.45;
 }
 
 a {
   color: var(--accent-text);
+}
+
+button,
+select,
+input {
+  font: inherit;
+  color: inherit;
 }
 
 :focus-visible {
