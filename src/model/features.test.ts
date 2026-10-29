@@ -4,6 +4,10 @@ import { defaultCountry, describe, scoreAxes } from './engine';
 import { examples } from './examples';
 import { article, sentence, summary, toMarkdown, toWikitext } from './formats';
 import { suggest } from './suggest';
+import { motto } from './motto';
+import { randomCountry } from './random';
+import { budgetTotal } from './budget';
+import { families, type LabelRule } from './naming';
 import type { Country } from './settings';
 
 const byId = (id: string) => examples.find((e) => e.id === id)!.country;
@@ -85,5 +89,30 @@ group('formats', () => {
     expect(wiki).toContain("'''Ruritania''' is a federal presidential republic and a liberal democracy.");
     expect(wiki).toContain('== Government and politics ==');
     expect(wiki.match(/\{\{/g)?.length).toBe(wiki.match(/\}\}/g)?.length);
+  });
+});
+
+group('random countries', () => {
+  it('hold together and add up', () => {
+    let seed = 1;
+    const next = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    for (let i = 0; i < 50; i++) {
+      const c = randomCountry(next);
+      const checks = describe(c).checks;
+      expect(checks.filter((x) => x.severity === 'conflict')).toEqual([]);
+      expect(checks.length).toBeLessThanOrEqual(1);
+      expect(budgetTotal(c)).toBe(100);
+    }
+  });
+});
+
+group('mottos', () => {
+  it('cover every regime, and stay the same for the same country', () => {
+    const profile = describe(byId('american'));
+    expect(motto(profile, 'abc')).toBe(motto(profile, 'abc'));
+    for (const rule of families.regime as readonly LabelRule[]) {
+      const fake = { ...profile, labels: { ...profile.labels, regime: { ...profile.labels.regime, rule: rule.id } } };
+      expect(motto(fake, 'x').length).toBeGreaterThan(3);
+    }
   });
 });

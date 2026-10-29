@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { cubicOut } from 'svelte/easing';
+  import { Tween } from 'svelte/motion';
   import { compassAxes, compassPoint, quadrants } from '../model/compass';
   import { countries } from '../model/countries';
   import { scoreAxes, type AxisScore } from '../model/engine';
@@ -28,6 +30,9 @@
   };
 
   const here = $derived(compassPoint(scores));
+  // This country's dot glides to its new place.
+  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const moving = Tween.of(() => here, { duration: calm ? 0 : 450, easing: cubicOut });
 
   const corners = $derived([
     { name: quadrants.topLeft, x: -half + 6, y: -half + 14, anchor: 'start', swatch: '#bf1e2e' },
@@ -136,11 +141,11 @@
       {/if}
     {/each}
 
-    <circle class="here-ring" cx={here.x * scale} cy={-here.y * scale} r="9" />
+    <circle class="here-ring" cx={moving.current.x * scale} cy={-moving.current.y * scale} r="9" />
     <circle
       class="here"
-      cx={here.x * scale}
-      cy={-here.y * scale}
+      cx={moving.current.x * scale}
+      cy={-moving.current.y * scale}
       r="6"
       role="presentation"
       onpointerenter={(e) => show(e, ['This country'])}

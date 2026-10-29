@@ -1,13 +1,19 @@
 <script lang="ts">
-  import { faBookOpen, faMagnifyingGlass, faXmark } from '@fortawesome/free-solid-svg-icons';
+  import { faBookOpen, faFloppyDisk, faMagnifyingGlass, faTrashCan, faXmark } from '@fortawesome/free-solid-svg-icons';
   import { countries, type Region } from '../model/countries';
   import { describe } from '../model/engine';
   import { examples } from '../model/examples';
+  import { decodeCountry } from '../model/link';
   import type { Country } from '../model/settings';
   import Icon from './Icon.svelte';
+  import { ref } from './ref';
+  import { forget, loadSaved, type Saved } from './saved';
 
-  let { open, onpick, onclose }: { open: boolean; onpick: (country: Country, name: string) => void; onclose: () => void } =
-    $props();
+  let {
+    open,
+    onpick,
+    onclose,
+  }: { open: boolean; onpick: (country: Country, name: string, flag?: string) => void; onclose: () => void } = $props();
 
   interface Entry {
     key: string;
@@ -15,6 +21,8 @@
     government: string;
     regime: string;
     note?: string;
+    /** A real country's ISO code, for its flag. */
+    flag?: string;
     country: Country;
     /** What the search matches against. */
     text: string;
@@ -23,10 +31,10 @@
   const fold = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
   const byTitle = (a: Entry, b: Entry) => a.title.localeCompare(b.title);
 
-  function entry(key: string, title: string, country: Country, note?: string): Entry {
+  function entry(key: string, title: string, country: Country, note?: string, flag?: string): Entry {
     const profile = describe(country);
     const regime = profile.labels.regime.label;
-    return { key, title, government: profile.name, regime, note, country, text: fold(`${title} ${profile.name} ${regime}`) };
+    return { key, title, government: profile.name, regime, note, flag, country, text: fold(`${title} ${profile.name} ${regime}`) };
   }
 
   const exampleEntries = examples.map((e) => entry(`example-${e.id}`, e.title, e.country)).sort(byTitle);
@@ -34,7 +42,7 @@
     region,
     entries: countries
       .filter((c) => c.region === region)
-      .map((c) => entry(`country-${c.code}`, c.name, c.country, c.note))
+      .map((c) => entry(`country-${c.code}`, c.name, c.country, c.note, c.code.toLowerCase()))
       .sort(byTitle),
   }));
 
@@ -42,6 +50,10 @@
   let query = $state('');
   const words = $derived(fold(query).split(/\s+/).filter(Boolean));
   const matches = (e: Entry) => words.every((w) => e.text.includes(w));
+
+  // Countries saved on this device, read again each time the dialog opens.
+  let saved = $state<Saved[]>([]);
+  const shownSaved = $derived(saved.filter((s) => words.every((w) => fold(`${s.name} ${s.government}`).includes(w))));
   const shownExamples = $derived(exampleEntries.filter(matches));
   const shownRegions = $derived(
     regions.map((r) => ({ ...r, entries: r.entries.filter(matches) })).filter((r) => r.entries.length),
@@ -49,14 +61,22 @@
   const shownCountries = $derived(shownRegions.reduce((n, r) => n + r.entries.length, 0));
 
   $effect(() => {
+    if (open) saved = loadSaved();
     if (open && !dialog.open) dialog.showModal();
     if (!open && dialog.open) dialog.close();
   });
 
   function pick(e: Entry, isCountry: boolean) {
-    onpick(structuredClone(e.country), isCountry ? e.title : '');
+    onpick(structuredClone(e.country), isCountry ? e.title : '', e.flag);
     dialog.close();
   }
+
+  function pickSaved(s: Saved) {
+    onpick(decodeCountry(s.code), s.name === 'Your country' ? '' : s.name, s.flag);
+    dialog.close();
+  }
+
+  const savedOn = (at: string) => new Date(at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 </script>
 
 <dialog bind:this={dialog} onclose={onclose} aria-labelledby="picker-title">
@@ -78,6 +98,28 @@
   </div>
 
   <div class="lists">
+    {#if shownSaved.length}
+      <section aria-labelledby="saved-title">
+        <h3 id="saved-title"><Icon icon={faFloppyDisk} /> Saved on this device <span class="count">{shownSaved.length}</span></h3>
+        <ul>
+          {#each shownSaved as s (s.name + s.code)}
+            <li class="saved">
+              <button onclick={() => pickSaved(s)}>
+                <span class="title">
+                  {#if s.flag}<img class="flag" src="/flags/{s.flag}.svg" alt="" width="16" height="16" />{/if}
+                  {s.name}
+                </span>
+                <span class="meta">{s.government} · saved {savedOn(s.at)}</span>
+              </button>
+              <button class="forget" aria-label="Forget {s.name}" title="Forget" onclick={() => (saved = forget(s))}>
+                <Icon icon={faTrashCan} />
+              </button>
+            </li>
+          {/each}
+        </ul>
+      </section>
+    {/if}
+
     <section aria-labelledby="examples-title">
       <h3 id="examples-title">Examples <span class="count">{shownExamples.length}</span></h3>
       {#if shownExamples.length}
@@ -101,7 +143,7 @@
       <p class="about">
         Approximate, as of 2026: institutions follow each constitution, and how free elections are follows the
         consensus of election observers. Spot a mistake?
-        <a href="https://github.com/eurth-org/eurth-government/issues">Tell us on GitHub</a>.
+        <a href={ref('https://github.com/eurth-org/eurth-government/issues')}>Tell us on GitHub</a>.
       </p>
       {#each shownRegions as r (r.region)}
         <h4>{r.region}</h4>
@@ -109,7 +151,10 @@
           {#each r.entries as e (e.key)}
             <li>
               <button onclick={() => pick(e, true)}>
-                <span class="title">{e.title}</span>
+                <span class="title">
+                  <img class="flag" src="/flags/{e.flag}.svg" alt="" width="16" height="16" loading="lazy" />
+                  {e.title}
+                </span>
                 <span class="meta">{e.government} · {e.regime}</span>
                 {#if e.note}<span class="note">{e.note}</span>{/if}
               </button>
@@ -248,7 +293,37 @@
   }
 
   .title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     font-weight: 600;
+  }
+
+  .flag {
+    flex: none;
+    width: 16px;
+    height: 16px;
+  }
+
+  .saved {
+    display: flex;
+    align-items: stretch;
+  }
+
+  .saved > button:first-child {
+    flex: 1;
+  }
+
+  li .forget {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    padding: 0;
+    color: var(--ink-muted);
+  }
+
+  li .forget:hover {
+    color: var(--danger);
   }
 
   .meta,

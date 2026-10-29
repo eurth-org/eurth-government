@@ -1,8 +1,11 @@
 <script lang="ts">
+  import { cubicOut } from 'svelte/easing';
+  import { Tween } from 'svelte/motion';
   import { axes, type AxisId } from '../model/axes';
   import type { AxisScore } from '../model/engine';
   import type { Country, SettingId } from '../model/settings';
   import { describeSuggestion, suggest, type Suggestion } from '../model/suggest';
+  import { coinBurst, niceWatcher } from './fun';
   import Icon from './Icon.svelte';
   import { axisIcons } from './icons';
 
@@ -21,6 +24,25 @@
   let hint = $state<{ axis: AxisId; direction: 1 | -1; suggestions: Suggestion[] } | null>(null);
 
   const axisDef = (id: AxisId) => axes.find((a) => a.id === id)!;
+
+  // Scores glide to their new values. One that settles on 69 gets a "Nice."; one that reaches
+  // 100% gets a little burst of coins.
+  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const shown = Tween.of(() => scores.map((s) => s.score), { duration: calm ? 0 : 400, easing: cubicOut });
+  const watchers = Object.fromEntries(axes.map((a) => [a.id, niceWatcher()]));
+  const before = new Map<AxisId, number>();
+  $effect(() => {
+    for (const s of scores) {
+      const output = () => document.getElementById(`score-${s.axis}`);
+      watchers[s.axis]!(s.score, output);
+      const previous = before.get(s.axis);
+      if (previous !== undefined && previous < 100 && s.score === 100) {
+        const box = output()?.getBoundingClientRect();
+        if (box) coinBurst(box.left + box.width / 2, box.top + box.height / 2);
+      }
+      before.set(s.axis, s.score);
+    }
+  });
 
   // Dragging a scale asks how to move it: the settings that would are shown and flash.
   function drag(score: AxisScore, value: number) {
@@ -42,19 +64,19 @@
 </script>
 
 <ul class="scales">
-  {#each scores as score (score.axis)}
+  {#each scores as score, i (score.axis)}
     {@const axis = axisDef(score.axis)}
     {@const [lowIcon, highIcon] = axisIcons[score.axis]}
     <li>
       <div class="head">
         <span class="label" title={axis.help}>{axis.label}</span>
-        <span class="score">{score.score}%</span>
+        <span class="score" id="score-{score.axis}">{Math.round(shown.current[i] ?? score.score)}%</span>
       </div>
       <div class="slider">
         <span class="end" title={axis.low}><Icon icon={lowIcon} label={axis.low} /></span>
         <input
           class="range"
-          style:--fill="{score.score}%"
+          style:--fill="{shown.current[i] ?? score.score}%"
           type="range"
           min="0"
           max="100"
