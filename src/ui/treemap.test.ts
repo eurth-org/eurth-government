@@ -29,4 +29,12 @@ describe('treemap', () => {
     expect(treemap([0, 5, 0], (v) => v, 0, 0, 10, 10)).toHaveLength(1);
     expect(treemap([0, 0], (v) => v, 0, 0, 10, 10)).toHaveLength(0);
   });
+
+  it('makes wider tiles when asked', () => {
+    const wide = treemap(values, (v) => v, 0, 0, 440, 220, 2);
+    expect(wide).toHaveLength(values.length);
+    for (const t of wide) expect(t.w * t.h).toBeCloseTo((t.item / 100) * 440 * 220, 6);
+    const ratio = (ts: typeof tiles) => ts.slice(0, 3).reduce((sum, t) => sum + t.w / t.h, 0) / 3;
+    expect(ratio(wide)).toBeGreaterThan(ratio(tiles));
+  });
 });

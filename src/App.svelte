@@ -5,11 +5,17 @@
     faBookOpen,
     faCircleInfo,
     faCircleQuestion,
+    faComments,
+    faCopyright,
     faCodeBranch,
     faFileExport,
     faFloppyDisk,
+    faMap,
+    faNewspaper,
     faHeart,
+    faHeartPulse,
     faRedo,
+    faScaleBalanced,
     faShareNodes,
     faUndo,
   } from '@fortawesome/free-solid-svg-icons';
@@ -30,13 +36,13 @@
   import Field from './ui/Field.svelte';
   import { clink, setSound, soundOn, toast } from './ui/fun';
   import Globe from './ui/Globe.svelte';
-  import Headline from './ui/Headline.svelte';
   import Info from './ui/Info.svelte';
   import NameCard from './ui/NameCard.svelte';
   import { save } from './ui/saved';
   import Icon from './ui/Icon.svelte';
   import { groupIcons, groupSwatches, panelIcons, ruleIcon, severityIcons } from './ui/icons';
   import Picker from './ui/Picker.svelte';
+  import { motion } from './ui/motion.svelte';
   import { setShortcuts, shortcutsOn } from './ui/prefs';
   import { ref, wikipedia } from './ui/ref';
   import Radar from './ui/Radar.svelte';
@@ -244,6 +250,7 @@
     flagFor = countryName;
     flag = countryFlag;
     baseline = $state.snapshot(next) as Country;
+    closeReview();
   }
 
   // Random: a random government with the name of a famous fictional nation, credited.
@@ -444,6 +451,7 @@
             {hits}
             currentHit={hits[hit]}
             name={shownName}
+            {link}
             onchange={(next) => (country = next)}
           />
         {:else}
@@ -539,7 +547,7 @@
 
     <section class="panel" aria-labelledby="compass-title">
       <h2 id="compass-title"><Icon icon={panelIcons.compass} /> Compass</h2>
-      <Compass scores={profile.axes} name={shownName} />
+      <Compass scores={profile.axes} name={shownName} {link} />
     </section>
 
     <section class="panel" aria-labelledby="share-title">
@@ -557,30 +565,24 @@
   </section>
 </main>
 
-<footer id="about" bind:this={footer} class:beating>
+<footer id="about" bind:this={footer} class:beating={beating && motion.on}>
   <h2>With thanks</h2>
   <ul class="about">
     <li>
       <span class="about-icon"><img src={yurt} alt="" width="18" height="18" /></span>
       <p>
-        <a href={ref('https://eurth.org')}>Made by Eurth, a Worldbuilding &amp; Roleplay Writing Community</a>. Built
-        a country you like? Give it a world to live in.
-      </p>
-    </li>
-    <Headline />
-    <li>
-      <span class="about-icon heart"><Icon icon={faHeart} /></span>
-      <p>
-        Made with love by <a href={ref('https://iiwiki.com/w/Orioni')}>Orioni</a>, for Eurth and the people who live
-        in it, going strong since 2004. Thanks to <a href={ref('https://www.nationstates.net')}>NationStates</a>,
-        where Eurth's worldbuilding began.
+        Made with love <span class="heart"><Icon icon={faHeart} /></span> by
+        <a href={ref('https://iiwiki.com/w/Orioni')}>Orioni</a> for
+        <a href={ref('https://eurth.org')}>Eurth, a Worldbuilding &amp; Roleplay Writing Community</a>, and the people
+        who live in it. Going strong since 2004, thanks to <a href={ref('https://www.nationstates.net')}>NationStates</a>,
+        where Eurth's worldbuilding began. Built a country you like? Give it a world to live in.
       </p>
     </li>
     <li>
       <span class="about-icon"><Icon icon={faShareNodes} /></span>
       <p>
         The share icon was designed by the late, great <a href={ref('https://alexking.org')}>Alex King</a>. We never
-        met him, but his work shaped how the web shares things, and how Orioni thinks about design.
+        met him, but his work shaped how the web shares things.
         <span class="heart"><Icon icon={faHeart} label="with love" /></span>
       </p>
     </li>
@@ -602,8 +604,32 @@
         <a href={ref('https://github.com/eurth-org/eurth-government/blob/main/LICENSE')}>Apache 2.0 licence</a>.
       </p>
     </li>
+    <li>
+      <span class="about-icon"><Icon icon={faCopyright} /></span>
+      <p>
+        © 2026 Eurth. Governmint is open source under the Apache 2.0 licence, as above: use it, change it, share it.
+        The countries you make are yours: Governmint keeps no copy, and claims no rights to them.
+      </p>
+    </li>
+    <li>
+      <span class="about-icon"><Icon icon={faScaleBalanced} /></span>
+      <p>
+        Governmint is a worldbuilding tool, made for fiction and fun. Its pictures of real countries are simplified and
+        approximate, as of 2026: not an assessment of any government, and not legal or political advice.
+      </p>
+    </li>
   </ul>
 </footer>
+
+<!-- The rest of Eurth, in a bar like the one at the top. -->
+<nav class="bottombar" aria-label="Eurth">
+  <div class="bar">
+    <a href={ref('https://eurth.org')}><Icon icon={faComments} /> Forums</a>
+    <a href={ref('https://map.eurth.org')}><Icon icon={faMap} /> Map</a>
+    <a href={ref('https://news.eurth.org')}><Icon icon={faNewspaper} /> News</a>
+    <a href={ref('https://status.eurth.org')}><Icon icon={faHeartPulse} /> Status</a>
+  </div>
+</nav>
 
 <Picker open={pickerOpen} onpick={load} onclose={() => (pickerOpen = false)} />
 <Info
@@ -696,12 +722,14 @@
 
   @media (prefers-reduced-motion: reduce) {
     .topbar a,
-    .pill-link {
+    .pill-link,
+    .bottombar a {
       transition: none;
     }
 
     .topbar a:hover,
-    .pill-link:hover {
+    .pill-link:hover,
+    .bottombar a:hover {
       transform: none;
     }
   }
@@ -849,6 +877,11 @@
     padding: var(--space-4);
   }
 
+  /* Nothing in the name card (the stamp, the coin) may reach past its edges and shake the page. */
+  .summary {
+    overflow: clip;
+  }
+
   h2 {
     display: flex;
     align-items: center;
@@ -862,14 +895,30 @@
     display: inline-flex;
   }
 
-  /* The footer's hearts beat three times as it comes into view, and again when pointed at. */
+  /* The footer's hearts beat now and then while it's in view (stopped with the globe, in
+     About), and at once when pointed at. */
   @media (prefers-reduced-motion: no-preference) {
     .beating .heart :global(.icon) {
-      animation: beat 0.9s ease-in-out 0.2s 3;
+      animation: beat-now-and-then 3.2s ease-in-out 0.2s infinite;
     }
 
     .about li:hover .heart :global(.icon) {
       animation: beat 0.9s ease-in-out;
+    }
+  }
+
+  /* A double beat, then a rest. */
+  @keyframes beat-now-and-then {
+    5%,
+    15% {
+      transform: scale(1.3);
+    }
+    10% {
+      transform: scale(1.05);
+    }
+    25%,
+    100% {
+      transform: scale(1);
     }
   }
 
@@ -1032,6 +1081,45 @@
 
   .heart {
     color: #bf1e2e;
+  }
+
+  /* The bottom bar: Eurth blue, with white pills, as at the top. */
+  .bottombar {
+    background: var(--eurth-blue);
+    padding: 0 var(--space-4);
+  }
+
+  .bottombar .bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-2) 0;
+  }
+
+  .bottombar a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: var(--radius-control);
+    background: #ffffff;
+    color: var(--eurth-blue);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition:
+      box-shadow 0.15s,
+      transform 0.15s;
+  }
+
+  .bottombar a:hover {
+    box-shadow: 0 2px 6px rgb(0 0 0 / 0.25);
+    transform: translateY(-1px);
+  }
+
+  .bottombar a:focus-visible {
+    outline-color: #ffffff;
   }
 
   /* For keyboard users: a way past the header, shown when it has focus (WCAG 2.4.1). */

@@ -2,12 +2,19 @@
   import { faCheck, faExpand, faXmark } from '@fortawesome/free-solid-svg-icons';
   import { axes } from '../model/axes';
   import { compassAxes, compassPoint } from '../model/compass';
+  import { compassJson, compassMarkdown } from '../model/compassText';
   import type { AxisScore } from '../model/engine';
   import CompassChart, { type Mode } from './CompassChart.svelte';
   import Download from './Download.svelte';
   import Icon from './Icon.svelte';
 
-  let { scores, name }: { scores: AxisScore[]; name: string } = $props();
+  let { scores, name, link }: { scores: AxisScore[]; name: string; link: string } = $props();
+
+  // The compass as text too: Markdown with a Mermaid chart, and JSON.
+  const texts = $derived([
+    { label: 'Markdown', extension: 'md', type: 'text/markdown', make: () => compassMarkdown(name, scores, mode, link) },
+    { label: 'JSON', extension: 'json', type: 'application/json', make: () => compassJson(name, scores, mode, link) },
+  ]);
 
   let mode = $state<Mode>('examples');
   let small = $state<SVGSVGElement>();
@@ -61,7 +68,7 @@
   </div>
 </dl>
 
-<Download svg={() => small} name="{name} compass" />
+<Download svg={() => small} name="{name} compass" {texts} />
 
 <dialog bind:this={dialog} aria-labelledby="compass-large-title">
   <div class="top">
@@ -70,7 +77,7 @@
   </div>
   {@render modePicker('compass-mode-large')}
   <CompassChart {scores} {mode} half={300} bind:svg={large} />
-  <Download svg={() => large} name="{name} compass" />
+  <Download svg={() => large} name="{name} compass" {texts} />
 </dialog>
 
 <style>

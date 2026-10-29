@@ -1,11 +1,12 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { motion } from './motion.svelte';
 
   /*
    * The Eurth globe from eurth.org: a 240-frame strip, turned by one Web Animation whose speed
-   * eases up and down, so it never jumps or freezes mid-turn. It turns for a few seconds when the
-   * page opens and then winds down (nothing keeps moving: WCAG 2.2.2); pointing at the link or
-   * button it sits in turns it again; and each time `spin` goes up it whirls fast for a while.
+   * eases up and down, so it never jumps or freezes mid-turn. It keeps turning, as on eurth.org,
+   * unless stopped in About (WCAG 2.2.2) or the visitor prefers reduced motion. Pointing at the
+   * link or button it sits in turns it faster, and each time `spin` goes up it whirls for a while.
    */
   let { size = 36, spin = 0 }: { size?: number; spin?: number } = $props();
   const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -13,7 +14,7 @@
   let turning: Animation | undefined;
 
   // What wants it turning, and how fast; it eases towards the fastest of them.
-  const wants = { opening: 0, pointer: 0, whirl: 0 };
+  const wants = { always: 0, opening: 0, pointer: 0, whirl: 0 };
   let speed = 0;
   let frame = 0;
 
@@ -25,7 +26,7 @@
   function ease() {
     frame = 0;
     if (!turning) return;
-    const target = Math.max(wants.opening, wants.pointer, wants.whirl);
+    const target = Math.max(wants.always, wants.opening, wants.pointer, wants.whirl);
     speed += (target - speed) * 0.06;
     if (Math.abs(target - speed) < 0.01) speed = target;
     if (speed === 0) {
@@ -49,13 +50,14 @@
 
     // Point at (or tab to) the link or button around it to turn it.
     const host = globe.closest<HTMLElement>('a, button');
-    const on = () => want('pointer', 1);
+    const on = () => want('pointer', motion.on ? 2.5 : 1);
     const off = () => want('pointer', 0);
     host?.addEventListener('pointerenter', on);
     host?.addEventListener('pointerleave', off);
     host?.addEventListener('focus', on);
     host?.addEventListener('blur', off);
 
+    want('always', motion.on ? 1 : 0);
     want('opening', 1);
     const opening = setTimeout(() => want('opening', 0), 5000);
     return () => {
@@ -67,6 +69,12 @@
       host?.removeEventListener('blur', off);
       turning?.cancel();
     };
+  });
+
+  // Switched on or off in About.
+  $effect(() => {
+    const on = motion.on;
+    if (turning) want('always', on ? 1 : 0);
   });
 
   $effect(() => {

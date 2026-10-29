@@ -53,6 +53,7 @@
   // A new name is minted: it types itself out (a CSS reveal over the one copy of the name, so
   // screen readers and read-aloud tools get it once), the coin flips and the seal stamps down.
   let minted = $state(0);
+  let cardHeight = $state(0);
   let previous = untrack(() => profile.name);
   $effect(() => {
     const next = profile.name;
@@ -98,8 +99,10 @@
   </button>
 {/if}
 
-<!-- The coin hangs beside the name, the motto and the summary, so all three share one edge. -->
-<div class="card">
+<!-- The coin hangs beside the name, the motto and the summary, so all three share one edge.
+     When a new name is longer or shorter, the card grows or shrinks smoothly instead of jumping. -->
+<div class="card-size" style:height={cardHeight ? `${cardHeight + 14}px` : undefined}>
+<div class="card" bind:clientHeight={cardHeight}>
   {#key minted}
     <span class="coin" class:flipping={minted > 0 && !calm} aria-hidden="true">
       <span class="face front">
@@ -122,6 +125,7 @@
   </div>
   <p class="motto">“{motto(profile, seed)}”</p>
   <p class="sentence">{sentence(name.trim() || 'This country', profile)}</p>
+</div>
 </div>
 
 <style>
@@ -226,6 +230,20 @@
     height: 16px;
   }
 
+  /* The card's box: it clips the coin's hop and the seal, so they never widen the page, with
+     14px of room above for both. */
+  .card-size {
+    margin-top: -14px;
+    padding-top: 14px;
+    overflow: clip;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .card-size {
+      transition: height 0.3s ease;
+    }
+  }
+
   .card {
     display: grid;
     grid-template-columns: 24px minmax(0, 1fr);
@@ -310,8 +328,8 @@
 
   .seal {
     position: absolute;
-    right: -6px;
-    top: -26px;
+    right: 0;
+    top: -12px;
     display: grid;
     place-items: center;
     width: 64px;

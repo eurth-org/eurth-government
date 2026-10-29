@@ -239,6 +239,12 @@ html.vt-shrink::view-transition-new(root) {
   display: inline-flex;
 }
 
+/* Options whose own icon says enough (chart types, export formats): no check mark, so no room
+   kept for one either. */
+.pill.plain {
+  padding-inline: var(--pad);
+}
+
 /* Text that turns bold when chosen keeps room for its bold self (a hidden bold copy sets the
    width), so the options beside it never shift. Put the text in data-text too. */
 .steady {

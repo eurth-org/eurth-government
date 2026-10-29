@@ -2,15 +2,17 @@
   import {
     faChartPie,
     faChartSimple,
-    faCheck,
     faClockRotateLeft,
+    faLock,
+    faLockOpen,
     faRotateLeft,
     faTableCellsLarge,
   } from '@fortawesome/free-solid-svg-icons';
   import { cubicOut } from 'svelte/easing';
   import { Tween } from 'svelte/motion';
-  import { setShare, withBudget } from '../model/budget';
+  import { setShare, shareRange, withBudget } from '../model/budget';
   import { defaultCountry } from '../model/engine';
+  import { budgetJson, budgetMarkdown } from '../model/formats';
   import { budgetIds, settings, type BudgetId, type Country, type SettingId } from '../model/settings';
   import type { ShareSettingDef } from '../model/types';
   import Download from './Download.svelte';
@@ -26,6 +28,7 @@
     hits = [],
     currentHit,
     name,
+    link,
     onchange,
   }: {
     country: Country;
@@ -36,8 +39,16 @@
     hits?: SettingId[];
     currentHit?: SettingId;
     name: string;
+    /** The country's link, for the Markdown and JSON downloads. */
+    link: string;
     onchange: (country: Country) => void;
   } = $props();
+
+  // The budget as text too: Markdown with a Mermaid pie chart, and JSON.
+  const texts = $derived([
+    { label: 'Markdown', extension: 'md', type: 'text/markdown', make: () => budgetMarkdown(name, country, link) },
+    { label: 'JSON', extension: 'json', type: 'application/json', make: () => budgetJson(name, country, link) },
+  ]);
 
   const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const fresh = defaultCountry();
@@ -78,7 +89,19 @@
     });
   });
 
-  const tiles = $derived(treemap(parts, (p) => p.share, 0, 0, 440, 220));
+  // Tiles about twice as wide as tall, so the names fit beside the shares.
+  const tiles = $derived(treemap(parts, (p) => p.share, 0, 0, 440, 220, 2));
+
+  /** A tile's name in one line if it fits, else two (split at the middle space), else none. */
+  function nameLines(label: string, width: number, height: number): string[] {
+    const fits = (text: string) => text.length * 6.8 + 16 <= width;
+    if (height >= 50 && fits(label)) return [label];
+    const spaces = [...label.matchAll(/ /g)].map((m) => m.index!);
+    if (height < 66 || !spaces.length) return [];
+    const middle = spaces.reduce((best, i) => (Math.abs(i - label.length / 2) < Math.abs(best - label.length / 2) ? i : best));
+    const lines = [label.slice(0, middle), label.slice(middle + 1)];
+    return lines.every(fits) ? lines : [];
+  }
 
   /**
    * Text on a tile: white, unless white falls below WCAG's 3:1 on that colour (the minimum for
@@ -109,8 +132,40 @@
     return `M ${at(start, r2)} A ${r2} ${r2} 0 ${large} 1 ${at(end, r2)} L ${at(end, r1)} A ${r1} ${r1} 0 ${large} 0 ${at(start, r1)} Z`;
   }
 
-  function set(id: BudgetId, value: number) {
-    onchange(setShare(country, id, value));
+  // Locked shares stay put while the others move. Pushing a share past what the locks leave makes
+  // its slider angry (a little red, a shake), and the locks in the way light up.
+  let locks = $state<BudgetId[]>([]);
+  let strained = $state<BudgetId | null>(null);
+  let calming: ReturnType<typeof setTimeout> | undefined;
+  const strainNote = $derived(
+    strained ? `The locked shares leave room for at most ${shareRange(country, strained, locks).max}%.` : '',
+  );
+
+  // A new country starts unlocked.
+  $effect(() => {
+    void baseline;
+    locks = [];
+  });
+
+  function toggleLock(id: BudgetId) {
+    locks = locks.includes(id) ? locks.filter((l) => l !== id) : [...locks, id];
+  }
+
+  function set(id: BudgetId, value: number, slider: HTMLInputElement) {
+    const { min, max } = shareRange(country, id, locks);
+    if (value > max || value < min) {
+      strained = id;
+      clearTimeout(calming);
+      calming = setTimeout(() => (strained = null), 900);
+    }
+    const next = setShare(country, id, value, locks);
+    slider.value = String(next[id]);
+    onchange(next);
+  }
+
+  function resetTo(c: Country) {
+    locks = [];
+    onchange(withBudget(country, budgetOf(c)));
   }
 
   const budgetOf = (c: Country) => Object.fromEntries(budgetIds.map((b) => [b, c[b]]));
@@ -142,21 +197,18 @@
 <!-- Chart types on the left; ways back to an earlier budget on the right. -->
 <div class="toolbar">
   <div class="chart-modes" role="radiogroup" aria-label="Chart">
-    <label class="pill mode">
+    <label class="pill plain mode">
       <input type="radio" name="budget-chart" value="bar" bind:group={chart} />
-      <span class="check"><Icon icon={faCheck} /></span>
       <Icon icon={faChartSimple} />
       <span class="steady" data-text="Bar">Bar</span>
     </label>
-    <label class="pill mode">
+    <label class="pill plain mode">
       <input type="radio" name="budget-chart" value="pie" bind:group={chart} />
-      <span class="check"><Icon icon={faCheck} /></span>
       <Icon icon={faChartPie} />
       <span class="steady" data-text="Pie">Pie</span>
     </label>
-    <label class="pill mode">
+    <label class="pill plain mode">
       <input type="radio" name="budget-chart" value="treemap" bind:group={chart} />
-      <span class="check"><Icon icon={faCheck} /></span>
       <Icon icon={faTableCellsLarge} />
       <span class="steady" data-text="Treemap">Treemap</span>
     </label>
@@ -167,7 +219,7 @@
       data-click="spin-back"
       disabled={same(baseline)}
       data-tip="Back to the budget this country started with"
-      onclick={() => onchange(withBudget(country, budgetOf(baseline)))}
+      onclick={() => resetTo(baseline)}
     >
       <Icon icon={faClockRotateLeft} /> Restore budget
     </button>
@@ -177,7 +229,7 @@
         data-click="spin-back"
         disabled={same(fresh)}
         data-tip="Governmint's default shares"
-        onclick={() => onchange(withBudget(country, budgetOf(fresh)))}
+        onclick={() => resetTo(fresh)}
       >
         <Icon icon={faRotateLeft} /> Default budget
       </button>
@@ -242,9 +294,9 @@
             </svg>
             {#if beside}
               <text class="tile-share" x={tile.x + 28} y={tile.y + 16} fill={colour}>{part.exact}%</text>
-              {#if tile.h >= 50 && part.def.label.length * 6.8 + 16 <= tile.w}
-                <text class="tile-label" x={tile.x + 8} y={tile.y + 37} fill={colour}>{part.def.label}</text>
-              {/if}
+              {#each nameLines(part.def.label, tile.w, tile.h) as line, i (i)}
+                <text class="tile-label" x={tile.x + 8} y={tile.y + 37 + i * 15} fill={colour}>{line}</text>
+              {/each}
             {:else if tile.w >= 38 && tile.h >= 50}
               <text class="tile-share" x={tile.x + 8} y={tile.y + 36} fill={colour}>{part.exact}%</text>
             {/if}
@@ -258,15 +310,18 @@
     <div class="tip" style:left="{tip.x}px" style:top="{tip.y}px" aria-hidden="true">{tip.text}</div>
   {/if}
 </div>
-<Download svg={() => svg} name="{name} budget" />
+<Download svg={() => svg} name="{name} budget" {texts} />
 
 <ul class="lines">
   {#each lines as line (line.id)}
+    {@const locked = locks.includes(line.id)}
     <li
       class="line"
       class:flash={flashing.includes(line.id)}
       class:matched={hits.includes(line.id)}
       class:current={currentHit === line.id}
+      class:angry={strained === line.id}
+      class:locked
       id="field-{line.id}"
     >
       <span class="icon" style:color={line.colour}><Icon icon={line.icon} /></span>
@@ -280,13 +335,25 @@
         min="0"
         max="100"
         value={country[line.id]}
+        disabled={locked}
         aria-describedby="help-{line.id}"
-        oninput={(e) => set(line.id, Number(e.currentTarget.value))}
+        oninput={(e) => set(line.id, Number(e.currentTarget.value), e.currentTarget)}
       />
+      <button
+        class="lock"
+        class:strain={strained !== null && locked}
+        aria-pressed={locked}
+        aria-label="{locked ? 'Unlock' : 'Lock'} {line.def.label} at {country[line.id]}%"
+        data-tip={locked ? 'Unlock' : `Lock at ${country[line.id]}%`}
+        onclick={() => toggleLock(line.id)}
+      >
+        <Icon icon={locked ? faLock : faLockOpen} />
+      </button>
       <p class="help" id="help-{line.id}">{line.def.help}</p>
     </li>
   {/each}
 </ul>
+<p class="visually-hidden" aria-live="polite">{strainNote}</p>
 
 
 <style>
@@ -435,11 +502,11 @@
 
   .line {
     display: grid;
-    grid-template-columns: 22px 1fr auto;
+    grid-template-columns: 22px 1fr auto auto;
     grid-template-areas:
-      'icon label value'
-      'icon slider slider'
-      'icon help help';
+      'icon label value lock'
+      'icon slider slider lock'
+      'icon help help help';
     column-gap: var(--space-2);
     margin: 0 calc(-1 * var(--space-2));
     padding: var(--space-1) var(--space-2);
@@ -472,6 +539,79 @@
     margin: 0;
     color: var(--ink-muted);
     font-size: 13px;
+  }
+
+  /* The lock, to the right of each share. */
+  .lock {
+    grid-area: lock;
+    align-self: center;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    margin-left: var(--space-1);
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: var(--radius-control);
+    background: none;
+    color: var(--ink-muted);
+    cursor: pointer;
+    transition:
+      background-color 0.15s,
+      color 0.15s,
+      box-shadow 0.2s;
+  }
+
+  .lock:hover {
+    background: var(--hover);
+  }
+
+  .locked .lock {
+    color: var(--accent-fill);
+  }
+
+  .locked .range {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  /* Too far: the slider turns a little red and shakes, and the locks in the way light up. */
+  .angry {
+    background: color-mix(in srgb, var(--danger) 14%, transparent);
+  }
+
+  .angry .range {
+    background: linear-gradient(to right, var(--danger) 0 var(--fill), var(--track) var(--fill) 100%);
+  }
+
+  .lock.strain {
+    color: var(--danger);
+    box-shadow: 0 0 0 2px var(--danger);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .angry {
+      animation: shake 0.3s ease-in-out 2;
+    }
+
+    .lock.strain :global(.icon) {
+      animation: pop 0.3s ease-out;
+    }
+  }
+
+  @keyframes shake {
+    20% {
+      transform: translateX(-3px);
+    }
+    40% {
+      transform: translateX(3px);
+    }
+    60% {
+      transform: translateX(-2px);
+    }
+    80% {
+      transform: translateX(2px);
+    }
   }
 
   .matched {

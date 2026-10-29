@@ -2,7 +2,7 @@ import { describe as group, expect, it } from 'vitest';
 import { compassPoint } from './compass';
 import { defaultCountry, describe, scoreAxes } from './engine';
 import { examples } from './examples';
-import { article, sentence, summary, toJson, toMarkdown, toWikitext } from './formats';
+import { article, budgetJson, budgetMarkdown, sentence, summary, toJson, toMarkdown, toWikitext } from './formats';
 import { suggest } from './suggest';
 import { motto } from './motto';
 import { randomCountry } from './random';
@@ -140,5 +140,33 @@ group('JSON export', () => {
     expect(Object.keys(data.scales)).toHaveLength(profile.axes.length);
     expect(data.settings).toEqual(country);
     expect(data.link).toBe('https://gov.eurth.org/?c=x');
+  });
+});
+
+group('compass as text', () => {
+  it('writes a Mermaid quadrant chart and JSON', async () => {
+    const { compassJson, compassMarkdown } = await import('./compassText');
+    const scores = describe(defaultCountry()).axes;
+    const md = compassMarkdown('Ruritania: the Kingdom', scores, 'examples', 'https://gov.eurth.org/?c=x');
+    expect(md).toContain('```mermaid\nquadrantChart');
+    expect(md).toContain('    Ruritania the Kingdom: [');
+    for (const point of md.matchAll(/: \[([\d.]+), ([\d.]+)\]/g)) {
+      expect(Number(point[1])).toBeGreaterThanOrEqual(0);
+      expect(Number(point[2])).toBeLessThanOrEqual(1);
+    }
+    const data = JSON.parse(compassJson('Ruritania', scores, 'none', 'https://gov.eurth.org/?c=x'));
+    expect(data.references).toEqual([]);
+    expect(data.compass.quadrant).toMatch(/Authoritarian|Libertarian/);
+  });
+});
+
+group('budget as text', () => {
+  it('writes a Mermaid pie chart and JSON', () => {
+    const country = defaultCountry();
+    const md = budgetMarkdown('Ruritania', country, 'https://gov.eurth.org/?c=x');
+    expect(md).toContain('```mermaid\npie showData');
+    expect(md).toContain('"Social protection" : 37');
+    const data = JSON.parse(budgetJson('Ruritania', country, 'https://gov.eurth.org/?c=x'));
+    expect(Object.values(data.budget as Record<string, number>).reduce((a, b) => a + b, 0)).toBe(100);
   });
 });

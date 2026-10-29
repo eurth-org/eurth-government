@@ -18,16 +18,31 @@ function apportion(weights: number[], total: number): number[] {
   return whole;
 }
 
-/** Sets one share and scales the others in proportion, so the budget still adds up to 100. */
-export function setShare(country: Country, id: BudgetId, value: number): Country {
-  const share = Math.max(0, Math.min(100, Math.round(value)));
+/**
+ * How far one share can go: the locked shares stay as they are, so it can take at most what they
+ * leave, and if every other share is locked, exactly that.
+ */
+export function shareRange(country: Country, id: BudgetId, locked: readonly BudgetId[] = []): { min: number; max: number } {
   const others = budgetIds.filter((b) => b !== id);
+  const fixed = others.filter((b) => locked.includes(b)).reduce((sum, b) => sum + country[b], 0);
+  const max = Math.max(0, 100 - fixed);
+  return { min: others.every((b) => locked.includes(b)) ? max : 0, max };
+}
+
+/**
+ * Sets one share and scales the unlocked others in proportion, so the budget still adds up to
+ * 100. Locked shares don't move; the share is kept within what they leave (see shareRange).
+ */
+export function setShare(country: Country, id: BudgetId, value: number, locked: readonly BudgetId[] = []): Country {
+  const { min, max } = shareRange(country, id, locked);
+  const share = Math.max(min, Math.min(max, Math.round(value)));
+  const free = budgetIds.filter((b) => b !== id && !locked.includes(b));
   const rest = apportion(
-    others.map((b) => country[b]),
-    100 - share,
+    free.map((b) => country[b]),
+    max - share,
   );
   const next = { ...country, [id]: share };
-  others.forEach((b, i) => (next[b] = rest[i]!));
+  free.forEach((b, i) => (next[b] = rest[i]!));
   return next;
 }
 
