@@ -511,7 +511,8 @@ html.vt-shrink::view-transition-new(root) {
 }
 
 /* Tooltips for buttons: data-tip holds the text (aria-label carries it for screen readers).
-   They appear under the button at once, aligned to its right edge so they stay on screen. */
+   They appear under the button at once, aligned to its right edge so they stay on screen, stay
+   while pointed at, and go with Escape (WCAG 1.4.13). */
 [data-tip] {
   position: relative;
 }
@@ -531,7 +532,11 @@ html.vt-shrink::view-transition-new(root) {
   font-weight: 600;
   line-height: 1.4;
   white-space: nowrap;
-  pointer-events: none;
+}
+
+/* Escape hides tooltips until the pointer moves again (ui/fun.ts). */
+.tips-hidden [data-tip]::after {
+  display: none;
 }
 
 @media (prefers-reduced-motion: no-preference) {

@@ -159,6 +159,13 @@ export function niceWatcher(wait = 800) {
  * Installed once, for the whole page.
  */
 export function clickDelights() {
+  // Escape hides tooltips (app.css) until the pointer moves again.
+  const root = document.documentElement;
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') root.classList.add('tips-hidden');
+  });
+  document.addEventListener('pointermove', () => root.classList.remove('tips-hidden'), { passive: true });
+
   document.addEventListener('click', (event) => {
     if (calm()) return;
     const button = (event.target as Element | null)?.closest<HTMLElement>('.btn, .pill');

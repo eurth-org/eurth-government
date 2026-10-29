@@ -4,17 +4,13 @@
     faArrowUpRightFromSquare,
     faBookOpen,
     faCircleInfo,
+    faCircleQuestion,
     faCodeBranch,
     faFloppyDisk,
     faHeart,
-    faKeyboard,
-    faLightbulb,
     faRedo,
     faShareNodes,
     faUndo,
-    faUserShield,
-    faVolumeHigh,
-    faVolumeXmark,
   } from '@fortawesome/free-solid-svg-icons';
   import { tick, untrack } from 'svelte';
   import { slide } from 'svelte/transition';
@@ -33,12 +29,13 @@
   import { clink, setSound, soundOn, toast } from './ui/fun';
   import Globe from './ui/Globe.svelte';
   import Headline from './ui/Headline.svelte';
+  import Info from './ui/Info.svelte';
   import NameCard from './ui/NameCard.svelte';
   import { save } from './ui/saved';
-  import Shortcuts from './ui/Shortcuts.svelte';
   import Icon from './ui/Icon.svelte';
   import { groupIcons, groupSwatches, panelIcons, ruleIcon, severityIcons } from './ui/icons';
   import Picker from './ui/Picker.svelte';
+  import { setShortcuts, shortcutsOn } from './ui/prefs';
   import { ref, wikipedia } from './ui/ref';
   import Radar from './ui/Radar.svelte';
   import Scales from './ui/Scales.svelte';
@@ -290,21 +287,28 @@
     lastExtent = country.extent;
   });
 
-  // The footer yurt follows Eurth's seasonal avatars.
-  function seasonalYurt(now = new Date()): string {
-    const month = now.getMonth() + 1;
-    const day = now.getDate();
-    if (month === 2) return '/yurt/valentines.gif';
-    if (month === 4 && day >= 16 && day <= 22) return '/yurt/earth-day.svg';
-    if (month === 6) return '/yurt/pride.svg';
-    if (month === 10) return '/yurt/halloween.png';
-    if (month === 12) return '/yurt/december.gif';
-    return yurt;
-  }
-  const footerYurt = seasonalYurt();
 
-  // Keyboard shortcuts, listed with "?". They stay quiet while you type in a field.
-  let shortcutsOpen = $state(false);
+  // The footer's hearts beat a few times each time it comes into view.
+  let footer = $state<HTMLElement>();
+  let beating = $state(false);
+  $effect(() => {
+    if (!footer) return;
+    const observer = new IntersectionObserver(([entry]) => (beating = !!entry?.isIntersecting), { threshold: 0.3 });
+    observer.observe(footer);
+    return () => observer.disconnect();
+  });
+
+  // About Governmint, with the keyboard shortcuts: the "?" button, the About link or the ? key.
+  let infoOpen = $state(false);
+
+  // Keyboard shortcuts. They stay quiet while you type in a field, and the single keys can be
+  // turned off in About, for speech input (WCAG 2.1.4).
+  let shortcuts = $state(shortcutsOn());
+  function toggleShortcuts() {
+    shortcuts = !shortcuts;
+    setShortcuts(shortcuts);
+  }
+
   function keys(event: KeyboardEvent) {
     const target = event.target as HTMLElement;
     const typing = target.matches('input, textarea, select, [contenteditable]');
@@ -316,6 +320,11 @@
       return;
     }
     if (typing || mod || event.altKey || document.querySelector('dialog[open]')) return;
+    if (event.key === 'Escape') {
+      closeReview();
+      return;
+    }
+    if (!shortcuts) return;
     const sectionIds = groups.map((g) => g.id);
     const at = sectionIds.indexOf(current);
     switch (event.key) {
@@ -325,10 +334,7 @@
         document.getElementById('setting-search')?.focus();
         break;
       case '?':
-        shortcutsOpen = true;
-        break;
-      case 'Escape':
-        closeReview();
+        infoOpen = true;
         break;
       case 'e':
       case 'E':
@@ -354,12 +360,15 @@
 
 <svelte:window onkeydown={keys} />
 
+<a class="skip" href="#settings">Skip to the settings</a>
+
 <div class="topbar">
   <div class="bar">
     <nav aria-label="Links">
-      <a href="#about"><Icon icon={faCircleInfo} /> About</a>
+      <button class="pill-link" onclick={() => (infoOpen = true)}><Icon icon={faCircleInfo} /> About</button>
       <a href={ref('https://github.com/eurth-org/eurth-government')}><Icon icon={faGithub} /> GitHub</a>
       <a href={ref('https://eurth.org')}><Icon icon={faArrowUpRightFromSquare} /> Eurth.org</a>
+      <ThemeSwitch />
     </nav>
   </div>
 </div>
@@ -368,16 +377,18 @@
   <div class="bar">
     <div class="brand">
       <!-- Like any site's logo, this one goes home: a fresh, default country. -->
-      <a class="home" href="/" title="Governmint: start afresh">
-        <Globe spin={worldSpin} />
-        <span class="title">Governmint</span>
-      </a>
+      <h1 class="title">
+        <a class="home" href="/" title="Governmint: start afresh">
+          <Globe spin={worldSpin} />
+          Governmint
+        </a>
+      </h1>
       <span class="tagline">Freshly minted governments</span>
       <span class="badge">Preview</span>
     </div>
     <div class="actions">
       <button class="btn" onclick={() => (pickerOpen = true)} data-tip="Start from an example or a real country (E)">
-        <Icon icon={faBookOpen} /> Examples<span class="wide-only">&nbsp;&amp; countries</span>
+        <Icon icon={faBookOpen} /> Examples<span class="wide-only">&amp; countries</span>
       </button>
       <span class="history">
         <button class="btn icon-only" data-click="swing-left" onclick={undo} disabled={!canUndo} aria-label="Undo" data-tip="Undo ({mod}Z)">
@@ -390,7 +401,14 @@
       <button class="btn btn-primary" data-click="bounce" onclick={saveCountry} data-tip="Save on this device and copy the link (S)">
         <Icon icon={faFloppyDisk} /> Save
       </button>
-      <ThemeSwitch />
+      <button
+        class="btn icon-only"
+        aria-label="About Governmint and keyboard shortcuts"
+        data-tip="About and shortcuts (?)"
+        onclick={() => (infoOpen = true)}
+      >
+        <Icon icon={faCircleQuestion} />
+      </button>
     </div>
   </div>
 </header>
@@ -408,8 +426,8 @@
   onclose={closeReview}
 />
 
-<div class="layout">
-  <main class="settings">
+<main class="layout">
+  <div class="settings" id="settings">
     {#each groups as group (group.id)}
       <section class="panel" id={group.id} aria-labelledby="{group.id}-title">
         <h2 id="{group.id}-title">
@@ -440,9 +458,9 @@
         {/if}
       </section>
     {/each}
-  </main>
+  </div>
 
-  <aside class="results" id="results">
+  <section class="results" id="results" aria-label="Result">
     <section class="panel summary">
       <NameCard
         bind:name
@@ -487,6 +505,7 @@
                 {familyLabels[family]}:
                 <a class="wiki" href={wikipedia(label.wiki)} target="_blank" rel="noopener" title="{label.wiki} on Wikipedia">
                   <strong>{label.label}</strong>
+                  <span class="visually-hidden">(Wikipedia, opens in a new tab)</span>
                 </a>
               </p>
               <p class="because">{label.because}</p>
@@ -524,28 +543,14 @@
       </h2>
       <Share name={shownName} {country} {profile} {link} onsave={saveCountry} />
     </section>
-  </aside>
-</div>
+  </section>
+</main>
 
-<footer id="about">
-  <h2>About Governmint</h2>
+<footer id="about" bind:this={footer} class:beating>
+  <h2>With thanks</h2>
   <ul class="about">
     <li>
-      <span class="about-icon"><Icon icon={faCircleInfo} /></span>
-      <p>
-        Set up a country and Governmint names the kind of state you've made, explains why, and points out where the
-        settings contradict each other. This preview covers government and the budget; the economy and law come next.
-      </p>
-    </li>
-    <li>
-      <span class="about-icon"><Icon icon={faUserShield} /></span>
-      <p>
-        A country lives in its link: copy it to share it or come back later. Save keeps a list on this device too, in
-        your browser; nothing is stored anywhere else.
-      </p>
-    </li>
-    <li>
-      <span class="about-icon"><img src={footerYurt} alt="" width="18" height="18" /></span>
+      <span class="about-icon"><img src={yurt} alt="" width="18" height="18" /></span>
       <p>
         <a href={ref('https://eurth.org')}>Made by Eurth, a Worldbuilding &amp; Roleplay Writing Community</a>. Built
         a country you like? Give it a world to live in.
@@ -553,7 +558,7 @@
     </li>
     <Headline />
     <li>
-      <span class="about-icon heart beat"><Icon icon={faHeart} /></span>
+      <span class="about-icon heart"><Icon icon={faHeart} /></span>
       <p>
         Made with love by <a href={ref('https://iiwiki.com/w/Orioni')}>Orioni</a>, for Eurth and the people who live
         in it, going strong since 2004. Thanks to <a href={ref('https://www.nationstates.net')}>NationStates</a>,
@@ -565,32 +570,14 @@
       <p>
         The share icon was designed by the late, great <a href={ref('https://alexking.org')}>Alex King</a>. We never
         met him, but his work shaped how the web shares things, and how Orioni thinks about design.
-        <span class="heart"><Icon icon={faHeart} label="love" /></span>
-      </p>
-    </li>
-    <li>
-      <span class="about-icon"><Icon icon={faLightbulb} /></span>
-      <p>
-        Fellow worldbuilder?
-        <a href={ref('https://github.com/eurth-org/eurth-government/discussions/categories/ideas')}>Table a motion for the roadmap</a>
-        on GitHub. No quorum required.
+        <span class="heart"><Icon icon={faHeart} label="with love" /></span>
       </p>
     </li>
     <li>
       <span class="about-icon"><Icon icon={faWikipediaW} /></span>
       <p>
         Every label links to <a href={ref('https://en.wikipedia.org')}>Wikipedia</a> for the full story. Thank you,
-        Wikipedia <span class="heart"><Icon icon={faHeart} label="love" /></span>
-      </p>
-    </li>
-    <li>
-      <span class="about-icon"><Icon icon={faKeyboard} /></span>
-      <p>
-        Prefer the keyboard? <button class="link" onclick={() => (shortcutsOpen = true)}>Press ? for the shortcuts</button>.
-        And for a little sound when coins change hands:
-        <button class="link sound" aria-pressed={sound} onclick={toggleSound}>
-          <Icon icon={sound ? faVolumeHigh : faVolumeXmark} /> Sound: {sound ? 'on' : 'off'}
-        </button>
+        Wikipedia <span class="heart"><Icon icon={faHeart} label="with love" /></span>
       </p>
     </li>
     <li>
@@ -608,7 +595,14 @@
 </footer>
 
 <Picker open={pickerOpen} onpick={load} onclose={() => (pickerOpen = false)} />
-<Shortcuts open={shortcutsOpen} onclose={() => (shortcutsOpen = false)} />
+<Info
+  open={infoOpen}
+  onclose={() => (infoOpen = false)}
+  {sound}
+  ontogglesound={toggleSound}
+  {shortcuts}
+  ontoggleshortcuts={toggleShortcuts}
+/>
 
 <style>
   /* Top bar and header, as on eurth.org. The bar is Eurth blue; its links are white pills with
@@ -636,7 +630,8 @@
     gap: var(--space-2);
   }
 
-  .topbar a {
+  .topbar a,
+  .pill-link {
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -652,21 +647,47 @@
       transform 0.15s;
   }
 
-  .topbar a:hover {
+  .pill-link {
+    border: 0;
+    font-family: inherit;
+    line-height: inherit;
+    cursor: pointer;
+  }
+
+  .topbar a:hover,
+  .pill-link:hover {
     box-shadow: 0 2px 6px rgb(0 0 0 / 0.25);
     transform: translateY(-1px);
   }
 
-  .topbar a:focus-visible {
+  .topbar a:focus-visible,
+  .pill-link:focus-visible,
+  .topbar :global(.switch:focus-visible) {
     outline-color: #ffffff;
   }
 
+  /* The light and dark switch, as a white pill in the blue bar. */
+  .topbar nav :global(.switch) {
+    width: 34px;
+    height: 27px;
+    border: 0;
+    background: #ffffff;
+    color: var(--eurth-blue);
+  }
+
+  .topbar nav :global(.switch svg) {
+    width: 17px;
+    height: 17px;
+  }
+
   @media (prefers-reduced-motion: reduce) {
-    .topbar a {
+    .topbar a,
+    .pill-link {
       transition: none;
     }
 
-    .topbar a:hover {
+    .topbar a:hover,
+    .pill-link:hover {
       transform: none;
     }
   }
@@ -699,8 +720,10 @@
   }
 
   .title {
+    margin: 0;
     font-size: 22px;
     font-weight: 700;
+    line-height: 1.2;
   }
 
   .tagline {
@@ -809,10 +832,14 @@
     display: inline-flex;
   }
 
+  /* The footer's hearts beat three times as it comes into view, and again when pointed at. */
   @media (prefers-reduced-motion: no-preference) {
-    /* The heart beats. */
-    .about li:hover .beat :global(.icon) {
-      animation: beat 0.8s ease-in-out;
+    .beating .heart :global(.icon) {
+      animation: beat 0.9s ease-in-out 0.2s 3;
+    }
+
+    .about li:hover .heart :global(.icon) {
+      animation: beat 0.9s ease-in-out;
     }
   }
 
@@ -968,13 +995,20 @@
     color: #bf1e2e;
   }
 
-  footer .link {
-    font-size: inherit;
+  /* For keyboard users: a way past the header, shown when it has focus (WCAG 2.4.1). */
+  .skip {
+    position: absolute;
+    left: var(--space-4);
+    top: -100px;
+    z-index: 30;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-control);
+    background: var(--surface);
+    color: var(--accent-text);
+    font-weight: 700;
   }
 
-  .sound {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
+  .skip:focus {
+    top: var(--space-2);
   }
 </style>

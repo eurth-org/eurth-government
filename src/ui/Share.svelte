@@ -1,10 +1,11 @@
 <script lang="ts">
-  import { faCheck, faCopy, faFloppyDisk, faLink } from '@fortawesome/free-solid-svg-icons';
+  import { faCheck, faCopy, faFloppyDisk, faLink, faShareNodes } from '@fortawesome/free-solid-svg-icons';
   import type { Profile } from '../model/engine';
   import { toMarkdown, toWikitext } from '../model/formats';
   import type { Country } from '../model/settings';
   import { clink, paperPlane, toast } from './fun';
   import Icon from './Icon.svelte';
+  import ShareDialog from './ShareDialog.svelte';
 
   let {
     name,
@@ -13,6 +14,8 @@
     link,
     onsave,
   }: { name: string; country: Country; profile: Profile; link: string; onsave: () => void } = $props();
+
+  let sharing = $state(false);
 
   type Format = 'markdown' | 'wikitext';
   let format = $state<Format>('markdown');
@@ -58,10 +61,14 @@
     <Icon icon={copied === 'link' ? faCheck : faLink} />
     {copied === 'link' ? 'Link copied' : 'Copy link'}
   </button>
+  <button class="btn" onclick={() => (sharing = true)}>
+    <Icon icon={faShareNodes} /> Share…
+  </button>
   <button class="btn" data-click="bounce" onclick={onsave}>
     <Icon icon={faFloppyDisk} /> Save on this device
   </button>
 </div>
+<ShareDialog open={sharing} onclose={() => (sharing = false)} {name} {profile} {link} />
 <p class="help">
   The link holds every setting and the name, so it brings this country back exactly. Saved countries are listed under
   Examples &amp; countries, in this browser only.

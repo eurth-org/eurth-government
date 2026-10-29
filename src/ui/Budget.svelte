@@ -80,14 +80,17 @@
 
   const tiles = $derived(treemap(parts, (p) => p.share, 0, 0, 440, 220));
 
-  /** White or near-black, whichever reads better on a tile of this colour (WCAG contrast). */
+  /**
+   * Text on a tile: white, unless white falls below WCAG's 3:1 on that colour (the minimum for
+   * bold labels and graphics), and then near-black.
+   */
   function ink(hex: string): string {
     const channel = (i: number) => {
       const c = parseInt(hex.slice(i, i + 2), 16) / 255;
       return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
     };
     const light = 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5);
-    return 1.05 / (light + 0.05) >= (light + 0.05) / 0.06 ? '#ffffff' : '#1c1c1c';
+    return 1.05 / (light + 0.05) >= 3 ? '#ffffff' : '#1c1c1c';
   }
 
   function show(event: PointerEvent, label: string, share: number) {
@@ -199,21 +202,24 @@
       {#each tiles as tile (tile.item.id)}
         {@const part = tile.item}
         {@const colour = ink(part.colour)}
-        {@const roomy = tile.w >= 62 && tile.h >= 30}
         <g class="part tile" role="presentation" onpointermove={(e) => show(e, part.def.label, part.exact)}>
           <rect x={tile.x + 1} y={tile.y + 1} width={Math.max(0, tile.w - 2)} height={Math.max(0, tile.h - 2)} rx="3" fill={part.colour}
             ><title>{part.def.label}: {part.exact}%</title></rect
           >
-          {#if roomy}
+          <!-- The icon first, as there's room: then the share beside it (or under it), then the name. -->
+          {#if tile.w >= 26 && tile.h >= 26}
+            {@const beside = tile.w >= 62 && tile.h >= 30}
             <svg x={tile.x + 8} y={tile.y + 8} width="15" height="15" viewBox={part.glyph.box}>
               <path d={part.glyph.d} fill={colour} />
             </svg>
-            <text class="tile-share" x={tile.x + 28} y={tile.y + 16} fill={colour}>{part.exact}%</text>
-            {#if tile.h >= 50 && part.def.label.length * 6.8 + 16 <= tile.w}
-              <text class="tile-label" x={tile.x + 8} y={tile.y + 37} fill={colour}>{part.def.label}</text>
+            {#if beside}
+              <text class="tile-share" x={tile.x + 28} y={tile.y + 16} fill={colour}>{part.exact}%</text>
+              {#if tile.h >= 50 && part.def.label.length * 6.8 + 16 <= tile.w}
+                <text class="tile-label" x={tile.x + 8} y={tile.y + 37} fill={colour}>{part.def.label}</text>
+              {/if}
+            {:else if tile.w >= 38 && tile.h >= 50}
+              <text class="tile-share" x={tile.x + 8} y={tile.y + 36} fill={colour}>{part.exact}%</text>
             {/if}
-          {:else if tile.w >= 34 && tile.h >= 22}
-            <text class="tile-share small" x={tile.x + tile.w / 2} y={tile.y + tile.h / 2} fill={colour}>{part.exact}%</text>
           {/if}
         </g>
       {/each}
@@ -364,11 +370,6 @@
   .tile-share {
     font-size: 15px;
     font-weight: 700;
-  }
-
-  .tile-share.small {
-    font-size: 12px;
-    text-anchor: middle;
   }
 
   .tile-label {

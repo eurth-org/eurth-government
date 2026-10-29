@@ -9,8 +9,8 @@
 
 <div class="download">
   <span class="label"><Icon icon={faDownload} /> Download</span>
-  <button class="btn" onclick={() => svg() && downloadPng(svg()!, name)}>PNG</button>
-  <button class="btn" onclick={() => svg() && downloadSvg(svg()!, name)}>SVG</button>
+  <button class="btn" aria-label="Download {name} as PNG" onclick={() => svg() && downloadPng(svg()!, name)}>PNG</button>
+  <button class="btn" aria-label="Download {name} as SVG" onclick={() => svg() && downloadSvg(svg()!, name)}>SVG</button>
 </div>
 
 <style>

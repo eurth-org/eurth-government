@@ -38,7 +38,7 @@
 
 <div class="field" class:flash class:matched class:current id="field-{def.id}">
   {#if buttons}
-    <fieldset>
+    <fieldset aria-describedby="help-{def.id}">
       <legend>{def.question}</legend>
       <div class="options">
         {#each def.options as option (option.id)}
@@ -58,13 +58,13 @@
     </fieldset>
   {:else}
     <label class="question" for={def.id}>{def.question}</label>
-    <select id={def.id} {value} onchange={(e) => onchange(e.currentTarget.value)}>
+    <select id={def.id} {value} aria-describedby="help-{def.id}" onchange={(e) => onchange(e.currentTarget.value)}>
       {#each def.options as option (option.id)}
         <option value={option.id}>{option.label}</option>
       {/each}
     </select>
   {/if}
-  <p class="help">{help}</p>
+  <p class="help" id="help-{def.id}">{help}</p>
 </div>
 
 <style>

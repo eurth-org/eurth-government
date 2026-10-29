@@ -50,35 +50,18 @@
     placeholder = 'Your country';
   }
 
-  // Typewriter: the new name types itself out in about a third of a second.
-  let typed = $state(untrack(() => profile.name));
+  // A new name is minted: it types itself out (a CSS reveal over the one copy of the name, so
+  // screen readers and read-aloud tools get it once), the coin flips and the seal stamps down.
   let minted = $state(0);
-  let typing: ReturnType<typeof setInterval> | undefined;
   let previous = untrack(() => profile.name);
   $effect(() => {
     const next = profile.name;
     if (next === previous) return;
     previous = next;
     minted += 1;
-    clearInterval(typing);
-    if (calm) {
-      typed = next;
-      return;
-    }
-    let shown = 0;
-    const step = Math.max(1, Math.ceil(next.length / 18));
-    typed = '';
-    typing = setInterval(() => {
-      shown = Math.min(next.length, shown + step);
-      typed = next.slice(0, shown);
-      if (shown >= next.length) clearInterval(typing);
-    }, 18);
   });
 
-  onDestroy(() => {
-    clearInterval(typing);
-    clearInterval(suggesting);
-  });
+  onDestroy(() => clearInterval(suggesting));
 </script>
 
 <label class="kicker" for="country-name">
@@ -126,12 +109,11 @@
     </span>
   {/key}
   <div class="title">
-    <h1>
-      <span class="visually-hidden" aria-live="polite">{profile.name}</span>
+    <h2 class="government" aria-live="polite">
       {#key minted}
-        <span class="minted" aria-hidden="true">{typed}</span>
+        <span class="minted" class:typing={minted > 0 && !calm}>{profile.name}</span>
       {/key}
-    </h1>
+    </h2>
     {#key minted}
       {#if minted > 0 && !calm}
         <span class="seal" aria-hidden="true">Freshly minted</span>
@@ -258,11 +240,22 @@
     position: relative;
   }
 
-  h1 {
+  .government {
     margin: 0;
     font-size: 24px;
     line-height: 1.25;
     min-height: 1.25em;
+  }
+
+  /* The typewriter: the name is uncovered from left to right, a few letters at a time. */
+  .typing {
+    animation: type 0.45s steps(16, end);
+  }
+
+  @keyframes type {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
   }
 
   .minted {
