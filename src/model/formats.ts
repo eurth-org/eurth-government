@@ -1,3 +1,4 @@
+import { axes } from './axes';
 import { picked, settingDef, type Profile } from './engine';
 import { familyLabels, type Family } from './naming';
 import { budgetIds, type Country, type SettingId } from './settings';
@@ -154,4 +155,25 @@ export function toWikitext(name: string, country: Country, profile: Profile, lin
     `<!-- Made with Governmint: ${link} -->`,
     '',
   ].join('\n');
+}
+
+/**
+ * JSON, for tools and spreadsheets: the readable profile (labels, institutions, budget, scales
+ * and checks) and the raw settings, which bring the country back exactly.
+ */
+export function toJson(name: string, country: Country, profile: Profile, link: string): string {
+  const data = {
+    name,
+    government: profile.name,
+    summary: summary(name, profile),
+    labels: Object.fromEntries(familyOrder.map((f) => [f, profile.labels[f].label])),
+    institutions: Object.fromEntries(facts(country).map((f) => [f.label, f.value])),
+    budget: Object.fromEntries(budgetIds.map((id) => [settingDef(id).label, country[id]])),
+    scales: Object.fromEntries(profile.axes.map((a) => [axes.find((x) => x.id === a.axis)?.label ?? a.axis, a.score])),
+    checks: profile.checks.map((c) => ({ kind: c.severity, message: c.message })),
+    settings: country,
+    link,
+    madeWith: 'Governmint, https://gov.eurth.org',
+  };
+  return `${JSON.stringify(data, null, 2)}\n`;
 }

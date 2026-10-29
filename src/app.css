@@ -182,11 +182,14 @@ html.vt-shrink::view-transition-new(root) {
 }
 
 .pill {
+  /* --pad is the side padding of a chosen option. Unchosen ones get 9px more on each side: the
+     room the check mark takes (12px, and the 6px gap), so choosing never changes the width. */
+  --pad: 12px;
   position: relative;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 12px;
+  padding: 5px calc(var(--pad) + 9px);
   border: 1px solid var(--line-strong);
   background: var(--surface);
   color: var(--ink);
@@ -223,10 +226,37 @@ html.vt-shrink::view-transition-new(root) {
 /* The check mark in front of a selected option. */
 .pill .check {
   display: none;
+  justify-content: center;
+  width: 12px;
+  font-size: 12px;
+}
+
+.pill:has(input:checked) {
+  padding-inline: var(--pad);
 }
 
 .pill:has(input:checked) .check {
   display: inline-flex;
+}
+
+/* Text that turns bold when chosen keeps room for its bold self (a hidden bold copy sets the
+   width), so the options beside it never shift. Put the text in data-text too. */
+.steady {
+  display: inline-grid;
+}
+
+.steady::after {
+  content: attr(data-text) / '';
+  height: 0;
+  visibility: hidden;
+  font-weight: 700;
+  user-select: none;
+  pointer-events: none;
+}
+
+.steady,
+.steady::after {
+  grid-area: 1 / 1;
 }
 
 .pill:has(input:focus-visible) {
@@ -532,6 +562,12 @@ html.vt-shrink::view-transition-new(root) {
   font-weight: 600;
   line-height: 1.4;
   white-space: nowrap;
+}
+
+/* A tooltip at the left edge of the screen lines up with its button's left edge instead. */
+[data-tip-align='start']::after {
+  right: auto;
+  left: 0;
 }
 
 /* Escape hides tooltips until the pointer moves again (ui/fun.ts). */

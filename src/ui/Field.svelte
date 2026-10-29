@@ -51,7 +51,7 @@
               onchange={() => pick(option.id)}
             />
             <span class="check"><Icon icon={faCheck} /></span>
-            <span>{option.label}</span>
+            <span class="steady" data-text={option.label}>{option.label}</span>
           </label>
         {/each}
       </div>

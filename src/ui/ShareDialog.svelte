@@ -102,14 +102,13 @@
   <ul class="targets">
     {#each targets as t (t.label)}
       <li>
-        <a class="btn" href={t.href} target={t.href.startsWith('mailto:') ? undefined : '_blank'} rel="noopener">
+        <a class="btn" href={t.href}>
           {#if t.icon}
             <span class="target-icon" style:color={t.colour}><Icon icon={t.icon} /></span>
           {:else}
             <img class="target-icon" src={yurt} alt="" width="18" height="18" />
           {/if}
           {t.label}
-          {#if !t.href.startsWith('mailto:')}<span class="visually-hidden">(opens in a new tab)</span>{/if}
         </a>
       </li>
     {/each}

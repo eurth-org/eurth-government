@@ -42,7 +42,8 @@ Times in UTC. Pull requests are on [GitHub](https://github.com/eurth-org/eurth-g
 | #2 Feedback rounds 1 and 2 | 29 Oct 2026, 14:18 | Feedback 1–26: icons, sticky section bar with search, buttons for short lists, citizenship, 197 real countries, picker, draggable scales, spider chart, compass, Markdown and wikitext, Deluminator, budget and Welfare scale, contrast test |
 | #3 Feedback round 3 | 29 Oct 2026, 15:21 | Feedback 27–57: Eurth blue, Wikipedia links and label icons, one-sentence summary, restricted candidacy, chart downloads, budget pie, grouped and enlargeable compass, find-in-page search, turning globe, this roadmap, suggestions on GitHub Discussions, animated switch icons, small delights, a wobbling shape and a resident spider |
 | #4 Feedback round 4 | 29 Oct 2026, 16:21 | Feedback 58–81: budget legend and treemap, credit on downloads, Random, Save, undo and redo, restore budget, real flags, keyboard shortcuts, plucked edges on the spider chart, smoother movement, sixteen new delights, a 404 page, `?ref` on outgoing links, Auto for the theme switch |
-| #5 Feedback round 5 | 29 Oct 2026, 17:10 | Feedback 82–100: a sharing image for link previews, a share window, famous fictional and NationStates nations for Random, the dice beside the name, real countries recognised by name, a tidier header, stepping through a second look, clearer treemap labels, a spider that stays on its web, About in a window and a lighter footer, an accessibility pass |
+| #5 Feedback round 5 | 29 Oct 2026, 17:42 | Feedback 82–100: a sharing image for link previews, a share window, famous fictional and NationStates nations for Random, the dice beside the name, real countries recognised by name, a tidier header, stepping through a second look, clearer treemap labels, a spider that stays on its web, About in a window and a lighter footer, an accessibility pass |
+| #6 Feedback round 6 | 29 Oct 2026, 17:54 | Feedback 101–113: a globe that winds down instead of freezing, the name as on eurth.org, even header tools, tooltips above the sticky bar, the globe as a way back to the top, budget and compass toolbars, an Export panel with JSON, WebP and Copy image, steady options, outside links in new tabs, a roomier About |
 
 ## What's in so far
 
@@ -66,7 +67,7 @@ The update that added each item is in brackets.
 - Scales you can drag: they suggest the changes that would move them, and apply them (#2).
 - A spider chart, a compass with examples or real countries as reference points (grouped where they overlap, enlargeable), and a budget chart as bar, pie or treemap with its legend inside; restore the budget a country started with (#2; grouping, enlarge and pie #3; treemap, legend and restore #4).
 - Share to the Eurth forum, Reddit, Bluesky, X, Facebook, LinkedIn, Tumblr, WhatsApp, Telegram or email, or the device's share sheet (#5).
-- Copy the link, save on this device, Markdown for the Eurth.org forum, wikitext for IIWiki, and PNG or SVG downloads of every chart with a small gov.eurth.org credit, all in the browser (link #1; Markdown and wikitext #2; downloads #3; saving and credit #4).
+- Copy the link, save on this device, Markdown for the Eurth.org forum, wikitext for IIWiki or JSON for tools, and every chart as PNG, SVG or WebP with a small gov.eurth.org credit, or copied as an image, all in the browser (link #1; Markdown and wikitext #2; downloads #3; saving and credit #4; JSON, WebP and Copy image #6).
 - Charts, scales and the compass glide to new values instead of jumping (#4).
 
 **Look and accessibility**
@@ -186,6 +187,19 @@ Every numbered point from the reviews, and the update that did it.
 | 98 | A lighter footer, with About under "?" | About moved to a window behind "?" in the tools (and the About link); the footer keeps thanks, the licence and Eurth (#5) |
 | 99 | The light/dark switch in the blue bar | A white pill beside About, GitHub and Eurth.org (#5) |
 | 100 | Check WCAG, without touching the colours | Done, colours untouched; see Look and accessibility above (#5) |
+| 101 | The header globe sometimes stops turning | It turns for five seconds on opening and then rests, by design (WCAG 2.2.2), but it froze mid-turn, and jumped when the "whole world" whirl ended. It now speeds up and winds down smoothly, through one Web Animation (#6) |
+| 102 | "Governmint" in capitals, Eurth blue, as on eurth.org | Done; as large bold text, it meets WCAG's 3:1 (#6) |
+| 103 | Header buttons of one size | All 36px high; the icon-only ones square (#6) |
+| 104 | Tooltips hidden under the sticky bar | The top bar and header now stack above it; all tooltips checked (#6) |
+| 105 | The globe as a way back to the top | Once the header has scrolled away, the globe joins the sticky bar; it turns, and takes you back up (#6) |
+| 106 | Budget buttons at the top | Chart types on the left, Restore and Default on the right (#6) |
+| 107 | Copy link, Share, Save to this device in one row | Done (#6) |
+| 108 | The text formats in their own area | An Export panel: Markdown, wikitext and now JSON, with Copy below (#6) |
+| 109 | Enlarge beside the compass's buttons; more download formats | Done; every chart now downloads as PNG, SVG or WebP (where the browser can make it), or copies as an image to paste anywhere (#6) |
+| 110 | Line up "Worth a second look" | Laid out like "Why this name" (#6) |
+| 111 | Outside links in a new tab | All of them, with a note for screen readers (#6) |
+| 112 | Options change width when chosen | Room is kept for the check mark and the bold text, so nothing moves (#6) |
+| 113 | About: Close scrolls away, more text hidden below, too narrow | Title and Close stay put, the bottom fades while there's more, and on a desktop it's wide, in two columns (#6) |
 
 ## Ideas
 
