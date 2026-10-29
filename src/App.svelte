@@ -233,7 +233,7 @@
 
     <section class="panel" aria-labelledby="compass-title">
       <h2 id="compass-title"><Icon icon={panelIcons.compass} /> Compass</h2>
-      <Compass scores={profile.axes} />
+      <Compass scores={profile.axes} name={shownName} />
     </section>
 
     <section class="panel" aria-labelledby="share-title">
