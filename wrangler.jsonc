@@ -1,0 +1,11 @@
+// A static site: the Worker only serves the files Vite builds into dist/.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "eurth-government",
+  "compatibility_date": "2026-09-01",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  },
+  "routes": [{ "pattern": "government.eurth.org", "custom_domain": true }]
+}
