@@ -31,13 +31,13 @@ Not planned: accounts, saved galleries, comments, or anything else that needs a 
 
 Each phase ships on its own.
 
-| Phase | What | Outcome |
-| --- | --- | --- |
-| **0. Groundwork** | Repo, licence, static site, Worker config, CI | Placeholder page live at gov.eurth.org |
-| **1. Model on paper** | Settings, axes and naming rules as data files in our own words, with test cases ("these settings make a parliamentary monarchy") | The model every later phase builds on |
-| **2. Government** | Government settings, the labels with explanations, settings in the link | A first version people can try |
-| **3. Economy and budget** | Sectors, taxes, spending, GDP balance, charts | Economy covered |
-| **4. Law and society** | The legal or illegal settings, grouped clearly | Society covered |
-| **5. Sharing** | Wiki, BBCode, Markdown and image exports; examples; contradiction checks | Ready to use in real worldbuilding |
-| **6. Discover** | Filter and compare a world's countries, starting with Eurth | Depends on a country dataset |
-| **7. Launch** | Replace old Filteries links in Eurth's Worldbuilding Tools docs, announce on the forum and Discord, add to status.eurth.org | Live and findable |
+| Phase | What | Outcome | Status |
+| --- | --- | --- | --- |
+| **0. Groundwork** | Repo, licence, static site, Worker config, CI, automatic deploys | Site live at gov.eurth.org | Done |
+| **1. Model** | Settings, axes, naming rules and checks as data files in our own words, with test cases ("these settings make a parliamentary monarchy"); see [docs/model.md](docs/model.md) | The model every later phase builds on | Done for government |
+| **2. Government** | The tool itself: government settings, the labels with explanations, axes, contradiction checks, examples, settings in the link | A first version people can try | Preview |
+| **3. Economy and budget** | Sectors, taxes, spending, GDP balance, charts | Economy covered | |
+| **4. Law and society** | The legal or illegal settings, grouped clearly | Society covered | |
+| **5. Sharing** | Wiki, BBCode, Markdown and image exports | Ready to use in real worldbuilding | |
+| **6. Discover** | Filter and compare a world's countries, starting with Eurth | Depends on a country dataset | |
+| **7. Launch** | Replace old Filteries links in Eurth's Worldbuilding Tools docs, announce on the forum and Discord, add to status.eurth.org | Live and findable | |

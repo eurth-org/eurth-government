@@ -4,14 +4,15 @@ Freshly minted governments. A free web tool for designing a country's government
 
 Live page: https://gov.eurth.org
 
-Status: phase 0, groundwork. See [ROADMAP.md](ROADMAP.md) for what's planned.
+Status: preview. Government settings work; economy and law come next. See [ROADMAP.md](ROADMAP.md).
 
 ## How it works
 
-- A static site built with Vite, Svelte and TypeScript. There is no server, database or account: everything runs in the browser, and a country's settings will live in its link.
+- A static site built with Vite, Svelte and TypeScript. There is no server, database or account: everything runs in the browser, and a country's settings live in its link (`?c=…`).
+- The model in `src/model/` is data plus a small engine: settings, axes, naming rules and contradiction checks. [docs/model.md](docs/model.md) explains it and how to change it.
 - A Cloudflare Worker serves the built files from `dist/` on the `gov.eurth.org` custom domain (`wrangler.jsonc`). It runs no code of its own.
 - `public/_headers` sets security and caching headers, and allows embedding on eurth.org.
-- Colours, type and spacing come from the Eurth design system (`src/app.css`). The page follows the visitor's light or dark setting.
+- The look follows eurth.org and the Eurth design system (`src/app.css`), in the visitor's light or dark setting.
 
 ## Local development
 
@@ -27,15 +28,14 @@ npm run build    # static build into dist/
 
 The site runs as the `eurth-government` Worker on the Cloudflare account that holds the eurth.org zone. The custom domain in `wrangler.jsonc` owns the `gov.eurth.org` DNS record.
 
-To deploy by hand, from a machine logged in with `npx wrangler login`:
+GitHub Actions (`.github/workflows/ci.yml`) checks, tests and builds every push and pull request. Pushes to `main` that pass are deployed to gov.eurth.org.
 
-```bash
-npm run deploy   # build, then upload dist/ to the Worker
-```
+Deploying needs one repository secret, `CLOUDFLARE_API_TOKEN`. To create or replace it:
 
-To deploy on every push to `main`, connect the repository once in the Cloudflare dashboard: Workers & Pages → `eurth-government` → Settings → Build → Connect, with build command `npm run build` and deploy command `npx wrangler deploy`.
+1. Open [this pre-filled token form](https://dash.cloudflare.com/profile/api-tokens?permissionGroupKeys=%5B%7B%22key%22%3A%22workers_scripts%22%2C%22type%22%3A%22edit%22%7D%2C%7B%22key%22%3A%22workers_routes%22%2C%22type%22%3A%22edit%22%7D%5D&accountId=%2A&zoneId=all&name=Governmint%20deploys%20from%20GitHub) (Workers Scripts and Workers Routes, edit), choose **Continue to summary**, then **Create Token**, and copy it.
+2. Run `gh secret set CLOUDFLARE_API_TOKEN --repo eurth-org/eurth-government` and paste it.
 
-GitHub Actions (`.github/workflows/ci.yml`) only checks, tests and builds; it needs no secrets.
+Without the secret, the deploy step is skipped with a warning. To deploy by hand from a machine logged in with `npx wrangler login`, run `npm run deploy`.
 
 ## Written from scratch
 

@@ -1,0 +1,196 @@
+import { defaultCountry } from './engine';
+import type { Country } from './settings';
+
+export interface Example {
+  id: string;
+  /** Shown in the examples menu. */
+  title: string;
+  country: Country;
+}
+
+function example(id: string, title: string, changes: Partial<Country>): Example {
+  return { id, title, country: { ...defaultCountry(), ...changes } };
+}
+
+/**
+ * Ready-made countries, loosely modelled on familiar systems. They are starting points
+ * in the tool and test cases for the naming rules (examples.test.ts).
+ */
+export const examples: Example[] = [
+  example('westminster', 'Westminster-style monarchy', {
+    territory: 'devolved',
+    headOfState: 'monarch',
+    headOfStateSelection: 'inherited',
+    government: 'pm-legislature',
+    legislature: 'partly-elected',
+    chambers: 'two',
+    electoralSystem: 'majoritarian',
+    courts: 'independent',
+    religion: 'established',
+  }),
+  example('american', 'American-style federal republic', {
+    territory: 'federal',
+    headOfStateSelection: 'people',
+    government: 'head-of-state',
+    chambers: 'two',
+    electoralSystem: 'majoritarian',
+    foreignPolicy: 'interventionist',
+  }),
+  example('french', 'French-style semi-presidential republic', {
+    headOfStateSelection: 'people',
+    government: 'pm-shared',
+    legislature: 'partly-elected',
+    chambers: 'two',
+    electoralSystem: 'majoritarian',
+  }),
+  example('german', 'German-style federal parliamentary republic', {
+    territory: 'federal',
+    chambers: 'two',
+    electoralSystem: 'mixed',
+  }),
+  example('swiss', 'Swiss-style directorial confederation', {
+    territory: 'federal',
+    headOfState: 'council',
+    government: 'council',
+    chambers: 'two',
+    foreignPolicy: 'neutral',
+    conscription: 'selective',
+  }),
+  example('malaysian', 'Elective monarchy of rulers', {
+    territory: 'federal',
+    headOfState: 'monarch',
+    headOfStateSelection: 'electors',
+    chambers: 'two',
+    electoralSystem: 'majoritarian',
+    religion: 'state-religion',
+  }),
+  example('one-party', 'One-party people’s republic', {
+    headOfStateSelection: 'legislature',
+    government: 'pm-head-of-state',
+    legislature: 'indirect',
+    elections: 'managed',
+    parties: 'one',
+    courts: 'controlled',
+    rulers: 'party',
+    religion: 'state-atheism',
+    conscription: 'selective',
+    immigration: 'restrictive',
+  }),
+  example('hereditary-one-party', 'Hereditary one-party republic', {
+    headOfStateSelection: 'inherited',
+    government: 'head-of-state',
+    legislature: 'elected',
+    elections: 'managed',
+    parties: 'one',
+    courts: 'controlled',
+    rulers: 'party',
+    religion: 'state-atheism',
+    foreignPolicy: 'expansionist',
+    conscription: 'universal',
+    immigration: 'closed',
+  }),
+  example('managed', 'Managed semi-presidential federation', {
+    territory: 'federal',
+    headOfStateSelection: 'people',
+    government: 'pm-shared',
+    chambers: 'two',
+    electoralSystem: 'mixed',
+    elections: 'managed',
+    courts: 'controlled',
+    foreignPolicy: 'expansionist',
+    conscription: 'universal',
+  }),
+  example('absolute-monarchy', 'Absolute monarchy', {
+    headOfState: 'monarch',
+    headOfStateSelection: 'inherited',
+    government: 'head-of-state',
+    legislature: 'advisory',
+    elections: 'none',
+    parties: 'none',
+    courts: 'religious',
+    rulers: 'nobility',
+    religion: 'state-religion',
+    immigration: 'restrictive',
+  }),
+  example('semi-constitutional', 'Semi-constitutional monarchy', {
+    headOfState: 'monarch',
+    headOfStateSelection: 'inherited',
+    government: 'pm-head-of-state',
+    courts: 'independent',
+    religion: 'established',
+  }),
+  example('theocratic-republic', 'Theocratic republic', {
+    headOfState: 'religious-leader',
+    headOfStateSelection: 'electors',
+    government: 'elected-leader',
+    electoralSystem: 'majoritarian',
+    elections: 'managed',
+    courts: 'religious',
+    rulers: 'clergy',
+    religion: 'state-religion',
+    immigration: 'restrictive',
+  }),
+  example('holy-city', 'Holy city-state', {
+    extent: 'city',
+    headOfState: 'religious-leader',
+    headOfStateSelection: 'electors',
+    government: 'head-of-state',
+    legislature: 'appointed',
+    elections: 'none',
+    parties: 'none',
+    courts: 'religious',
+    rulers: 'clergy',
+    religion: 'state-religion',
+    foreignPolicy: 'neutral',
+    immigration: 'closed',
+  }),
+  example('junta', 'Military junta', {
+    headOfState: 'council',
+    headOfStateSelection: 'force',
+    government: 'head-of-state',
+    legislature: 'none',
+    elections: 'none',
+    parties: 'none',
+    courts: 'controlled',
+    rulers: 'military',
+    religion: 'state-religion',
+    foreignPolicy: 'expansionist',
+    conscription: 'universal',
+    immigration: 'closed',
+  }),
+  example('strongman', 'Strongman dictatorship', {
+    headOfStateSelection: 'force',
+    government: 'head-of-state',
+    legislature: 'appointed',
+    elections: 'none',
+    parties: 'none',
+    courts: 'controlled',
+    immigration: 'restrictive',
+  }),
+  example('ancient-assembly', 'Ancient city assembly', {
+    extent: 'city',
+    headOfState: 'council',
+    headOfStateSelection: 'people',
+    government: 'council',
+    legislature: 'assembly',
+    electoralSystem: 'majoritarian',
+    parties: 'none',
+    suffrageLimits: ['sex', 'ethnicity'],
+    courts: 'independent',
+    religion: 'state-religion',
+    conscription: 'universal',
+    immigration: 'restrictive',
+  }),
+  example('technocracy', 'Technocratic republic', {
+    headOfStateSelection: 'legislature',
+    suffrageLimits: ['education'],
+    rulers: 'experts',
+  }),
+  example('world-federation', 'World federation', {
+    extent: 'world',
+    territory: 'federal',
+    chambers: 'two',
+    foreignPolicy: 'pacifist',
+    immigration: 'open',
+  }),
+];
