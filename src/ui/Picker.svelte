@@ -90,6 +90,8 @@
     <!-- svelte-ignore a11y_autofocus -->
     <input
       id="picker-search"
+      maxlength="100"
+      autocomplete="off"
       type="search"
       placeholder="Search by name, or by type: monarchy, one-party, federal…"
       bind:value={query}

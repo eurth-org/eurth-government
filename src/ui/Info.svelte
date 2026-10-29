@@ -129,7 +129,10 @@
         <h3 id="info-sound"><Icon icon={sound ? faVolumeHigh : faVolumeXmark} /> Sound and motion</h3>
         <p class="setting">
           <button class="btn" aria-pressed={sound} onclick={ontogglesound}>Coin clink: {sound ? 'on' : 'off'}</button>
-          <span class="note">A little clink when you save or copy.</span>
+          <span class="note">
+            Off unless you turn it on. Then a soft clink when you save, copy a link, a text or an image, or when a
+            scale reaches 100% and coins burst out (only if you can see it).
+          </span>
         </p>
         <p class="setting">
           <button class="btn" aria-pressed={motion.on} onclick={() => setMotion(!motion.on)}>

@@ -13,6 +13,7 @@
   import yurt from '../assets/eurth-yurt-circle.svg';
   import type { Profile } from '../model/engine';
   import { summary } from '../model/formats';
+  import { markdownText } from '../model/text';
   import { clink, toast } from './fun';
   import Icon from './Icon.svelte';
 
@@ -46,7 +47,11 @@
   }
 
   const targets: Target[] = $derived([
-    { label: 'Eurth forum', href: `https://eurth.org/new-topic?title=${e(title)}&body=${e(`${text}\n\n${link}`)}` },
+    // The forum reads the body as Markdown, so the name goes in as plain text.
+    {
+      label: 'Eurth forum',
+      href: `https://eurth.org/new-topic?title=${e(title)}&body=${e(`${summary(markdownText(name), profile)} Freshly minted on Governmint.\n\n${link}`)}`,
+    },
     { label: 'Reddit', icon: faReddit, colour: '#ff4500', href: `https://www.reddit.com/submit?url=${e(link)}&title=${e(title)}` },
     { label: 'Bluesky', icon: faBluesky, colour: '#1185fe', href: `https://bsky.app/intent/compose?text=${e(`${text} ${link}`)}` },
     { label: 'X', icon: faXTwitter, href: `https://x.com/intent/post?text=${e(text)}&url=${e(link)}` },

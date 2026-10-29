@@ -10,12 +10,28 @@ export interface Saved {
   at: string;
 }
 
+import { cleanName } from '../model/text';
+
 const key = 'governmint:saved';
+
+/** One saved entry as read back from storage, which anyone with the browser could have edited. */
+function checked(entry: unknown): Saved | null {
+  if (!entry || typeof entry !== 'object') return null;
+  const e = entry as Record<string, unknown>;
+  if (typeof e.name !== 'string' || typeof e.code !== 'string' || e.code.length > 200) return null;
+  return {
+    name: cleanName(e.name),
+    code: e.code,
+    flag: typeof e.flag === 'string' && /^[a-z]{2}$/.test(e.flag) ? e.flag : undefined,
+    government: typeof e.government === 'string' ? e.government.slice(0, 120) : '',
+    at: typeof e.at === 'string' && !Number.isNaN(Date.parse(e.at)) ? e.at : new Date(0).toISOString(),
+  };
+}
 
 export function loadSaved(): Saved[] {
   try {
     const list = JSON.parse(localStorage.getItem(key) ?? '[]');
-    return Array.isArray(list) ? list : [];
+    return Array.isArray(list) ? list.map(checked).filter((e): e is Saved => e !== null).slice(0, 30) : [];
   } catch {
     return [];
   }
