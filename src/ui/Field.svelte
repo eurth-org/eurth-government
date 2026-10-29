@@ -7,11 +7,17 @@
     def,
     value,
     flash = false,
+    matched = false,
+    current = false,
     onchange,
   }: {
     def: SettingDef;
     value: string | string[];
     flash?: boolean;
+    /** A search match: highlighted until the search is cleared. */
+    matched?: boolean;
+    /** The search match the visitor is on. */
+    current?: boolean;
     onchange: (value: string | string[]) => void;
   } = $props();
 
@@ -30,7 +36,7 @@
   }
 </script>
 
-<div class="field" class:flash id="field-{def.id}">
+<div class="field" class:flash class:matched class:current id="field-{def.id}">
   {#if buttons}
     <fieldset>
       <legend>{def.question}</legend>
@@ -70,6 +76,15 @@
 
   .field + :global(.field) {
     margin-top: var(--space-2);
+  }
+
+  .matched {
+    background: var(--flash);
+  }
+
+  .current {
+    background: var(--flash);
+    box-shadow: 0 0 0 2px var(--focus-ring);
   }
 
   .flash {

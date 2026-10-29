@@ -1,0 +1,86 @@
+/**
+ * Saves a chart as SVG or PNG, entirely in the browser. The page styles charts with CSS
+ * variables, so the copy gets each element's computed colours and sizes written in, and wide
+ * gamut colours (Eurth blue in P3) converted to sRGB, which every image viewer understands.
+ */
+const painted = [
+  'fill',
+  'fill-opacity',
+  'stroke',
+  'stroke-width',
+  'stroke-opacity',
+  'stroke-linejoin',
+  'stroke-linecap',
+  'opacity',
+  'font-size',
+  'font-family',
+  'font-weight',
+  'text-anchor',
+  'dominant-baseline',
+];
+
+let probe: CanvasRenderingContext2D | null = null;
+
+/** Any CSS colour as rgb() or rgba(), read back from a one-pixel canvas. */
+function srgb(colour: string): string {
+  if (!/color\(|oklch|lab\(|lch\(/.test(colour)) return colour;
+  probe ??= document.createElement('canvas').getContext('2d', { willReadFrequently: true });
+  if (!probe) return colour;
+  probe.clearRect(0, 0, 1, 1);
+  probe.fillStyle = colour;
+  probe.fillRect(0, 0, 1, 1);
+  const [r, g, b, a] = probe.getImageData(0, 0, 1, 1).data;
+  return a === 255 ? `rgb(${r}, ${g}, ${b})` : `rgba(${r}, ${g}, ${b}, ${(a! / 255).toFixed(3)})`;
+}
+
+function standalone(svg: SVGSVGElement): { text: string; width: number; height: number } {
+  const clone = svg.cloneNode(true) as SVGSVGElement;
+  const from = [svg, ...svg.querySelectorAll('*')];
+  const to = [clone, ...clone.querySelectorAll('*')];
+  from.forEach((element, i) => {
+    const style = getComputedStyle(element);
+    const target = to[i]!;
+    for (const property of painted) {
+      const value = style.getPropertyValue(property);
+      if (value) target.setAttribute(property, srgb(value));
+    }
+    target.removeAttribute('class');
+    target.removeAttribute('style');
+  });
+  const box = svg.viewBox.baseVal;
+  const background = srgb(getComputedStyle(svg.closest('.panel') ?? document.body).backgroundColor);
+  const ground = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  for (const [key, value] of Object.entries({ x: box.x, y: box.y, width: box.width, height: box.height, fill: background })) {
+    ground.setAttribute(key, String(value));
+  }
+  clone.insertBefore(ground, clone.firstChild);
+  clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  clone.setAttribute('width', String(box.width));
+  clone.setAttribute('height', String(box.height));
+  return { text: new XMLSerializer().serializeToString(clone), width: box.width, height: box.height };
+}
+
+function save(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+export function downloadSvg(svg: SVGSVGElement, name: string) {
+  save(new Blob([standalone(svg).text], { type: 'image/svg+xml' }), `${name}.svg`);
+}
+
+export async function downloadPng(svg: SVGSVGElement, name: string, scale = 3) {
+  const { text, width, height } = standalone(svg);
+  const image = new Image();
+  image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(text)}`;
+  await image.decode();
+  const canvas = document.createElement('canvas');
+  canvas.width = width * scale;
+  canvas.height = height * scale;
+  canvas.getContext('2d')?.drawImage(image, 0, 0, canvas.width, canvas.height);
+  canvas.toBlob((blob) => blob && save(blob, `${name}.png`), 'image/png');
+}

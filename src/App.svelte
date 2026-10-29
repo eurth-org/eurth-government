@@ -1,14 +1,19 @@
 <script lang="ts">
-  import { faGithub } from '@fortawesome/free-brands-svg-icons';
+  import { faGithub, faWikipediaW } from '@fortawesome/free-brands-svg-icons';
   import {
     faArrowUpRightFromSquare,
     faBookOpen,
     faCircleInfo,
+    faCodeBranch,
+    faHeart,
+    faLightbulb,
     faRotateLeft,
+    faUserShield,
   } from '@fortawesome/free-solid-svg-icons';
   import { tick } from 'svelte';
   import yurt from './assets/eurth-yurt-circle.svg';
   import { defaultCountry, describe } from './model/engine';
+  import { sentence } from './model/formats';
   import { decodeCountry, encodeCountry } from './model/link';
   import { familyLabels, type Family } from './model/naming';
   import { settings, type Country, type SettingId } from './model/settings';
@@ -16,8 +21,9 @@
   import Budget from './ui/Budget.svelte';
   import Compass from './ui/Compass.svelte';
   import Field from './ui/Field.svelte';
+  import Globe from './ui/Globe.svelte';
   import Icon from './ui/Icon.svelte';
-  import { groupIcons, groupSwatches, panelIcons, severityIcons } from './ui/icons';
+  import { groupIcons, groupSwatches, panelIcons, ruleIcon, severityIcons } from './ui/icons';
   import Picker from './ui/Picker.svelte';
   import Radar from './ui/Radar.svelte';
   import Scales from './ui/Scales.svelte';
@@ -41,6 +47,21 @@
   let name = $state(params.get('n') ?? '');
   const profile = $derived(describe(country));
   const shownName = $derived(name.trim() || 'Your country');
+
+  // While the empty name field has focus, its placeholder suggests a name: classics of fiction,
+  // with a few of Eurth's nations among them.
+  const suggestions = ['Ruritania', 'Orioni', 'Freedonia', 'Dolchland', 'Grand Fenwick', 'Adaptus', 'Elbonia', 'Lysia'];
+  let placeholder = $state('Your country');
+  let suggesting: ReturnType<typeof setInterval> | undefined;
+  function suggestNames() {
+    let i = 0;
+    placeholder = suggestions[i]!;
+    suggesting = setInterval(() => (placeholder = suggestions[++i % suggestions.length]!), 1800);
+  }
+  function stopSuggesting() {
+    clearInterval(suggesting);
+    placeholder = 'Your country';
+  }
 
   const link = $derived.by(() => {
     const url = new URL(location.pathname, location.origin);
@@ -74,17 +95,39 @@
     }
   }
 
-  function search(query: string): number {
-    const words = query.toLowerCase().split(/\s+/);
-    const found = defs.filter((d) => {
-      const text = [d.label, d.question, d.group, ...d.options.flatMap((o) => [o.label, o.help])].join(' ').toLowerCase();
-      return words.every((w) => text.includes(w));
-    });
-    flash(
-      found.map((d) => d.id as SettingId),
-      true,
-    );
-    return found.length;
+  // Search works like find-in-page: every match stays highlighted while the search box has
+  // text, and the visitor steps through them one at a time.
+  let hits = $state<SettingId[]>([]);
+  let hit = $state(0);
+  const hitCounts = $derived(
+    Object.fromEntries(groups.map((g) => [g.id, g.defs.filter((d) => hits.includes(d.id as SettingId)).length])),
+  );
+
+  function search(query: string) {
+    const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+    hits = words.length
+      ? defs
+          .filter((d) => {
+            const text = [d.label, d.question, d.group, d.kind === 'share' ? d.help : '', ...d.options.flatMap((o) => [o.label, o.help])]
+              .join(' ')
+              .toLowerCase();
+            return words.every((w) => text.includes(w));
+          })
+          .map((d) => d.id as SettingId)
+      : [];
+    hit = 0;
+    showHit();
+  }
+
+  function step(direction: 1 | -1) {
+    if (!hits.length) return;
+    hit = (hit + direction + hits.length) % hits.length;
+    showHit();
+  }
+
+  function showHit() {
+    const id = hits[hit];
+    if (id) document.getElementById(`field-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
   // Which section is under the sticky bar, so the bar can show where you are.
@@ -127,37 +170,47 @@
 
 <header class="header">
   <div class="brand">
-    <img src="/eurth-globe.gif" alt="" width="36" height="36" />
+    <Globe />
     <span class="title">Governmint</span>
     <span class="tagline">Freshly minted governments</span>
     <span class="badge">Preview</span>
   </div>
   <div class="actions">
     <button class="btn" onclick={() => (pickerOpen = true)}><Icon icon={faBookOpen} /> Start from…</button>
-    <button class="btn" onclick={reset}><Icon icon={faRotateLeft} /> Reset</button>
+    <button class="btn reset" onclick={reset}><Icon icon={faRotateLeft} /> Reset</button>
     <ThemeSwitch />
   </div>
 </header>
 
-<SectionNav sections={groups} {current} name={profile.name} onsearch={search} />
+<SectionNav
+  sections={groups}
+  {current}
+  name={profile.name}
+  {hitCounts}
+  hitCount={hits.length}
+  {hit}
+  onsearch={search}
+  onstep={step}
+/>
 
 <div class="layout">
   <main class="settings">
     {#each groups as group (group.id)}
       <section class="panel" id={group.id} aria-labelledby="{group.id}-title">
         <h2 id="{group.id}-title">
-          <span class="swatch" style:--swatch={group.swatch}></span>
           <span class="group-icon" style:color={group.swatch}><Icon icon={group.icon} /></span>
           {group.name}
         </h2>
         {#if group.name === 'Budget'}
-          <Budget {country} {flashing} onchange={(next) => (country = next)} />
+          <Budget {country} {flashing} {hits} currentHit={hits[hit]} name={shownName} onchange={(next) => (country = next)} />
         {:else}
           {#each group.defs as def (def.id)}
             <Field
               {def}
               value={country[def.id as SettingId] as string | string[]}
               flash={flashing.includes(def.id as SettingId)}
+              matched={hits.includes(def.id as SettingId)}
+              current={hits[hit] === def.id}
               onchange={(value) => setValue(def.id, value)}
             />
           {/each}
@@ -168,10 +221,20 @@
 
   <aside class="results" id="results">
     <section class="panel summary">
-      <label class="kicker" for="country-name">Country name</label>
-      <input id="country-name" class="name-input" placeholder="Your country" bind:value={name} />
-      <h1 aria-live="polite"><Icon icon={panelIcons.name} /> {profile.name}</h1>
-      <p class="regime">{profile.labels.regime.label}</p>
+      <label class="kicker" for="country-name"><Icon icon={panelIcons.name} /> Country name</label>
+      <input
+        id="country-name"
+        class="name-input"
+        {placeholder}
+        bind:value={name}
+        onfocus={suggestNames}
+        onblur={stopSuggesting}
+      />
+      {#key profile.name}
+        <!-- A fresh name gets a "freshly minted" shine. -->
+        <h1 class="minted" aria-live="polite">{profile.name}</h1>
+      {/key}
+      <p class="sentence">{sentence(name.trim() || 'This country', profile)}</p>
     </section>
 
     {#if profile.checks.length}
@@ -194,37 +257,42 @@
 
     <section class="panel" aria-labelledby="why-title">
       <h2 id="why-title"><Icon icon={panelIcons.why} /> Why this name</h2>
-      <dl class="labels">
+      <ul class="labels">
         {#each familyOrder as family (family)}
           {@const label = profile.labels[family]}
-          <div>
-            <dt>{familyLabels[family]}</dt>
-            <dd>
-              <strong>{label.label}.</strong>
-              {label.because}
-              <button class="based-on link" onclick={() => flash(label.dependsOn, true)}>
-                Based on: {label.dependsOn.map((id) => defs.find((d) => d.id === id)?.label ?? id).join(', ')}
-              </button>
-            </dd>
-          </div>
+          <li>
+            <span class="label-icon"><Icon icon={ruleIcon(family, label.rule)} /></span>
+            <div>
+              <p class="label-title">{familyLabels[family]}: <strong>{label.label}</strong></p>
+              <p class="because">{label.because}</p>
+              <p class="label-links">
+                <a href="https://en.wikipedia.org/wiki/{encodeURIComponent(label.wiki.replaceAll(' ', '_'))}" target="_blank" rel="noopener">
+                  <Icon icon={faWikipediaW} /> {label.wiki}
+                </a>
+                <button class="link" onclick={() => flash(label.dependsOn, true)}>
+                  Based on: {label.dependsOn.map((id) => defs.find((d) => d.id === id)?.label ?? id).join(', ')}
+                </button>
+              </p>
+            </div>
+          </li>
         {/each}
-      </dl>
+      </ul>
     </section>
 
     <section class="panel" aria-labelledby="scales-title">
-      <h2 id="scales-title"><Icon icon={panelIcons.scales} /> Where it stands</h2>
-      <p class="intro">Drag a scale to see which settings would move it.</p>
+      <h2 id="scales-title"><Icon icon={panelIcons.scales} /> Scales</h2>
+      <p class="intro">Each scale runs from 0% to 100%. Drag one to see which settings move it.</p>
       <Scales scores={profile.axes} {country} onapply={(next) => (country = next)} onflash={flash} />
     </section>
 
     <section class="panel" aria-labelledby="radar-title">
       <h2 id="radar-title"><Icon icon={panelIcons.radar} /> Shape</h2>
-      <Radar scores={profile.axes} />
+      <Radar scores={profile.axes} name={shownName} />
     </section>
 
     <section class="panel" aria-labelledby="compass-title">
       <h2 id="compass-title"><Icon icon={panelIcons.compass} /> Compass</h2>
-      <Compass scores={profile.axes} />
+      <Compass scores={profile.axes} name={shownName} />
     </section>
 
     <section class="panel" aria-labelledby="share-title">
@@ -236,32 +304,66 @@
 
 <footer id="about">
   <h2>About Governmint</h2>
-  <p>
-    Set up a country and Governmint names the kind of state you've made, explains why, and points out where the
-    settings contradict each other. This preview covers government; economy and law come next.
-  </p>
-  <p>Your country lives in the link: copy it to share it or come back later. Nothing is stored anywhere else.</p>
-  <p class="made-by">
-    <img src={yurt} alt="" width="20" height="20" />
-    <span>
-      Made by <a href="https://eurth.org">Eurth</a>, a Worldbuilding &amp; Roleplay Writing Community. Built a
-      country you like? Give it a world to live in.
-    </span>
-  </p>
-  <p class="fine">
-    Inspired by the
-    <a href="https://minkinfin.github.io/Filteries-Political-Simulator-Archive/">Filteries Political Simulator</a>
-    (2016–2018). Icons by <a href="https://fontawesome.com">Font Awesome</a> (CC BY 4.0) and
-    <a href="https://github.com/cyberalien/line-md">line-md</a> (MIT). Open source under the
-    <a href="https://github.com/eurth-org/eurth-government/blob/main/LICENSE">Apache 2.0 licence</a>.
-  </p>
+  <ul class="about">
+    <li>
+      <span class="about-icon"><Icon icon={faCircleInfo} /></span>
+      <p>
+        Set up a country and Governmint names the kind of state you've made, explains why, and points out where the
+        settings contradict each other. This preview covers government and the budget; the economy and law come next.
+      </p>
+    </li>
+    <li>
+      <span class="about-icon"><Icon icon={faUserShield} /></span>
+      <p>A country lives in its link: copy it to share it or come back later. Nothing is stored anywhere else.</p>
+    </li>
+    <li>
+      <span class="about-icon"><img src={yurt} alt="" width="18" height="18" /></span>
+      <p>
+        <a href="https://eurth.org">Made by Eurth, a Worldbuilding &amp; Roleplay Writing Community</a>. Built a
+        country you like? Give it a world to live in.
+      </p>
+    </li>
+    <li>
+      <span class="about-icon heart beat"><Icon icon={faHeart} /></span>
+      <p>
+        Made with love by <a href="https://iiwiki.com/w/Orioni">Orioni</a>, for Eurth and the people who live in it,
+        going strong since 2004. Thanks to <a href="https://www.nationstates.net">NationStates</a>, where Eurth's
+        worldbuilding began.
+      </p>
+    </li>
+    <li>
+      <span class="about-icon"><Icon icon={faLightbulb} /></span>
+      <p>
+        Fellow worldbuilder?
+        <a href="https://github.com/eurth-org/eurth-government/discussions/categories/ideas">Table a motion for the roadmap</a>
+        on GitHub. No quorum required.
+      </p>
+    </li>
+    <li>
+      <span class="about-icon"><Icon icon={faWikipediaW} /></span>
+      <p>
+        Every label links to <a href="https://en.wikipedia.org">Wikipedia</a> for the full story. Thank you, Wikipedia
+        <span class="heart"><Icon icon={faHeart} label="love" /></span>
+      </p>
+    </li>
+    <li>
+      <span class="about-icon"><Icon icon={faCodeBranch} /></span>
+      <p>
+        Inspired by the
+        <a href="https://minkinfin.github.io/Filteries-Political-Simulator-Archive/">Filteries Political Simulator</a>
+        (2016–2018). Icons by <a href="https://fontawesome.com">Font Awesome</a> (CC BY 4.0) and
+        <a href="https://github.com/cyberalien/line-md">line-md</a> (MIT). Open source under the
+        <a href="https://github.com/eurth-org/eurth-government/blob/main/LICENSE">Apache 2.0 licence</a>.
+      </p>
+    </li>
+  </ul>
 </footer>
 
 <Picker open={pickerOpen} onpick={pick} onclose={() => (pickerOpen = false)} />
 
 <style>
-  /* Top bar and header, as on eurth.org. The bar is Eurth blue; its links sit on the deeper
-     Eurth blue, because white text on Eurth blue itself is too faint (3.2:1). */
+  /* Top bar and header, as on eurth.org. The bar is Eurth blue; its links are white pills with
+     Eurth blue text, so the bar stays two colours (a brand exception in contrast.test.ts). */
   .topbar {
     background: var(--eurth-blue);
     min-height: 40px;
@@ -282,8 +384,8 @@
     gap: 6px;
     padding: 3px 10px;
     border-radius: var(--radius-control);
-    background: var(--selected);
-    color: var(--on-selected);
+    background: #ffffff;
+    color: var(--eurth-blue);
     font-size: 14px;
     font-weight: 600;
     text-decoration: none;
@@ -298,7 +400,7 @@
   }
 
   .topbar a:focus-visible {
-    outline-color: var(--on-selected);
+    outline-color: #ffffff;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -405,13 +507,6 @@
     font-size: 16px;
   }
 
-  .swatch {
-    width: 10px;
-    height: 10px;
-    border-radius: var(--radius-sm);
-    background: var(--swatch);
-    flex: none;
-  }
 
   .group-icon {
     display: inline-flex;
@@ -419,12 +514,19 @@
 
   /* Results */
   .kicker {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
     color: var(--ink-muted);
     font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
+  }
+
+  .kicker :global(.icon) {
+    color: var(--accent-fill);
+    font-size: 14px;
   }
 
   .name-input {
@@ -438,21 +540,78 @@
   }
 
   h1 {
-    display: flex;
-    gap: var(--space-2);
     margin: 0;
     font-size: 24px;
     line-height: 1.25;
   }
 
-  h1 :global(.icon) {
-    margin-top: 0.2em;
-    color: var(--accent-fill);
-    font-size: 0.8em;
+  @media (prefers-reduced-motion: no-preference) {
+    /* A shine sweeps across a freshly minted name. */
+    .minted {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .minted::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(100deg, transparent 30%, rgb(255 255 255 / 0.6) 50%, transparent 70%);
+      transform: translateX(-100%);
+      animation: shine 0.9s ease-out 0.1s;
+      pointer-events: none;
+    }
+
+    :global([data-theme='dark']) .minted::after {
+      background: linear-gradient(100deg, transparent 30%, rgb(255 255 255 / 0.25) 50%, transparent 70%);
+    }
+
+    /* The flag waves when you point at it, the reset arrow winds back, the heart beats. */
+    .kicker:hover :global(.icon) {
+      animation: wave 0.6s ease-in-out;
+      transform-origin: 10% 90%;
+    }
+
+    .reset :global(.icon) {
+      transition: transform 0.4s ease-out;
+    }
+
+    .reset:hover :global(.icon) {
+      transform: rotate(-200deg);
+    }
+
+    .about li:hover .beat :global(.icon) {
+      animation: beat 0.8s ease-in-out;
+    }
   }
 
-  .regime {
-    margin: var(--space-1) 0 0;
+  @keyframes shine {
+    to {
+      transform: translateX(100%);
+    }
+  }
+
+  @keyframes wave {
+    25% {
+      transform: rotate(-12deg);
+    }
+    60% {
+      transform: rotate(9deg);
+    }
+  }
+
+  @keyframes beat {
+    15%,
+    45% {
+      transform: scale(1.3);
+    }
+    30% {
+      transform: scale(1.05);
+    }
+  }
+
+  .sentence {
+    margin: var(--space-2) 0 0;
     color: var(--ink-muted);
   }
 
@@ -502,27 +661,49 @@
 
   .labels {
     margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: var(--space-4);
   }
 
-  .labels div + div {
-    margin-top: var(--space-3);
+  .labels li {
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    gap: var(--space-2);
   }
 
-  dt {
+  .label-icon {
+    padding-top: 2px;
+    color: var(--accent-fill);
+    font-size: 16px;
+  }
+
+  .label-title,
+  .because {
+    margin: 0;
+  }
+
+  .label-title {
     color: var(--ink-muted);
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
   }
 
-  dd {
+  .label-title strong {
+    color: var(--ink);
+  }
+
+  .label-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px var(--space-3);
     margin: 2px 0 0;
+    font-size: 13px;
   }
 
-  .based-on {
-    display: block;
-    margin-top: 2px;
+  .label-links a {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
   }
 
   /* Footer */
@@ -539,19 +720,35 @@
     color: var(--ink);
   }
 
-  footer p {
-    max-width: 720px;
-    margin: 0 0 var(--space-3);
+  .about {
+    display: grid;
+    gap: var(--space-3);
+    max-width: 760px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
   }
 
-  .made-by {
-    display: flex;
-    gap: var(--space-2);
-    align-items: flex-start;
+  .about li {
+    display: grid;
+    grid-template-columns: 20px 1fr;
+    gap: var(--space-3);
+    align-items: start;
   }
 
-  .made-by img {
-    flex: none;
-    margin-top: 1px;
+  .about p {
+    margin: 0;
+  }
+
+  .about-icon {
+    display: inline-flex;
+    justify-content: center;
+    padding-top: 2px;
+    color: var(--ink-muted);
+    font-size: 16px;
+  }
+
+  .heart {
+    color: #bf1e2e;
   }
 </style>

@@ -20,8 +20,9 @@
     <meta property="og:url" content="https://gov.eurth.org/" />
     <meta property="og:title" content="Governmint: freshly minted governments" />
     <meta property="og:description" content="Design a country's government, laws and economy, and see what kind of state you've made." />
-    <!-- The animated Eurth globe, as in the eurth.org header; browsers that don't animate favicons show its first frame. -->
-    <link rel="icon" href="/eurth-globe.gif" type="image/gif" />
+    <!-- The Eurth globe. A still frame for every browser; src/ui/favicon.ts turns it where the
+         browser allows (not Safari). favicon.ico is there for browsers that look for it by name. -->
+    <link id="favicon" rel="icon" type="image/png" href="/favicon-64.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   </head>
   <body>

@@ -10,6 +10,8 @@ export interface Label {
   rule: string;
   label: string;
   because: string;
+  /** The English Wikipedia article that explains it. */
+  wiki: string;
   /** Settings the matching rule looked at. */
   dependsOn: SettingId[];
 }
@@ -93,7 +95,14 @@ function classify(family: Family, country: Country): { rule: LabelRule; label: L
   const looked = own.length ? own : [...new Set(rules.slice(0, index).flatMap((r) => dependsOn(r.when)))];
   return {
     rule,
-    label: { family, rule: rule.id, label: rule.label, because: fill(rule.because, country), dependsOn: looked },
+    label: {
+      family,
+      rule: rule.id,
+      label: rule.label,
+      because: fill(rule.because, country),
+      wiki: rule.wiki,
+      dependsOn: looked,
+    },
   };
 }
 

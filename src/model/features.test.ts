@@ -2,7 +2,7 @@ import { describe as group, expect, it } from 'vitest';
 import { compassPoint } from './compass';
 import { defaultCountry, describe, scoreAxes } from './engine';
 import { examples } from './examples';
-import { summary, toMarkdown, toWikitext } from './formats';
+import { article, sentence, summary, toMarkdown, toWikitext } from './formats';
 import { suggest } from './suggest';
 import type { Country } from './settings';
 
@@ -52,6 +52,20 @@ group('formats', () => {
     expect(summary('Ruritania', profile)).toBe('Ruritania is a federal presidential republic and a liberal democracy.');
     expect(summary('Ruritania', describe(byId('managed')))).toBe(
       'Ruritania is a federal semi-presidential republic and an electoral autocracy.',
+    );
+  });
+
+  it('choose a or an by sound', () => {
+    expect(article('unitary state')).toBe('a unitary state');
+    expect(article('one-party state')).toBe('a one-party state');
+    expect(article('electoral autocracy')).toBe('an electoral autocracy');
+    expect(article('absolute monarchy')).toBe('an absolute monarchy');
+    expect(article('federal republic')).toBe('a federal republic');
+  });
+
+  it('explain the regime in one sentence', () => {
+    expect(sentence('Ruritania', profile)).toBe(
+      'Ruritania is a liberal democracy: free elections, competing parties and independent courts keep those in power in check.',
     );
   });
 

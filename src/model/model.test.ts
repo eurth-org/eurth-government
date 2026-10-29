@@ -109,6 +109,16 @@ group('naming rules', () => {
     }
   });
 
+  it('link every label to a Wikipedia article', () => {
+    for (const { family, rule } of allRules) expect(rule.wiki.trim(), `${family}.${rule.id}`).not.toBe('');
+  });
+
+  it('call free elections with restricted candidacy a restricted democracy', () => {
+    const profile = describe(country({ rulers: 'military' }));
+    expect(profile.labels.regime.label).toBe('Restricted democracy');
+    expect(profile.labels.regime.because).toBe('Elections are free, but only military officers may hold high office.');
+  });
+
   it('end each family with a rule that always matches', () => {
     for (const [family, rules] of Object.entries(families)) {
       const last = (rules as readonly LabelRule[]).at(-1)!;

@@ -44,9 +44,9 @@ A `when` lists settings and the options that make the rule apply:
 | `suffrageLimits: { empty: false }` | at least one option is picked |
 | `anyOf: [{…}, {…}]`, `allOf`, `noneOf` | combine conditions |
 
-`term` is what the label adds to the full name (`''` adds nothing). In `because`, `{settingId}` is replaced with the chosen option, so "chosen by {headOfStateSelection}" reads "chosen by popular vote".
+`term` is what the label adds to the full name (`''` adds nothing). `wiki` names the English Wikipedia article the tool links to for more. In `because`, `{settingId}` is replaced with the chosen option, so "chosen by {headOfStateSelection}" reads "chosen by popular vote".
 
-The regime labels follow political science's usual split between closed autocracy, electoral autocracy, electoral democracy and liberal democracy, with a few named types (one-party state, military dictatorship, theocracy, restricted and direct democracy) checked first.
+The regime labels follow political science's usual split between closed autocracy, electoral autocracy, electoral democracy and liberal democracy, with a few named types (one-party state, military dictatorship, theocracy, restricted and direct democracy) checked first. A democracy is "restricted" when some adults may not vote, or when only some groups (officers, experts, the wealthy, nobles) may hold office.
 
 ## Axes
 
