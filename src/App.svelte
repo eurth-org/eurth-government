@@ -328,8 +328,8 @@
 <Picker open={pickerOpen} onpick={pick} onclose={() => (pickerOpen = false)} />
 
 <style>
-  /* Top bar and header, as on eurth.org. The bar is Eurth blue; its links sit on the deeper
-     Eurth blue so they stand out from the bar (white on it is 5.5:1). */
+  /* Top bar and header, as on eurth.org. The bar is Eurth blue; its links are white pills with
+     Eurth blue text, so the bar stays two colours (a brand exception in contrast.test.ts). */
   .topbar {
     background: var(--eurth-blue);
     min-height: 40px;
@@ -350,8 +350,8 @@
     gap: 6px;
     padding: 3px 10px;
     border-radius: var(--radius-control);
-    background: var(--eurth-blue-deep);
-    color: var(--on-selected);
+    background: #ffffff;
+    color: var(--eurth-blue);
     font-size: 14px;
     font-weight: 600;
     text-decoration: none;
@@ -366,7 +366,7 @@
   }
 
   .topbar a:focus-visible {
-    outline-color: var(--on-selected);
+    outline-color: #ffffff;
   }
 
   @media (prefers-reduced-motion: reduce) {

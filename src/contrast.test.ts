@@ -66,11 +66,13 @@ it('uses the same dark colours with and without the theme switch', () => {
 
 /*
  * Brand exceptions, decided knowingly: Eurth blue buttons and selected options with white text
- * (feedback point 29, "not even for WCAG"). Kept here so the actual ratios stay visible and
+ * (feedback point 29, "not even for WCAG"), and the reverse for the top bar's links. Kept here so the actual ratios stay visible and
  * can't slip further.
  */
 const exceptions: [string, string, number][] = [
   ['on-selected', 'selected', 3.2],
+  // The top bar's links: white pills with Eurth blue text (feedback point 50).
+  ['eurth-blue', 'on-selected', 3.2],
   ['selected', 'surface', 3.2],
   ['selected', 'surface-raised', 2.9],
 ];
