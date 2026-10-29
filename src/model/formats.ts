@@ -22,8 +22,10 @@ function lower(text: string): string {
   return text.charAt(0).toLowerCase() + text.slice(1);
 }
 
-function article(text: string): string {
-  return /^[aeiou]/i.test(text) ? `an ${text}` : `a ${text}`;
+/** "a" or "an", by sound: "a unitary state", "a one-party state", "an elective monarchy". */
+export function article(text: string): string {
+  const vowelSound = /^[aeiou]/i.test(text) && !/^(uni|use|usu|eu|one)/i.test(text);
+  return vowelSound ? `an ${text}` : `a ${text}`;
 }
 
 export function facts(country: Country): Fact[] {
@@ -60,6 +62,12 @@ export function budget(country: Country): Fact[] {
     .map((id) => ({ label: settingDef(id).label, share: country[id] }))
     .sort((a, b) => b.share - a.share)
     .map(({ label, share }) => ({ label, value: `${share}%` }));
+}
+
+/** One sentence that says what the regime label means for this country. */
+export function sentence(name: string, profile: Profile): string {
+  const regime = profile.labels.regime;
+  return `${name} is ${article(lower(regime.label))}: ${lower(regime.because)}`;
 }
 
 export function summary(name: string, profile: Profile): string {

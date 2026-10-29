@@ -1,5 +1,11 @@
 <script lang="ts">
-  import { faFlag, faMagnifyingGlass, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
+  import {
+    faChevronLeft,
+    faChevronRight,
+    faFlag,
+    faMagnifyingGlass,
+    type IconDefinition,
+  } from '@fortawesome/free-solid-svg-icons';
   import Icon from './Icon.svelte';
 
   interface Section {
@@ -37,6 +43,26 @@
     };
   });
 
+  // Whether more chips are hidden to the left or right, to show arrows and a fade on that side.
+  let more = $state({ left: false, right: false });
+  function measure() {
+    if (!list) return;
+    more = {
+      left: list.scrollLeft > 2,
+      right: list.scrollLeft + list.clientWidth < list.scrollWidth - 2,
+    };
+  }
+  $effect(() => {
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(list);
+    return () => observer.disconnect();
+  });
+
+  function scrollChips(direction: 1 | -1) {
+    list.scrollBy({ left: direction * list.clientWidth * 0.7, behavior: 'smooth' });
+  }
+
   function search() {
     clearTimeout(timer);
     timer = setTimeout(() => (found = query.trim() ? onsearch(query.trim()) : 0), 250);
@@ -71,7 +97,13 @@
         <span class="found" aria-live="polite">{found === 1 ? '1 match' : `${found} matches`}</span>
       {/if}
     </form>
-    <ul class="chips" bind:this={list}>
+    <div class="chips-wrap" class:more-left={more.left} class:more-right={more.right}>
+      {#if more.left}
+        <button class="scroll left" aria-label="Show earlier sections" onclick={() => scrollChips(-1)}>
+          <Icon icon={faChevronLeft} />
+        </button>
+      {/if}
+    <ul class="chips" bind:this={list} onscroll={measure}>
       {#each sections as section (section.id)}
         <li>
           <a
@@ -79,7 +111,6 @@
             aria-current={current === section.id ? 'location' : undefined}
             style:--swatch={section.swatch}
           >
-            <span class="swatch"></span>
             <span class="chip-icon"><Icon icon={section.icon} /></span>
             <span>{section.name}</span>
           </a>
@@ -92,6 +123,12 @@
         </a>
       </li>
     </ul>
+      {#if more.right}
+        <button class="scroll right" aria-label="Show more sections" onclick={() => scrollChips(1)}>
+          <Icon icon={faChevronRight} />
+        </button>
+      {/if}
+    </div>
   </div>
   <p class="name small-only">{name}</p>
   <div class="progress" aria-hidden="true"><span style:width="{progress}%"></span></div>
@@ -159,12 +196,64 @@
     scrollbar-width: none;
   }
 
+  /* More sections off to one side: a fade and an arrow on that side. */
+  .chips-wrap {
+    position: relative;
+    display: flex;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .chips-wrap .chips {
+    flex: 1;
+  }
+
+  .more-left .chips {
+    mask-image: linear-gradient(to right, transparent 0, #000 48px);
+  }
+
+  .more-right .chips {
+    mask-image: linear-gradient(to left, transparent 0, #000 48px);
+  }
+
+  .more-left.more-right .chips {
+    mask-image: linear-gradient(to right, transparent 0, #000 48px, #000 calc(100% - 48px), transparent 100%);
+  }
+
+  .scroll {
+    position: absolute;
+    top: 50%;
+    z-index: 1;
+    display: inline-grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 1px solid var(--line-strong);
+    border-radius: 50%;
+    background: var(--surface);
+    color: var(--ink);
+    transform: translateY(-50%);
+    cursor: pointer;
+  }
+
+  .scroll:hover {
+    background: var(--hover);
+  }
+
+  .scroll.left {
+    left: 0;
+  }
+
+  .scroll.right {
+    right: 0;
+  }
+
   .chips a {
     display: inline-flex;
     align-items: center;
     gap: 6px;
     padding: 6px 10px;
-    border-radius: var(--radius-control);
     color: var(--ink);
     text-decoration: none;
     white-space: nowrap;
@@ -178,7 +267,6 @@
 
   /* Where you are: the current section's chip, underlined in its own colour. */
   .chips a[aria-current] {
-    background: var(--button);
     font-weight: 700;
     box-shadow: inset 0 -3px 0 var(--swatch);
   }
@@ -199,12 +287,6 @@
     background: var(--eurth-blue);
   }
 
-  .swatch {
-    width: 8px;
-    height: 8px;
-    border-radius: var(--radius-sm);
-    background: var(--swatch);
-  }
 
   .name {
     margin: 0;
@@ -234,7 +316,7 @@
       width: 100%;
     }
 
-    .chips {
+    .chips-wrap {
       flex: 1 1 100%;
     }
   }

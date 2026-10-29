@@ -9,6 +9,8 @@ export interface LabelRule {
   readonly term: string;
   /** One sentence. `{settingId}` inserts the chosen option, lower-cased. */
   readonly because: string;
+  /** The English Wikipedia article that explains it, by title. */
+  readonly wiki: string;
   /** Regime only: leave the system out of the name, because it says little here. */
   readonly hidesSystem?: boolean;
   /** Regime only: words added after the name. */
@@ -26,6 +28,7 @@ export const families = {
   structure: [
     {
       id: 'world-federation',
+      wiki: 'World government',
       when: { extent: 'world', territory: 'federal' },
       label: 'World federation',
       term: 'federal',
@@ -33,6 +36,7 @@ export const families = {
     },
     {
       id: 'world-confederation',
+      wiki: 'World government',
       when: { extent: 'world', territory: 'confederal' },
       label: 'World confederation',
       term: 'confederal',
@@ -40,6 +44,7 @@ export const families = {
     },
     {
       id: 'world-state',
+      wiki: 'World government',
       when: { extent: 'world' },
       label: 'World state',
       term: 'unitary',
@@ -47,6 +52,7 @@ export const families = {
     },
     {
       id: 'federal-union',
+      wiki: 'Supranational union',
       when: { extent: 'union', territory: 'federal' },
       label: 'Federal union',
       term: 'federal',
@@ -54,6 +60,7 @@ export const families = {
     },
     {
       id: 'confederation-of-states',
+      wiki: 'Confederation',
       when: { extent: 'union', territory: 'confederal' },
       label: 'Confederation of states',
       term: 'confederal',
@@ -61,6 +68,7 @@ export const families = {
     },
     {
       id: 'union-state',
+      wiki: 'Supranational union',
       when: { extent: 'union' },
       label: 'Union state',
       term: 'unitary',
@@ -68,6 +76,7 @@ export const families = {
     },
     {
       id: 'federal-city-state',
+      wiki: 'City-state',
       when: { extent: 'city', territory: 'federal' },
       label: 'Federal city-state',
       term: 'federal',
@@ -75,6 +84,7 @@ export const families = {
     },
     {
       id: 'confederal-city-state',
+      wiki: 'City-state',
       when: { extent: 'city', territory: 'confederal' },
       label: 'Confederal city-state',
       term: 'confederal',
@@ -82,6 +92,7 @@ export const families = {
     },
     {
       id: 'city-state',
+      wiki: 'City-state',
       when: { extent: 'city' },
       label: 'City-state',
       term: 'unitary',
@@ -89,6 +100,7 @@ export const families = {
     },
     {
       id: 'federation',
+      wiki: 'Federation',
       when: { territory: 'federal' },
       label: 'Federation',
       term: 'federal',
@@ -96,6 +108,7 @@ export const families = {
     },
     {
       id: 'confederation',
+      wiki: 'Confederation',
       when: { territory: 'confederal' },
       label: 'Confederation',
       term: 'confederal',
@@ -103,6 +116,7 @@ export const families = {
     },
     {
       id: 'devolved-unitary-state',
+      wiki: 'Devolution',
       when: { territory: 'devolved' },
       label: 'Unitary state with devolved regions',
       term: 'unitary',
@@ -110,6 +124,7 @@ export const families = {
     },
     {
       id: 'unitary-state',
+      wiki: 'Unitary state',
       when: {},
       label: 'Unitary state',
       term: 'unitary',
@@ -120,6 +135,7 @@ export const families = {
   system: [
     {
       id: 'direct-democratic',
+      wiki: 'Direct democracy',
       when: { legislature: 'assembly' },
       label: "Citizens' assembly",
       term: 'direct-democratic',
@@ -127,6 +143,7 @@ export const families = {
     },
     {
       id: 'directorial',
+      wiki: 'Directorial system',
       when: { government: 'council' },
       label: 'Directorial system',
       term: 'directorial',
@@ -134,6 +151,7 @@ export const families = {
     },
     {
       id: 'semi-presidential',
+      wiki: 'Semi-presidential system',
       when: { government: 'pm-shared', headOfState: ['president', 'council'] },
       label: 'Semi-presidential system',
       term: 'semi-presidential',
@@ -141,6 +159,7 @@ export const families = {
     },
     {
       id: 'shared-executive',
+      wiki: 'Executive (government)',
       when: { government: 'pm-shared' },
       label: 'Shared executive',
       term: '',
@@ -148,6 +167,7 @@ export const families = {
     },
     {
       id: 'parliamentary',
+      wiki: 'Parliamentary system',
       when: { government: 'pm-legislature' },
       label: 'Parliamentary system',
       term: 'parliamentary',
@@ -155,6 +175,7 @@ export const families = {
     },
     {
       id: 'presidential',
+      wiki: 'Presidential system',
       when: { government: 'head-of-state', headOfStateSelection: 'people', headOfState: ['president', 'council'] },
       label: 'Presidential system',
       term: 'presidential',
@@ -162,6 +183,7 @@ export const families = {
     },
     {
       id: 'presidential-elected-leader',
+      wiki: 'Presidential system',
       when: { government: 'elected-leader' },
       label: 'Presidential system',
       term: 'presidential',
@@ -169,6 +191,7 @@ export const families = {
     },
     {
       id: 'parliamentary-executive-president',
+      wiki: 'Parliamentary republics with an executive presidency',
       when: {
         government: 'head-of-state',
         headOfStateSelection: 'legislature',
@@ -180,6 +203,7 @@ export const families = {
     },
     {
       id: 'presidential-with-prime-minister',
+      wiki: 'Presidential system',
       when: { government: 'pm-head-of-state', headOfState: ['president', 'council'], headOfStateSelection: 'people' },
       label: 'Presidential system with a prime minister',
       term: 'presidential',
@@ -187,6 +211,7 @@ export const families = {
     },
     {
       id: 'rule-by-head-of-state',
+      wiki: 'Autocracy',
       when: {},
       label: 'Rule by the head of state',
       term: '',
@@ -197,6 +222,7 @@ export const families = {
   form: [
     {
       id: 'theocratic-republic',
+      wiki: 'Theocracy',
       when: { headOfState: 'religious-leader', government: ['elected-leader', 'pm-legislature', 'pm-shared'] },
       label: 'Theocratic republic',
       term: 'theocratic republic',
@@ -204,6 +230,7 @@ export const families = {
     },
     {
       id: 'hereditary-theocracy',
+      wiki: 'Theocracy',
       when: { headOfState: 'religious-leader', headOfStateSelection: 'inherited' },
       label: 'Hereditary theocracy',
       term: 'hereditary theocracy',
@@ -211,6 +238,7 @@ export const families = {
     },
     {
       id: 'elective-theocracy',
+      wiki: 'Theocracy',
       when: { headOfState: 'religious-leader', headOfStateSelection: ['people', 'legislature', 'electors'] },
       label: 'Elective theocracy',
       term: 'elective theocracy',
@@ -218,6 +246,7 @@ export const families = {
     },
     {
       id: 'theocracy',
+      wiki: 'Theocracy',
       when: { headOfState: 'religious-leader' },
       label: 'Theocracy',
       term: 'theocracy',
@@ -225,6 +254,7 @@ export const families = {
     },
     {
       id: 'elective-constitutional-monarchy',
+      wiki: 'Elective monarchy',
       when: {
         headOfState: 'monarch',
         headOfStateSelection: ['people', 'legislature', 'electors'],
@@ -236,6 +266,7 @@ export const families = {
     },
     {
       id: 'constitutional-monarchy',
+      wiki: 'Constitutional monarchy',
       when: { headOfState: 'monarch', government: ['pm-legislature', 'council', 'elected-leader'] },
       label: 'Constitutional monarchy',
       term: 'constitutional monarchy',
@@ -243,6 +274,7 @@ export const families = {
     },
     {
       id: 'elective-semi-constitutional-monarchy',
+      wiki: 'Elective monarchy',
       when: {
         headOfState: 'monarch',
         headOfStateSelection: ['people', 'legislature', 'electors'],
@@ -254,6 +286,7 @@ export const families = {
     },
     {
       id: 'semi-constitutional-monarchy',
+      wiki: 'Semi-constitutional monarchy',
       when: { headOfState: 'monarch', legislature: ['elected', 'partly-elected', 'indirect', 'assembly'] },
       label: 'Semi-constitutional monarchy',
       term: 'semi-constitutional monarchy',
@@ -261,6 +294,7 @@ export const families = {
     },
     {
       id: 'elective-absolute-monarchy',
+      wiki: 'Elective monarchy',
       when: { headOfState: 'monarch', headOfStateSelection: ['people', 'legislature', 'electors'] },
       label: 'Elective absolute monarchy',
       term: 'elective absolute monarchy',
@@ -268,6 +302,7 @@ export const families = {
     },
     {
       id: 'absolute-monarchy',
+      wiki: 'Absolute monarchy',
       when: { headOfState: 'monarch' },
       label: 'Absolute monarchy',
       term: 'absolute monarchy',
@@ -275,6 +310,7 @@ export const families = {
     },
     {
       id: 'hereditary-republic',
+      wiki: 'Dynasty',
       when: { headOfState: ['president', 'council'], headOfStateSelection: 'inherited' },
       label: 'Hereditary republic',
       term: 'hereditary republic',
@@ -282,6 +318,7 @@ export const families = {
     },
     {
       id: 'junta',
+      wiki: 'Military junta',
       when: { headOfState: 'council', rulers: 'military' },
       label: 'Junta',
       term: 'junta',
@@ -289,6 +326,7 @@ export const families = {
     },
     {
       id: 'republic',
+      wiki: 'Republic',
       when: {},
       label: 'Republic',
       term: 'republic',
@@ -299,6 +337,7 @@ export const families = {
   regime: [
     {
       id: 'military-dictatorship',
+      wiki: 'Military dictatorship',
       when: { rulers: 'military', elections: ['managed', 'none'] },
       label: 'Military dictatorship',
       term: 'military',
@@ -307,6 +346,7 @@ export const families = {
     },
     {
       id: 'one-party-state',
+      wiki: 'One-party state',
       when: { parties: 'one' },
       label: 'One-party state',
       term: 'one-party',
@@ -315,6 +355,7 @@ export const families = {
     },
     {
       id: 'theocracy',
+      wiki: 'Theocracy',
       when: { anyOf: [{ rulers: 'clergy' }, { headOfState: 'religious-leader' }] },
       label: 'Theocracy',
       term: '',
@@ -322,6 +363,7 @@ export const families = {
     },
     {
       id: 'dictatorship',
+      wiki: 'Dictatorship',
       when: { elections: 'none', headOfState: ['president', 'council'], headOfStateSelection: 'force' },
       label: 'Closed autocracy',
       term: '',
@@ -330,6 +372,7 @@ export const families = {
     },
     {
       id: 'closed-autocracy',
+      wiki: 'Autocracy',
       when: { elections: 'none' },
       label: 'Closed autocracy',
       term: '',
@@ -337,6 +380,7 @@ export const families = {
     },
     {
       id: 'nothing-to-elect',
+      wiki: 'Autocracy',
       when: {
         legislature: ['appointed', 'advisory', 'none'],
         headOfStateSelection: { not: ['people', 'legislature'] },
@@ -348,6 +392,7 @@ export const families = {
     },
     {
       id: 'electoral-autocracy',
+      wiki: 'Hybrid regime',
       when: { elections: 'managed' },
       label: 'Electoral autocracy',
       term: '',
@@ -355,6 +400,7 @@ export const families = {
     },
     {
       id: 'unelected-ruler',
+      wiki: 'Hybrid regime',
       when: {
         government: ['head-of-state', 'pm-head-of-state', 'pm-shared'],
         headOfStateSelection: ['inherited', 'electors', 'party', 'force'],
@@ -365,13 +411,23 @@ export const families = {
     },
     {
       id: 'restricted-democracy',
+      wiki: 'Suffrage',
       when: { suffrageLimits: { any: ['property', 'education', 'sex', 'ethnicity', 'religion', 'service', 'party'] } },
       label: 'Restricted democracy',
       term: '',
       because: 'Elections are free, but voting is limited by {suffrageLimits}.',
     },
     {
+      id: 'restricted-candidacy',
+      wiki: 'Illiberal democracy',
+      when: { rulers: ['military', 'experts', 'wealthy', 'nobility'] },
+      label: 'Restricted democracy',
+      term: '',
+      because: 'Elections are free, but only {rulers} may hold high office.',
+    },
+    {
       id: 'direct-democracy',
+      wiki: 'Direct democracy',
       when: { legislature: 'assembly' },
       label: 'Direct democracy',
       term: '',
@@ -379,6 +435,7 @@ export const families = {
     },
     {
       id: 'liberal-democracy',
+      wiki: 'Liberal democracy',
       when: { parties: 'many', courts: ['review', 'independent'] },
       label: 'Liberal democracy',
       term: '',
@@ -386,6 +443,7 @@ export const families = {
     },
     {
       id: 'non-partisan-democracy',
+      wiki: 'Non-partisan democracy',
       when: { parties: 'none', courts: ['review', 'independent'] },
       label: 'Non-partisan democracy',
       term: '',
@@ -393,6 +451,7 @@ export const families = {
     },
     {
       id: 'electoral-democracy-weak-courts',
+      wiki: 'Illiberal democracy',
       when: { courts: ['controlled', 'religious'] },
       label: 'Electoral democracy',
       term: '',
@@ -400,6 +459,7 @@ export const families = {
     },
     {
       id: 'electoral-democracy',
+      wiki: 'Representative democracy',
       when: {},
       label: 'Electoral democracy',
       term: '',
@@ -410,6 +470,7 @@ export const families = {
   rulers: [
     {
       id: 'anyone',
+      wiki: 'Political egalitarianism',
       when: { rulers: 'anyone' },
       label: 'Open to all citizens',
       term: '',
@@ -417,6 +478,7 @@ export const families = {
     },
     {
       id: 'party-members',
+      wiki: 'Particracy',
       when: { rulers: 'party' },
       label: 'Party members',
       term: '',
@@ -424,6 +486,7 @@ export const families = {
     },
     {
       id: 'clergy-under-religious-leader',
+      wiki: 'Theocracy',
       when: { rulers: 'clergy', headOfState: 'religious-leader' },
       label: 'Clergy',
       term: '',
@@ -431,6 +494,7 @@ export const families = {
     },
     {
       id: 'clergy',
+      wiki: 'Theocracy',
       when: { rulers: 'clergy' },
       label: 'Clergy',
       term: 'theocratic',
@@ -438,6 +502,7 @@ export const families = {
     },
     {
       id: 'military',
+      wiki: 'Stratocracy',
       when: { rulers: 'military' },
       label: 'Military officers',
       term: 'military',
@@ -445,6 +510,7 @@ export const families = {
     },
     {
       id: 'technocracy',
+      wiki: 'Technocracy',
       when: { rulers: 'experts' },
       label: 'Technocracy',
       term: 'technocratic',
@@ -452,6 +518,7 @@ export const families = {
     },
     {
       id: 'plutocracy',
+      wiki: 'Plutocracy',
       when: { rulers: 'wealthy' },
       label: 'Plutocracy',
       term: 'plutocratic',
@@ -459,6 +526,7 @@ export const families = {
     },
     {
       id: 'nobility-under-monarch',
+      wiki: 'Nobility',
       when: { rulers: 'nobility', headOfState: 'monarch' },
       label: 'Nobility',
       term: '',
@@ -466,6 +534,7 @@ export const families = {
     },
     {
       id: 'aristocracy',
+      wiki: 'Aristocracy',
       when: { rulers: 'nobility' },
       label: 'Aristocracy',
       term: 'aristocratic',
@@ -473,6 +542,7 @@ export const families = {
     },
     {
       id: 'unrestricted',
+      wiki: 'Political egalitarianism',
       when: {},
       label: 'Open to all citizens',
       term: '',

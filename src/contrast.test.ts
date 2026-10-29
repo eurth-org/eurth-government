@@ -49,10 +49,8 @@ const pairs: [string, string, number][] = [
   ['accent-text', 'surface', 4.5],
   ['accent-text', 'surface-raised', 4.5],
   ['on-accent-small', 'accent-fill', 4.5],
-  ['on-selected', 'selected', 4.5],
+
   ['ink', 'hover', 4.5],
-  ['selected-edge', 'surface', 3],
-  ['selected-edge', 'surface-raised', 3],
   ['danger', 'surface-raised', 3],
   ['unusual', 'surface-raised', 3],
   ['accent-fill', 'surface-raised', 3],
@@ -64,6 +62,23 @@ const pairs: [string, string, number][] = [
 
 it('uses the same dark colours with and without the theme switch', () => {
   expect(declared(css, ':root:not([data-theme])')).toEqual(declared(css, ":root[data-theme='dark']"));
+});
+
+/*
+ * Brand exceptions, decided knowingly: Eurth blue buttons and selected options with white text
+ * (feedback point 29, "not even for WCAG"). Kept here so the actual ratios stay visible and
+ * can't slip further.
+ */
+const exceptions: [string, string, number][] = [
+  ['on-selected', 'selected', 3.2],
+  ['selected', 'surface', 3.2],
+  ['selected', 'surface-raised', 2.9],
+];
+
+describe('brand exceptions', () => {
+  it.each(exceptions)('%s on %s stays at %s:1 or better', (fg, bg, min) => {
+    expect(contrast(light[fg]!, light[bg]!)).toBeGreaterThanOrEqual(min);
+  });
 });
 
 describe.each([

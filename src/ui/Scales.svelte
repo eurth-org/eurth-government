@@ -34,9 +34,10 @@
     );
   }
 
+  // Applying keeps the hints open, refreshed for the new settings, until the visitor closes them.
   function apply(s: Suggestion) {
     onapply(s.country);
-    hint = null;
+    if (hint) hint = { ...hint, suggestions: suggest(s.country, hint.axis, hint.direction) };
   }
 </script>
 
@@ -47,16 +48,18 @@
     <li>
       <div class="head">
         <span class="label" title={axis.help}>{axis.label}</span>
-        <span class="score">{score.score}</span>
+        <span class="score">{score.score}%</span>
       </div>
       <div class="slider">
         <span class="end" title={axis.low}><Icon icon={lowIcon} label={axis.low} /></span>
         <input
+          class="range"
+          style:--fill="{score.score}%"
           type="range"
           min="0"
           max="100"
           value={score.score}
-          aria-label="{axis.label}: {score.score}. Drag to see what would change it."
+          aria-label="{axis.label}: {score.score}%. Drag to see which settings move it."
           aria-describedby={hint?.axis === score.axis ? `hint-${score.axis}` : undefined}
           oninput={(e) => drag(score, Number(e.currentTarget.value))}
           onchange={(e) => (e.currentTarget.value = String(score.score))}
@@ -73,7 +76,7 @@
               {#each hint.suggestions as s (s.setting)}
                 <li>
                   <button class="link" onclick={() => onflash([s.setting], true)}>{describeSuggestion(s)}</button>
-                  <span class="delta">{s.delta > 0 ? '+' : ''}{s.delta}</span>
+                  <span class="delta">{s.delta > 0 ? '+' : ''}{s.delta}%</span>
                   <button class="btn btn-primary apply" onclick={() => apply(s)}>Apply</button>
                 </li>
               {/each}
@@ -123,14 +126,8 @@
     font-size: 16px;
   }
 
-  input[type='range'] {
+  .range {
     flex: 1;
-    accent-color: var(--accent-fill);
-    cursor: grab;
-  }
-
-  input[type='range']:active {
-    cursor: grabbing;
   }
 
   .poles {
