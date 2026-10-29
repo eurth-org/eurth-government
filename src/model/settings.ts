@@ -1,4 +1,25 @@
-import type { SettingDef } from './types';
+import type { AxisId } from './axes';
+import type { SettingDef, ShareEffect } from './types';
+
+function share<const Id extends string>(
+  id: Id,
+  label: string,
+  defaultShare: number,
+  help: string,
+  axes?: { [A in AxisId]?: ShareEffect },
+) {
+  return {
+    id,
+    kind: 'share',
+    group: 'Budget',
+    label,
+    question: `How much of the budget goes to ${label.toLowerCase()}?`,
+    help,
+    default: defaultShare,
+    options: [],
+    ...(axes ? { axes } : {}),
+  } as const;
+}
 
 /**
  * Everything a country can be set to, in the order the tool asks.
@@ -140,7 +161,11 @@ export const settings = [
     question: 'Who runs the government day to day, and who can remove them?',
     default: 'pm-legislature',
     options: [
-      { id: 'head-of-state', label: 'The head of state', help: 'The head of state also leads the government.' },
+      {
+        id: 'head-of-state',
+        label: 'The head of state, who also leads the government',
+        help: 'One person is both head of state and head of government: a president elected by the people, or one the legislature chooses and can remove, whatever the title.',
+      },
       {
         id: 'pm-legislature',
         label: 'A prime minister, answerable to the legislature',
@@ -325,8 +350,14 @@ export const settings = [
     group: 'Elections',
     label: 'Voting limited by',
     question: 'Besides age, what limits who may vote?',
-    default: [],
+    default: ['citizenship'],
     options: [
+      {
+        id: 'citizenship',
+        label: 'Citizenship',
+        help: 'Only citizens may vote; residents without citizenship may not.',
+        axes: { participation: -1 },
+      },
       {
         id: 'property',
         label: 'Property',
@@ -450,11 +481,11 @@ export const settings = [
     ],
   },
 
-  // Religion, defence and borders
+  // Religion
   {
     id: 'religion',
     kind: 'choice',
-    group: 'Religion, defence and borders',
+    group: 'Religion',
     label: 'Religion',
     question: "What is religion's place in the state?",
     default: 'secular',
@@ -485,10 +516,11 @@ export const settings = [
       },
     ],
   },
+  // Defence and borders
   {
     id: 'foreignPolicy',
     kind: 'choice',
-    group: 'Religion, defence and borders',
+    group: 'Defence and borders',
     label: 'Foreign policy',
     question: 'How does the state use its armed forces abroad?',
     default: 'defensive',
@@ -528,7 +560,7 @@ export const settings = [
   {
     id: 'conscription',
     kind: 'choice',
-    group: 'Religion, defence and borders',
+    group: 'Defence and borders',
     label: 'Military service',
     question: 'Do citizens have to serve in the armed forces?',
     default: 'none',
@@ -541,7 +573,7 @@ export const settings = [
   {
     id: 'immigration',
     kind: 'choice',
-    group: 'Religion, defence and borders',
+    group: 'Defence and borders',
     label: 'Immigration',
     question: 'Who may move to the country?',
     default: 'managed',
@@ -562,6 +594,19 @@ export const settings = [
       { id: 'closed', label: 'Closed', help: 'Nobody may settle here.', axes: { openness: -2 } },
     ],
   },
+
+  // Budget: shares of government spending, after the UN's Classification of the Functions of
+  // Government (COFOG). Defaults are roughly the average of OECD countries.
+  share('budgetGeneral', 'General services', 13, 'Running the state: parliament, tax collection, foreign affairs and interest on debt.'),
+  share('budgetDefence', 'Defence', 3, 'Armed forces, military aid and defence research.', { militarism: { neutral: 4, per: 3 } }),
+  share('budgetOrder', 'Public order', 4, 'Police, fire services, courts and prisons.'),
+  share('budgetEconomy', 'Economy', 10, 'Transport, energy, farming, industry and support for business.'),
+  share('budgetEnvironment', 'Environment', 2, 'Waste, pollution control and nature protection.'),
+  share('budgetHousing', 'Housing', 1, 'Housing, water supply, street lighting and community development.'),
+  share('budgetHealth', 'Health', 15, 'Hospitals, doctors, medicines and public health.', { welfare: { neutral: 15, per: 8 } }),
+  share('budgetCulture', 'Culture and religion', 3, 'Sport, culture, broadcasting and religious bodies.'),
+  share('budgetEducation', 'Education', 12, 'Schools, universities and training.', { welfare: { neutral: 12, per: 8 } }),
+  share('budgetSocial', 'Social protection', 37, 'Pensions, unemployment, sickness, family and housing benefits.', { welfare: { neutral: 35, per: 8 } }),
 ] as const satisfies readonly SettingDef[];
 
 type Def = (typeof settings)[number];
@@ -571,5 +616,13 @@ export type OptionId<Id extends SettingId> = SettingDefOf<Id>['options'][number]
 
 /** A country: one value for every setting. */
 export type Country = {
-  -readonly [Id in SettingId]: SettingDefOf<Id> extends { kind: 'multi' } ? OptionId<Id>[] : OptionId<Id>;
+  -readonly [Id in SettingId]: SettingDefOf<Id> extends { kind: 'multi' }
+    ? OptionId<Id>[]
+    : SettingDefOf<Id> extends { kind: 'share' }
+      ? number
+      : OptionId<Id>;
 };
+
+/** The budget's settings, in order. */
+export type BudgetId = Extract<Def, { kind: 'share' }>['id'];
+export const budgetIds = settings.filter((s) => s.kind === 'share').map((s) => s.id) as BudgetId[];

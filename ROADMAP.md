@@ -38,6 +38,6 @@ Each phase ships on its own.
 | **2. Government** | The tool itself: government settings, the labels with explanations, axes, contradiction checks, examples, settings in the link | A first version people can try | Preview |
 | **3. Economy and budget** | Sectors, taxes, spending, GDP balance, charts | Economy covered | |
 | **4. Law and society** | The legal or illegal settings, grouped clearly | Society covered | |
-| **5. Sharing** | Wiki, BBCode, Markdown and image exports | Ready to use in real worldbuilding | |
-| **6. Discover** | Filter and compare a world's countries, starting with Eurth | Depends on a country dataset | |
+| **5. Sharing** | Wiki, BBCode, Markdown and image exports | Ready to use in real worldbuilding | Markdown and wikitext done |
+| **6. Discover** | Filter and compare a world's countries, starting with Eurth | Depends on a country dataset | Real countries searchable |
 | **7. Launch** | Replace old Filteries links in Eurth's Worldbuilding Tools docs, announce on the forum and Discord, add to status.eurth.org | Live and findable | |

@@ -32,7 +32,27 @@ export interface MultiSettingDef extends SettingBase {
   readonly default: readonly string[];
 }
 
-export type SettingDef = ChoiceSettingDef | MultiSettingDef;
+/** How a share pushes an axis: every `per` points above `neutral` is one step up, at most 2 either way. */
+export interface ShareEffect {
+  readonly neutral: number;
+  readonly per: number;
+}
+
+/** A share of the government budget, in whole percent. All shares in a country add up to 100. */
+export interface ShareSettingDef {
+  readonly kind: 'share';
+  readonly id: string;
+  readonly group: string;
+  readonly label: string;
+  readonly question: string;
+  /** What the area covers, in one sentence. */
+  readonly help: string;
+  readonly default: number;
+  readonly options: readonly [];
+  readonly axes?: { readonly [A in AxisId]?: ShareEffect };
+}
+
+export type SettingDef = ChoiceSettingDef | MultiSettingDef | ShareSettingDef;
 
 export interface AxisDef {
   readonly id: string;

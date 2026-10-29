@@ -2,11 +2,12 @@ import { describe as group, expect, it } from 'vitest';
 import { axes } from './axes';
 import { checks } from './checks';
 import { dependsOn, matches, type Condition } from './conditions';
+import { budgetTotal, setShare, withBudget } from './budget';
 import { defaultCountry, describe, fill, scoreAxes } from './engine';
 import { examples } from './examples';
 import { decodeCountry, encodeCountry } from './link';
 import { families, type LabelRule } from './naming';
-import { settings, type Country, type SettingId } from './settings';
+import { budgetIds, settings, type Country, type SettingId } from './settings';
 import type { SettingDef } from './types';
 
 const defs = settings as readonly SettingDef[];
@@ -28,6 +29,10 @@ function checkCondition(condition: Condition, where: string) {
     }
     const def = defs.find((d) => d.id === key);
     expect(def, `${where}: unknown setting "${key}"`).toBeDefined();
+    if (def!.kind === 'share') {
+      expect(Object.keys(test as object).every((k) => k === 'above' || k === 'below'), where).toBe(true);
+      continue;
+    }
     const values: string[] =
       typeof test === 'string'
         ? [test]
@@ -49,13 +54,16 @@ function random(seed: number) {
 }
 
 function randomCountry(next: () => number): Country {
-  return Object.fromEntries(
+  const raw = Object.fromEntries(
     defs.map((d) =>
-      d.kind === 'choice'
-        ? [d.id, d.options[Math.floor(next() * d.options.length)]!.id]
-        : [d.id, d.options.filter(() => next() < 0.25).map((o) => o.id)],
+      d.kind === 'share'
+        ? [d.id, Math.floor(next() * 30)]
+        : d.kind === 'choice'
+          ? [d.id, d.options[Math.floor(next() * d.options.length)]!.id]
+          : [d.id, d.options.filter(() => next() < 0.25).map((o) => o.id)],
     ),
   ) as Country;
+  return withBudget(raw, {});
 }
 
 group('settings', () => {
@@ -64,8 +72,10 @@ group('settings', () => {
     for (const d of defs) expect(new Set(d.options.map((o) => o.id)).size, d.id).toBe(d.options.length);
   });
 
-  it('default to options that exist', () => {
+  it('default to options that exist, and a budget that adds up to 100', () => {
+    expect(budgetTotal(defaultCountry())).toBe(100);
     for (const d of defs) {
+      if (d.kind === 'share') continue;
       const defaults = d.kind === 'choice' ? [d.default] : d.default;
       for (const value of defaults) expect(d.options.some((o) => o.id === value), `${d.id}: ${value}`).toBe(true);
     }
@@ -85,6 +95,7 @@ group('settings', () => {
   it('end every sentence with a full stop', () => {
     for (const d of defs) {
       expect(d.question.endsWith('?'), d.id).toBe(true);
+      if (d.kind === 'share') expect(d.help.endsWith('.'), d.id).toBe(true);
       for (const o of d.options) expect(o.help.endsWith('.'), `${d.id}.${o.id}`).toBe(true);
     }
   });
@@ -134,7 +145,8 @@ group('conditions', () => {
     expect(matches({ suffrageLimits: { any: ['sex', 'property'] } }, base)).toBe(true);
     expect(matches({ suffrageLimits: { none: ['sex'] } }, base)).toBe(false);
     expect(matches({ suffrageLimits: { empty: false } }, base)).toBe(true);
-    expect(matches({ suffrageLimits: { empty: true } }, defaultCountry())).toBe(true);
+    expect(matches({ suffrageLimits: { empty: true } }, country({ suffrageLimits: [] }))).toBe(true);
+    expect(matches({ suffrageLimits: { empty: true } }, defaultCountry())).toBe(false);
   });
 
   it('combine with allOf, anyOf and noneOf', () => {
@@ -209,6 +221,38 @@ group('axes', () => {
   });
 });
 
+group('budget', () => {
+  it('keeps adding up to 100 when one share changes, scaling the others in proportion', () => {
+    const before = defaultCountry();
+    const after = setShare(before, 'budgetDefence', 23);
+    expect(after.budgetDefence).toBe(23);
+    expect(budgetTotal(after)).toBe(100);
+    expect(after.budgetSocial).toBeLessThan(before.budgetSocial);
+    expect(after.budgetSocial / after.budgetHealth).toBeCloseTo(before.budgetSocial / before.budgetHealth, 0);
+    expect(budgetTotal(setShare(before, 'budgetSocial', 100))).toBe(100);
+    expect(setShare(before, 'budgetSocial', 100).budgetDefence).toBe(0);
+  });
+
+  it('can fix several shares at once', () => {
+    const c = withBudget(defaultCountry(), { budgetDefence: 20, budgetHealth: 20 });
+    expect([c.budgetDefence, c.budgetHealth, budgetTotal(c)]).toEqual([20, 20, 100]);
+  });
+
+  it('moves the militarism and welfare scales', () => {
+    const score = (c: Country, axis: string) => scoreAxes(c).find((a) => a.axis === axis)!.score;
+    const base = defaultCountry();
+    expect(score(setShare(base, 'budgetDefence', 15), 'militarism')).toBeGreaterThan(score(base, 'militarism'));
+    expect(score(setShare(base, 'budgetSocial', 60), 'welfare')).toBeGreaterThan(score(base, 'welfare'));
+    expect(budgetIds).toHaveLength(10);
+  });
+
+  it('flags a pacifist state with a big army', () => {
+    const c = setShare(country({ foreignPolicy: 'pacifist' }), 'budgetDefence', 12);
+    const check = describe(c).checks.find((x) => x.id === 'pacifist-big-army');
+    expect(check?.message).toBe('A state that has given up war spends 12% of its budget on defence.');
+  });
+});
+
 group('links', () => {
   it('round-trip every example and random countries', () => {
     for (const e of examples) expect(decodeCountry(encodeCountry(e.country))).toEqual(e.country);
@@ -225,6 +269,6 @@ group('links', () => {
   });
 
   it('stay short', () => {
-    expect(encodeCountry(defaultCountry()).length).toBeLessThanOrEqual(24);
+    expect(encodeCountry(defaultCountry()).length).toBeLessThanOrEqual(48);
   });
 });

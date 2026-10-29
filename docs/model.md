@@ -15,7 +15,7 @@ From a country, the engine in [`engine.ts`](../src/model/engine.ts) builds a **p
   - *Regime*: liberal democracy, electoral democracy, electoral autocracy, closed autocracy, plus one-party states, military dictatorships and theocracies.
   - *Rulers*: who may hold office, such as clergy, experts or nobility.
 - **A full name**, put together from the labels: structure, system, regime, rulers, form. For example "Federal" + "presidential" + "republic", or "Unitary" + "one-party" + "republic".
-- **Seven axes** from 0 to 100: participation, competition, checks and balances, decentralisation, religion, militarism and openness.
+- **Eight axes** from 0 to 100: participation, competition, checks and balances, decentralisation, religion, militarism, welfare and openness.
 - **Checks**: combinations that contradict each other ("conflict") or are possible but odd ("unusual").
 
 ## Naming rules
@@ -63,6 +63,20 @@ Each option in `settings.ts` can push an axis from -2 to 2. A country's score is
 3. Run `npm test`. The tests check every example, the data's consistency, and 3,000 random countries.
 
 Write labels and reasons in plain British English, one sentence each, in your own words. Nothing may be copied from the Filteries Political Simulator; see the README.
+
+## Budget
+
+Ten settings of a third kind, `share`, hold the budget: each area's share of all government spending, in whole percent, after the UN's Classification of the Functions of Government (COFOG). They always add up to 100. [`budget.ts`](../src/model/budget.ts) changes one share and scales the others in proportion. A share can push an axis (defence moves Militarism; social protection, health and education move Welfare), and conditions can test it: `budgetDefence: { above: 5 }`.
+
+## Real countries
+
+[`countries.ts`](../src/model/countries.ts) describes every UN member, plus Kosovo, Palestine, Taiwan and Vatican City, as of 2026. Each starts from a template (parliamentary republic, constitutional monarchy, one-party state…) and lists how it differs. Institutions follow the constitution; how free elections are and how independent courts are follow the consensus of election observers. Countries between constitutions carry a `note` and may contradict themselves; the tests require every other country to be free of contradictions.
+
+## Hints, compass and exports
+
+- [`suggest.ts`](../src/model/suggest.ts) finds the single changes that move an axis up or down, biggest first, leaving out changes that would add a contradiction. Dragging a scale in the tool shows them.
+- [`compass.ts`](../src/model/compass.ts) turns the axes into a compass: up is authoritarian (participation, competition and checks, reversed), across is progressive to traditional (religion, and openness reversed) until the economy settings arrive.
+- [`formats.ts`](../src/model/formats.ts) writes a country as Markdown for the Eurth.org forum, or as wikitext with `{{Infobox country}}` for IIWiki.
 
 ## Coming later
 

@@ -1,191 +1,199 @@
 <script lang="ts">
-  import globe from './assets/eurth-globe.gif';
+  import { faGithub } from '@fortawesome/free-brands-svg-icons';
+  import {
+    faArrowUpRightFromSquare,
+    faBookOpen,
+    faCircleInfo,
+    faRotateLeft,
+  } from '@fortawesome/free-solid-svg-icons';
+  import { tick } from 'svelte';
   import yurt from './assets/eurth-yurt-circle.svg';
-  import { axes } from './model/axes';
   import { defaultCountry, describe } from './model/engine';
-  import { examples } from './model/examples';
   import { decodeCountry, encodeCountry } from './model/link';
   import { familyLabels, type Family } from './model/naming';
   import { settings, type Country, type SettingId } from './model/settings';
   import type { SettingDef } from './model/types';
+  import Budget from './ui/Budget.svelte';
+  import Compass from './ui/Compass.svelte';
+  import Field from './ui/Field.svelte';
+  import Icon from './ui/Icon.svelte';
+  import { groupIcons, groupSwatches, panelIcons, severityIcons } from './ui/icons';
+  import Picker from './ui/Picker.svelte';
+  import Radar from './ui/Radar.svelte';
+  import Scales from './ui/Scales.svelte';
+  import SectionNav from './ui/SectionNav.svelte';
+  import Share from './ui/Share.svelte';
+  import ThemeSwitch from './ui/ThemeSwitch.svelte';
 
   const defs = settings as readonly SettingDef[];
+  const slug = (name: string) => name.toLowerCase().replace(/[^a-z]+/g, '-');
   const groups = [...new Set(defs.map((d) => d.group))].map((name) => ({
+    id: slug(name),
     name,
+    icon: groupIcons[name]!,
+    swatch: groupSwatches[name]!,
     defs: defs.filter((d) => d.group === name),
   }));
   const familyOrder: Family[] = ['structure', 'system', 'form', 'regime', 'rulers'];
 
-  // Eurth's forum category colours, as small swatches beside each section.
-  const swatches: Record<string, string> = {
-    'The state': '#12a89d',
-    'Head of state': '#2698d4',
-    Government: '#bf1e2e',
-    Legislature: '#f7941d',
-    Elections: '#3ab54a',
-    'Courts and rulers': '#9eb83b',
-    'Religion, defence and borders': '#f1592a',
-  };
-
-  function fromLink(): Country {
-    const code = new URLSearchParams(location.search).get('c');
-    return code ? decodeCountry(code) : defaultCountry();
-  }
-
-  let country = $state<Country>(fromLink());
+  const params = new URLSearchParams(location.search);
+  let country = $state<Country>(params.get('c') ? decodeCountry(params.get('c')!) : defaultCountry());
+  let name = $state(params.get('n') ?? '');
   const profile = $derived(describe(country));
-  let example = $state('');
-  let copied = $state(false);
+  const shownName = $derived(name.trim() || 'Your country');
 
-  $effect(() => {
-    const url = new URL(location.href);
+  const link = $derived.by(() => {
+    const url = new URL(location.pathname, location.origin);
     url.searchParams.set('c', encodeCountry(country));
-    history.replaceState(null, '', url);
+    if (name.trim()) url.searchParams.set('n', name.trim());
+    return url.toString();
   });
 
-  const values = (): Record<string, string | string[]> => country as unknown as Record<string, string | string[]>;
+  $effect(() => {
+    history.replaceState(null, '', link);
+  });
 
-  function choice(id: string): string {
-    return values()[id] as string;
+  let pickerOpen = $state(false);
+  let current = $state(groups[0]!.id);
+  let flashing = $state<SettingId[]>([]);
+  let flashTimer: ReturnType<typeof setTimeout> | undefined;
+
+  function setValue(id: string, value: string | string[]) {
+    (country as unknown as Record<string, string | string[]>)[id] = value;
   }
 
-  function chosen(id: string): string[] {
-    return values()[id] as string[];
+  /** Draws attention to settings: they flash, and the first is scrolled into view if asked. */
+  async function flash(ids: SettingId[], scroll: boolean) {
+    flashing = [];
+    await tick();
+    flashing = ids;
+    clearTimeout(flashTimer);
+    flashTimer = setTimeout(() => (flashing = []), 3000);
+    if (scroll && ids[0]) {
+      document.getElementById(`field-${ids[0]}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   }
 
-  function setChoice(id: string, option: string) {
-    values()[id] = option;
+  function search(query: string): number {
+    const words = query.toLowerCase().split(/\s+/);
+    const found = defs.filter((d) => {
+      const text = [d.label, d.question, d.group, ...d.options.flatMap((o) => [o.label, o.help])].join(' ').toLowerCase();
+      return words.every((w) => text.includes(w));
+    });
+    flash(
+      found.map((d) => d.id as SettingId),
+      true,
+    );
+    return found.length;
   }
 
-  function toggle(id: string, option: string) {
-    const list = chosen(id);
-    values()[id] = list.includes(option) ? list.filter((o) => o !== option) : [...list, option];
-  }
+  // Which section is under the sticky bar, so the bar can show where you are.
+  $effect(() => {
+    const narrow = matchMedia('(max-width: 899px)');
+    const update = () => {
+      // On wide screens the results sit beside the settings, so only the settings sections count.
+      const ids = [...groups.map((g) => g.id), ...(narrow.matches ? ['results'] : [])];
+      const line = 120;
+      let found = ids[0]!;
+      for (const id of ids) {
+        const el = document.getElementById(id);
+        if (el && el.getBoundingClientRect().top <= line && el.offsetParent !== null) found = id;
+      }
+      current = found;
+    };
+    addEventListener('scroll', update, { passive: true });
+    update();
+    return () => removeEventListener('scroll', update);
+  });
 
-  function helpFor(def: SettingDef): string {
-    if (def.kind === 'choice') return def.options.find((o) => o.id === choice(def.id))?.help ?? '';
-    const picked = def.options.filter((o) => chosen(def.id).includes(o.id));
-    return picked.length ? picked.map((o) => o.help).join(' ') : 'Only age limits who may vote.';
-  }
-
-  function settingLabel(id: SettingId): string {
-    return defs.find((d) => d.id === id)?.label ?? id;
-  }
-
-  function axisDef(id: string) {
-    return axes.find((a) => a.id === id)!;
-  }
-
-  function loadExample() {
-    const found = examples.find((e) => e.id === example);
-    if (found) country = structuredClone(found.country);
-    example = '';
+  function pick(next: Country, countryName: string) {
+    country = next;
+    name = countryName;
   }
 
   function reset() {
     country = defaultCountry();
-  }
-
-  async function copyLink() {
-    await navigator.clipboard.writeText(location.href);
-    copied = true;
-    setTimeout(() => (copied = false), 2000);
+    name = '';
   }
 </script>
 
 <div class="topbar">
   <nav aria-label="Links">
-    <a href="#about">About</a>
-    <a href="https://github.com/eurth-org/eurth-government">GitHub</a>
-    <a href="https://eurth.org">Eurth.org</a>
+    <a href="#about"><Icon icon={faCircleInfo} /> About</a>
+    <a href="https://github.com/eurth-org/eurth-government"><Icon icon={faGithub} /> GitHub</a>
+    <a href="https://eurth.org"><Icon icon={faArrowUpRightFromSquare} /> Eurth.org</a>
   </nav>
 </div>
 
 <header class="header">
   <div class="brand">
-    <img src={globe} alt="" width="36" height="36" />
+    <img src="/eurth-globe.gif" alt="" width="36" height="36" />
     <span class="title">Governmint</span>
     <span class="tagline">Freshly minted governments</span>
     <span class="badge">Preview</span>
   </div>
   <div class="actions">
-    <select aria-label="Load an example" bind:value={example} onchange={loadExample}>
-      <option value="">Examples…</option>
-      {#each examples as e (e.id)}
-        <option value={e.id}>{e.title}</option>
-      {/each}
-    </select>
-    <button class="primary" onclick={copyLink}>{copied ? 'Copied' : 'Copy link'}</button>
-    <button onclick={reset}>Reset</button>
+    <button class="btn" onclick={() => (pickerOpen = true)}><Icon icon={faBookOpen} /> Start from…</button>
+    <button class="btn" onclick={reset}><Icon icon={faRotateLeft} /> Reset</button>
+    <ThemeSwitch />
   </div>
 </header>
 
-<a class="sticky-name" href="#results">
-  <strong>{profile.name}</strong>
-  <span>{profile.labels.regime.label}{profile.checks.length ? ` · ${profile.checks.length} to check` : ''}</span>
-</a>
+<SectionNav sections={groups} {current} name={profile.name} onsearch={search} />
 
 <div class="layout">
   <main class="settings">
-    {#each groups as group (group.name)}
-      <section class="panel">
-        <h2><span class="swatch" style:--swatch={swatches[group.name]}></span>{group.name}</h2>
-        {#each group.defs as def (def.id)}
-          <div class="field">
-            {#if def.kind === 'choice'}
-              <label for={def.id}>{def.question}</label>
-              <select id={def.id} value={choice(def.id)} onchange={(e) => setChoice(def.id, e.currentTarget.value)}>
-                {#each def.options as option (option.id)}
-                  <option value={option.id}>{option.label}</option>
-                {/each}
-              </select>
-            {:else}
-              <fieldset>
-                <legend>{def.question}</legend>
-                <div class="chips">
-                  {#each def.options as option (option.id)}
-                    <label class="chip">
-                      <input
-                        type="checkbox"
-                        checked={chosen(def.id).includes(option.id)}
-                        onchange={() => toggle(def.id, option.id)}
-                      />
-                      {option.label}
-                    </label>
-                  {/each}
-                </div>
-              </fieldset>
-            {/if}
-            <p class="help">{helpFor(def)}</p>
-          </div>
-        {/each}
+    {#each groups as group (group.id)}
+      <section class="panel" id={group.id} aria-labelledby="{group.id}-title">
+        <h2 id="{group.id}-title">
+          <span class="swatch" style:--swatch={group.swatch}></span>
+          <span class="group-icon" style:color={group.swatch}><Icon icon={group.icon} /></span>
+          {group.name}
+        </h2>
+        {#if group.name === 'Budget'}
+          <Budget {country} {flashing} onchange={(next) => (country = next)} />
+        {:else}
+          {#each group.defs as def (def.id)}
+            <Field
+              {def}
+              value={country[def.id as SettingId] as string | string[]}
+              flash={flashing.includes(def.id as SettingId)}
+              onchange={(value) => setValue(def.id, value)}
+            />
+          {/each}
+        {/if}
       </section>
     {/each}
   </main>
 
   <aside class="results" id="results">
-    <section class="panel">
-      <p class="kicker">Your country</p>
-      <h1 aria-live="polite">{profile.name}</h1>
+    <section class="panel summary">
+      <label class="kicker" for="country-name">Country name</label>
+      <input id="country-name" class="name-input" placeholder="Your country" bind:value={name} />
+      <h1 aria-live="polite"><Icon icon={panelIcons.name} /> {profile.name}</h1>
       <p class="regime">{profile.labels.regime.label}</p>
     </section>
 
     {#if profile.checks.length}
-      <section class="panel">
-        <h2>Worth a second look</h2>
+      <section class="panel" aria-labelledby="checks-title">
+        <h2 id="checks-title"><Icon icon={panelIcons.checks} /> Worth a second look</h2>
         <ul class="checks">
           {#each profile.checks as check (check.id)}
             <li class={check.severity}>
-              <span class="severity">{check.severity === 'conflict' ? 'Contradiction' : 'Unusual'}</span>
+              <span class="severity">
+                <Icon icon={severityIcons[check.severity]} />
+                {check.severity === 'conflict' ? 'Contradiction' : 'Unusual'}
+              </span>
               {check.message}
+              <button class="link" onclick={() => flash(check.dependsOn, true)}>Show settings</button>
             </li>
           {/each}
         </ul>
       </section>
     {/if}
 
-    <section class="panel">
-      <h2>Why this name</h2>
+    <section class="panel" aria-labelledby="why-title">
+      <h2 id="why-title"><Icon icon={panelIcons.why} /> Why this name</h2>
       <dl class="labels">
         {#each familyOrder as family (family)}
           {@const label = profile.labels[family]}
@@ -194,30 +202,34 @@
             <dd>
               <strong>{label.label}.</strong>
               {label.because}
-              <span class="based-on">Based on: {label.dependsOn.map(settingLabel).join(', ')}</span>
+              <button class="based-on link" onclick={() => flash(label.dependsOn, true)}>
+                Based on: {label.dependsOn.map((id) => defs.find((d) => d.id === id)?.label ?? id).join(', ')}
+              </button>
             </dd>
           </div>
         {/each}
       </dl>
     </section>
 
-    <section class="panel">
-      <h2>Where it stands</h2>
-      <ul class="axes">
-        {#each profile.axes as score (score.axis)}
-          {@const axis = axisDef(score.axis)}
-          <li>
-            <div class="axis-head">
-              <span title={axis.help}>{axis.label}</span>
-              <span class="score">{score.score}</span>
-            </div>
-            <div class="track" role="img" aria-label="{axis.label}: {score.score} out of 100">
-              <span class="marker" style:left="{score.score}%"></span>
-            </div>
-            <div class="poles"><span>{axis.low}</span><span>{axis.high}</span></div>
-          </li>
-        {/each}
-      </ul>
+    <section class="panel" aria-labelledby="scales-title">
+      <h2 id="scales-title"><Icon icon={panelIcons.scales} /> Where it stands</h2>
+      <p class="intro">Drag a scale to see which settings would move it.</p>
+      <Scales scores={profile.axes} {country} onapply={(next) => (country = next)} onflash={flash} />
+    </section>
+
+    <section class="panel" aria-labelledby="radar-title">
+      <h2 id="radar-title"><Icon icon={panelIcons.radar} /> Shape</h2>
+      <Radar scores={profile.axes} />
+    </section>
+
+    <section class="panel" aria-labelledby="compass-title">
+      <h2 id="compass-title"><Icon icon={panelIcons.compass} /> Compass</h2>
+      <Compass scores={profile.axes} />
+    </section>
+
+    <section class="panel" aria-labelledby="share-title">
+      <h2 id="share-title"><Icon icon={panelIcons.share} /> Share</h2>
+      <Share name={shownName} {country} {profile} {link} />
     </section>
   </aside>
 </div>
@@ -239,16 +251,20 @@
   <p class="fine">
     Inspired by the
     <a href="https://minkinfin.github.io/Filteries-Political-Simulator-Archive/">Filteries Political Simulator</a>
-    (2016–2018). Open source under the
+    (2016–2018). Icons by <a href="https://fontawesome.com">Font Awesome</a> (CC BY 4.0) and
+    <a href="https://github.com/cyberalien/line-md">line-md</a> (MIT). Open source under the
     <a href="https://github.com/eurth-org/eurth-government/blob/main/LICENSE">Apache 2.0 licence</a>.
   </p>
 </footer>
 
+<Picker open={pickerOpen} onpick={pick} onclose={() => (pickerOpen = false)} />
+
 <style>
-  /* Top bar and header, as on eurth.org */
+  /* Top bar and header, as on eurth.org. The bar is Eurth blue; its links sit on the deeper
+     Eurth blue, because white text on Eurth blue itself is too faint (3.2:1). */
   .topbar {
-    background: var(--accent-fill);
-    height: 40px;
+    background: var(--eurth-blue);
+    min-height: 40px;
     display: flex;
     justify-content: flex-end;
     align-items: center;
@@ -257,23 +273,46 @@
 
   .topbar nav {
     display: flex;
-    gap: var(--space-6);
+    gap: var(--space-2);
   }
 
   .topbar a {
-    color: var(--on-accent-small);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: var(--radius-control);
+    background: var(--selected);
+    color: var(--on-selected);
     font-size: 14px;
     font-weight: 600;
     text-decoration: none;
+    transition:
+      box-shadow 0.15s,
+      transform 0.15s;
   }
 
   .topbar a:hover {
-    text-decoration: underline;
+    box-shadow: 0 2px 6px rgb(0 0 0 / 0.25);
+    transform: translateY(-1px);
+  }
+
+  .topbar a:focus-visible {
+    outline-color: var(--on-selected);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .topbar a {
+      transition: none;
+    }
+
+    .topbar a:hover {
+      transform: none;
+    }
   }
 
   .header {
     background: var(--header);
-    border-bottom: 1px solid var(--line);
     min-height: 56px;
     padding: var(--space-2) var(--space-4);
     display: flex;
@@ -319,68 +358,6 @@
   .actions {
     display: flex;
     gap: var(--space-2);
-    min-width: 0;
-  }
-
-  .actions select {
-    min-width: 0;
-    max-width: 16rem;
-  }
-
-  @media (max-width: 640px) {
-    .actions {
-      width: 100%;
-    }
-
-    .actions select {
-      flex: 1;
-      max-width: none;
-    }
-  }
-
-  button,
-  select {
-    border: 1px solid transparent;
-    border-radius: var(--radius-sm);
-    background: var(--button);
-    padding: 6px 12px;
-    cursor: pointer;
-  }
-
-  button.primary {
-    background: var(--accent-fill);
-    color: var(--on-accent-small);
-    font-weight: 700;
-  }
-
-  button:hover,
-  select:hover {
-    filter: brightness(1.08);
-  }
-
-  /* Mobile: keep the name in view while changing settings */
-  .sticky-name {
-    display: none;
-  }
-
-  @media (max-width: 899px) {
-    .sticky-name {
-      position: sticky;
-      top: 0;
-      z-index: 1;
-      display: flex;
-      flex-direction: column;
-      padding: var(--space-2) var(--space-4);
-      background: var(--surface-raised);
-      border-bottom: 1px solid var(--line);
-      color: var(--ink);
-      text-decoration: none;
-    }
-
-    .sticky-name span {
-      color: var(--ink-muted);
-      font-size: 13px;
-    }
   }
 
   /* Layout */
@@ -398,11 +375,12 @@
       align-items: start;
     }
 
-    .results {
+    /* The name stays in view beside whichever settings you're changing; the rest scrolls. */
+    .summary {
       position: sticky;
-      top: var(--space-4);
-      max-height: calc(100vh - 2 * var(--space-4));
-      overflow-y: auto;
+      top: calc(var(--nav-height) + var(--space-3));
+      z-index: 1;
+      box-shadow: 0 0 0 var(--space-3) var(--surface);
     }
   }
 
@@ -435,63 +413,13 @@
     flex: none;
   }
 
-  /* Settings */
-  .field + .field {
-    margin-top: var(--space-4);
-  }
-
-  .field label,
-  legend {
-    display: block;
-    margin-bottom: var(--space-1);
-    font-weight: 600;
-  }
-
-  fieldset {
-    margin: 0;
-    padding: 0;
-    border: 0;
-  }
-
-  .field select {
-    width: 100%;
-    background: var(--surface);
-    border-color: var(--line-strong);
-  }
-
-  .chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-  }
-
-  .chip {
+  .group-icon {
     display: inline-flex;
-    align-items: center;
-    gap: var(--space-1);
-    font-weight: 400;
-    padding: 4px 10px;
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    margin: 0;
-  }
-
-  .chip:has(input:checked) {
-    background: var(--accent-fill);
-    border-color: var(--accent-fill);
-    color: var(--on-accent-small);
-  }
-
-  .help {
-    margin: var(--space-1) 0 0;
-    color: var(--ink-muted);
-    font-size: 13px;
   }
 
   /* Results */
   .kicker {
-    margin: 0 0 var(--space-1);
+    display: block;
     color: var(--ink-muted);
     font-size: 12px;
     font-weight: 700;
@@ -499,10 +427,28 @@
     text-transform: uppercase;
   }
 
+  .name-input {
+    width: 100%;
+    margin: var(--space-1) 0 var(--space-3);
+    padding: 4px 8px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-control);
+    background: var(--surface);
+    font-weight: 600;
+  }
+
   h1 {
+    display: flex;
+    gap: var(--space-2);
     margin: 0;
     font-size: 24px;
     line-height: 1.25;
+  }
+
+  h1 :global(.icon) {
+    margin-top: 0.2em;
+    color: var(--accent-fill);
+    font-size: 0.8em;
   }
 
   .regime {
@@ -510,12 +456,18 @@
     color: var(--ink-muted);
   }
 
+  .intro {
+    margin: calc(-1 * var(--space-2)) 0 var(--space-3);
+    color: var(--ink-muted);
+    font-size: 13px;
+  }
+
   .checks {
     margin: 0;
     padding: 0;
     list-style: none;
     display: grid;
-    gap: var(--space-2);
+    gap: var(--space-3);
   }
 
   .severity {
@@ -529,16 +481,23 @@
     text-transform: uppercase;
   }
 
-  .severity::before {
-    content: '';
-    width: 10px;
-    height: 10px;
-    border-radius: var(--radius-sm);
-    background: var(--unusual);
+  .unusual .severity :global(.icon) {
+    color: var(--unusual);
   }
 
-  .conflict .severity::before {
-    background: var(--danger);
+  .conflict .severity :global(.icon) {
+    color: var(--danger);
+  }
+
+  .link {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--accent-text);
+    text-align: left;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 13px;
   }
 
   .labels {
@@ -564,52 +523,6 @@
   .based-on {
     display: block;
     margin-top: 2px;
-    color: var(--ink-muted);
-    font-size: 13px;
-  }
-
-  .axes {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    display: grid;
-    gap: var(--space-3);
-  }
-
-  .axis-head {
-    display: flex;
-    justify-content: space-between;
-    font-weight: 600;
-  }
-
-  .score {
-    font-variant-numeric: tabular-nums;
-    color: var(--ink-muted);
-  }
-
-  .track {
-    position: relative;
-    height: 4px;
-    margin: 8px 0 6px;
-    background: var(--line);
-    border-radius: 2px;
-  }
-
-  .marker {
-    position: absolute;
-    top: 50%;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: var(--accent-fill);
-    transform: translate(-50%, -50%);
-  }
-
-  .poles {
-    display: flex;
-    justify-content: space-between;
-    color: var(--ink-muted);
-    font-size: 12px;
   }
 
   /* Footer */
