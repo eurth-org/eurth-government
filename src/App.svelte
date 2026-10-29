@@ -48,6 +48,21 @@
   const profile = $derived(describe(country));
   const shownName = $derived(name.trim() || 'Your country');
 
+  // While the empty name field has focus, its placeholder suggests a name: classics of fiction,
+  // with a few of Eurth's nations among them.
+  const suggestions = ['Ruritania', 'Orioni', 'Freedonia', 'Dolchland', 'Grand Fenwick', 'Adaptus', 'Elbonia', 'Lysia'];
+  let placeholder = $state('Your country');
+  let suggesting: ReturnType<typeof setInterval> | undefined;
+  function suggestNames() {
+    let i = 0;
+    placeholder = suggestions[i]!;
+    suggesting = setInterval(() => (placeholder = suggestions[++i % suggestions.length]!), 1800);
+  }
+  function stopSuggesting() {
+    clearInterval(suggesting);
+    placeholder = 'Your country';
+  }
+
   const link = $derived.by(() => {
     const url = new URL(location.pathname, location.origin);
     url.searchParams.set('c', encodeCountry(country));
@@ -162,7 +177,7 @@
   </div>
   <div class="actions">
     <button class="btn" onclick={() => (pickerOpen = true)}><Icon icon={faBookOpen} /> Start from…</button>
-    <button class="btn" onclick={reset}><Icon icon={faRotateLeft} /> Reset</button>
+    <button class="btn reset" onclick={reset}><Icon icon={faRotateLeft} /> Reset</button>
     <ThemeSwitch />
   </div>
 </header>
@@ -207,8 +222,18 @@
   <aside class="results" id="results">
     <section class="panel summary">
       <label class="kicker" for="country-name"><Icon icon={panelIcons.name} /> Country name</label>
-      <input id="country-name" class="name-input" placeholder="Your country" bind:value={name} />
-      <h1 aria-live="polite">{profile.name}</h1>
+      <input
+        id="country-name"
+        class="name-input"
+        {placeholder}
+        bind:value={name}
+        onfocus={suggestNames}
+        onblur={stopSuggesting}
+      />
+      {#key profile.name}
+        <!-- A fresh name gets a "freshly minted" shine. -->
+        <h1 class="minted" aria-live="polite">{profile.name}</h1>
+      {/key}
       <p class="sentence">{sentence(name.trim() || 'This country', profile)}</p>
     </section>
 
@@ -299,7 +324,7 @@
       </p>
     </li>
     <li>
-      <span class="about-icon heart"><Icon icon={faHeart} /></span>
+      <span class="about-icon heart beat"><Icon icon={faHeart} /></span>
       <p>
         Made with love by <a href="https://iiwiki.com/w/Orioni">Orioni</a>, for Eurth and the people who live in it,
         going strong since 2004. Thanks to <a href="https://www.nationstates.net">NationStates</a>, where Eurth's
@@ -518,6 +543,71 @@
     margin: 0;
     font-size: 24px;
     line-height: 1.25;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* A shine sweeps across a freshly minted name. */
+    .minted {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .minted::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(100deg, transparent 30%, rgb(255 255 255 / 0.6) 50%, transparent 70%);
+      transform: translateX(-100%);
+      animation: shine 0.9s ease-out 0.1s;
+      pointer-events: none;
+    }
+
+    :global([data-theme='dark']) .minted::after {
+      background: linear-gradient(100deg, transparent 30%, rgb(255 255 255 / 0.25) 50%, transparent 70%);
+    }
+
+    /* The flag waves when you point at it, the reset arrow winds back, the heart beats. */
+    .kicker:hover :global(.icon) {
+      animation: wave 0.6s ease-in-out;
+      transform-origin: 10% 90%;
+    }
+
+    .reset :global(.icon) {
+      transition: transform 0.4s ease-out;
+    }
+
+    .reset:hover :global(.icon) {
+      transform: rotate(-200deg);
+    }
+
+    .about li:hover .beat :global(.icon) {
+      animation: beat 0.8s ease-in-out;
+    }
+  }
+
+  @keyframes shine {
+    to {
+      transform: translateX(100%);
+    }
+  }
+
+  @keyframes wave {
+    25% {
+      transform: rotate(-12deg);
+    }
+    60% {
+      transform: rotate(9deg);
+    }
+  }
+
+  @keyframes beat {
+    15%,
+    45% {
+      transform: scale(1.3);
+    }
+    30% {
+      transform: scale(1.05);
+    }
   }
 
   .sentence {

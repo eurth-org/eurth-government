@@ -360,6 +360,17 @@
     color: var(--swatch);
   }
 
+  /* Section icons give a little nudge under the pointer. */
+  @media (prefers-reduced-motion: no-preference) {
+    .chip-icon {
+      transition: transform 0.2s cubic-bezier(0.3, 1.6, 0.6, 1);
+    }
+
+    .chips a:hover .chip-icon {
+      transform: translateY(-2px) rotate(-8deg);
+    }
+  }
+
   .progress {
     height: 3px;
     background: var(--line);

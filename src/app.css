@@ -282,6 +282,45 @@ html.vt-shrink::view-transition-new(root) {
   background: transparent;
 }
 
+/* Small delights, only for visitors who don't ask for reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  /* The check mark pops in when an option is chosen. */
+  .pill:has(input:checked) .check {
+    animation: pop 0.25s cubic-bezier(0.3, 1.6, 0.6, 1);
+  }
+
+  /* Slider handles grow under the pointer, a little more while held. */
+  .range::-webkit-slider-thumb {
+    transition: transform 0.15s;
+  }
+
+  .range:hover::-webkit-slider-thumb {
+    transform: scale(1.15);
+  }
+
+  .range:active::-webkit-slider-thumb {
+    transform: scale(1.3);
+  }
+
+  .range::-moz-range-thumb {
+    transition: transform 0.15s;
+  }
+
+  .range:hover::-moz-range-thumb {
+    transform: scale(1.15);
+  }
+
+  .range:active::-moz-range-thumb {
+    transform: scale(1.3);
+  }
+}
+
+@keyframes pop {
+  from {
+    transform: scale(0);
+  }
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;

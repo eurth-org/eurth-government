@@ -43,7 +43,9 @@
     let start = 0;
     return lines.map((line) => {
       const share = country[line.id];
-      const part = { ...line, share, start };
+      // Each pie slice lifts out along its middle when pointed at.
+      const middle = ((start + share / 2) / 100) * Math.PI * 2 - Math.PI / 2;
+      const part = { ...line, share, start, dx: Math.cos(middle) * 6, dy: Math.sin(middle) * 6 };
       start += share;
       return part;
     });
@@ -116,6 +118,8 @@
           <path
             d={slice(part.start, part.start + part.share)}
             fill={part.colour}
+            style:--dx="{part.dx}px"
+            style:--dy="{part.dy}px"
             role="presentation"
             onpointermove={(e) => show(e, part.def.label, part.share)}
           ><title>{part.def.label}: {part.share}%</title></path>
@@ -208,7 +212,19 @@
 
   rect:hover,
   path:hover {
-    opacity: 0.8;
+    opacity: 0.85;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    path {
+      transition:
+        opacity 0.15s,
+        transform 0.2s cubic-bezier(0.3, 1.4, 0.6, 1);
+    }
+
+    path:hover {
+      transform: translate(var(--dx), var(--dy));
+    }
   }
 
   .centre {
