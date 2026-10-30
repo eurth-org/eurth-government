@@ -1,7 +1,6 @@
 <script lang="ts">
   import { faGithub, faWikipediaW } from '@fortawesome/free-brands-svg-icons';
   import {
-    faArrowUpRightFromSquare,
     faBookOpen,
     faCircleInfo,
     faCircleQuestion,
@@ -383,7 +382,6 @@
     <nav aria-label="Links">
       <button class="pill-link" onclick={() => (infoOpen = true)}><Icon icon={faCircleInfo} /> About</button>
       <a href={ref('https://github.com/eurth-org/eurth-government')}><Icon icon={faGithub} /> GitHub</a>
-      <a href={ref('https://eurth.org')}><Icon icon={faArrowUpRightFromSquare} /> Eurth.org</a>
       <ThemeSwitch />
     </nav>
   </div>

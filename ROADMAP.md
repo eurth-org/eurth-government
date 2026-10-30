@@ -46,7 +46,7 @@ Times in UTC. Pull requests are on [GitHub](https://github.com/eurth-org/eurth-g
 | #6 Feedback round 6 | 29 Oct 2026, 19:10 | Feedback 101–113: a globe that winds down instead of freezing, the name as on eurth.org, even header tools, tooltips above the sticky bar, the globe as a way back to the top, budget and compass toolbars, an Export panel with JSON, WebP and Copy image, steady options, outside links in new tabs, a roomier About |
 | #7 Feedback round 7 | 29 Oct 2026, 20:21 | Feedback 114–133: budget locks with an angry slider, wider treemap tiles, the budget as Markdown and JSON, a softer clink, an Eurth bar at the bottom, a globe that keeps turning (with a switch), the compass as Markdown with a Mermaid chart and as JSON, Copy text and a checked Copy image, plain chart and format buttons, a steadier name card, a merged footer, Apache 2.0 throughout and a disclaimer, no stored caches |
 | #8 Feedback round 8 | 29 Oct 2026, 20:47 | Feedback 134–138: the Eurth coin in Twemoji style, hardened names and exports, strict security headers, a privacy line, a fixed back-to-top tooltip |
-| #9 Feedback round 9 | 30 Oct 2026, 12:10 | Feedback 139–140: the Eurth coin as favicon, app icon and logo |
+| #9 Feedback round 9 | 30 Oct 2026, 12:10 | Feedback 139–141: the Eurth coin as favicon, app icon and logo; no Eurth link in the header |
 
 ## What's in so far
 
@@ -231,6 +231,7 @@ Every numbered point from the reviews, and the update that did it.
 | 138 | When does the coin clink? | Explained in About: only with sound on, when you save, copy a link, a text or an image, or when a scale reaches 100% and you can see it (#8) |
 | 139 | The coin as favicon and app icon | An SVG favicon, a favicon.ico (16, 32 and 48 pixels), and app icons with the coin on Eurth blue for iOS and Android, with a web app manifest; scripts/make-icons.sh makes them all. The turning globe favicon is gone (#9) |
 | 140 | The coin as the logo, where the globe was | In the header and in the sticky bar's way back to the top. It flips when the page opens and when pointed at, and spins when you choose "The whole world"; the About switch now stops only the footer's hearts (#9) |
+| 141 | No Eurth link in the header | Gone from the top bar, so it doesn't read as advertising; Eurth stays in the footer and the bottom bar (#9) |
 
 ## Ideas
 
