@@ -136,9 +136,9 @@
         </p>
         <p class="setting">
           <button class="btn" aria-pressed={motion.on} onclick={() => setMotion(!motion.on)}>
-            Globe and hearts: {motion.on ? 'moving' : 'still'}
+            Hearts: {motion.on ? 'beating' : 'still'}
           </button>
-          <span class="note">The Eurth globe turns and the footer's hearts beat. Stop them here.</span>
+          <span class="note">The footer's hearts beat every few seconds. Stop them here.</span>
         </p>
       </section>
     </div>
