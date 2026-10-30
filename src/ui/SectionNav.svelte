@@ -10,7 +10,7 @@
     type IconDefinition,
   } from '@fortawesome/free-solid-svg-icons';
   import { scale } from 'svelte/transition';
-  import Globe from './Globe.svelte';
+  import Coin from './Coin.svelte';
   import Icon from './Icon.svelte';
 
   interface Section {
@@ -56,7 +56,7 @@
   let list: HTMLUListElement;
 
   // How far down the page you are, as a thin bar along the bottom of the sticky bar. Once the
-  // header has scrolled away, the Eurth globe joins the bar as a way back to the top.
+  // header has scrolled away, the Eurth coin joins the bar as a way back to the top.
   const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let progress = $state(0);
   let away = $state(false);
@@ -132,7 +132,7 @@
         transition:scale={{ duration: calm ? 0 : 200, start: 0.6 }}
         onclick={() => scrollTo({ top: 0, behavior: calm ? 'auto' : 'smooth' })}
       >
-        <Globe size={30} />
+        <Coin size={30} />
       </button>
     {/if}
     <form
@@ -490,7 +490,7 @@
       gap: var(--space-2);
     }
 
-    /* The search fills the row, leaving room for the globe beside it when it's there. */
+    /* The search fills the row, leaving room for the coin beside it when it's there. */
     .search {
       flex: 1 1 0;
       min-width: 0;

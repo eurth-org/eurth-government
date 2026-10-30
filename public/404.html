@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Unclaimed territory · Governmint</title>
     <meta name="robots" content="noindex" />
-    <link rel="icon" type="image/png" href="/favicon-64.png" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <style>
       /* Governmint's 404: no government has claimed this page yet. Light or dark, as the system says. */
       :root {
@@ -48,22 +48,26 @@
         text-align: center;
       }
 
-      .globe {
+      /* The Eurth coin, flipped twice on arrival. */
+      .coin {
+        display: block;
         width: 96px;
         height: 96px;
         margin: 0 auto 16px;
-        background: url('/eurth-globe-sprite.png') 0 0 / 96px auto no-repeat;
-        animation: turn 9.6s steps(240) 1;
+        animation: flip 1.4s cubic-bezier(0.3, 0.7, 0.4, 1) 1;
       }
 
-      @keyframes turn {
+      @keyframes flip {
+        from {
+          transform: perspective(400px) rotateY(0);
+        }
         to {
-          background-position: 0 -23040px;
+          transform: perspective(400px) rotateY(720deg);
         }
       }
 
       @media (prefers-reduced-motion: reduce) {
-        .globe {
+        .coin {
           animation: none;
         }
       }
@@ -112,7 +116,7 @@
   </head>
   <body>
     <main>
-      <div class="globe" aria-hidden="true"></div>
+      <img class="coin" src="/favicon.svg" alt="" width="96" height="96" />
       <h1>Unclaimed territory</h1>
       <p>
         No government has claimed this page yet: no flag, no constitution, not even a customs post. Perhaps the map was

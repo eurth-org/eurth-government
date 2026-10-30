@@ -45,7 +45,8 @@ Times in UTC. Pull requests are on [GitHub](https://github.com/eurth-org/eurth-g
 | #5 Feedback round 5 | 29 Oct 2026, 17:42 | Feedback 82–100: a sharing image for link previews, a share window, famous fictional and NationStates nations for Random, the dice beside the name, real countries recognised by name, a tidier header, stepping through a second look, clearer treemap labels, a spider that stays on its web, About in a window and a lighter footer, an accessibility pass |
 | #6 Feedback round 6 | 29 Oct 2026, 19:10 | Feedback 101–113: a globe that winds down instead of freezing, the name as on eurth.org, even header tools, tooltips above the sticky bar, the globe as a way back to the top, budget and compass toolbars, an Export panel with JSON, WebP and Copy image, steady options, outside links in new tabs, a roomier About |
 | #7 Feedback round 7 | 29 Oct 2026, 20:21 | Feedback 114–133: budget locks with an angry slider, wider treemap tiles, the budget as Markdown and JSON, a softer clink, an Eurth bar at the bottom, a globe that keeps turning (with a switch), the compass as Markdown with a Mermaid chart and as JSON, Copy text and a checked Copy image, plain chart and format buttons, a steadier name card, a merged footer, Apache 2.0 throughout and a disclaimer, no stored caches |
-| #8 Feedback round 8 | 29 Oct 2026, 20:42 | Feedback 134–138: the Eurth coin in Twemoji style, hardened names and exports, strict security headers, a privacy line, a fixed back-to-top tooltip |
+| #8 Feedback round 8 | 29 Oct 2026, 20:47 | Feedback 134–138: the Eurth coin in Twemoji style, hardened names and exports, strict security headers, a privacy line, a fixed back-to-top tooltip |
+| #9 Feedback round 9 | 30 Oct 2026, 12:10 | Feedback 139–141: the Eurth coin as favicon, app icon and logo; no Eurth link in the header |
 
 ## What's in so far
 
@@ -73,14 +74,14 @@ The update that added each item is in brackets.
 - Charts, scales and the compass glide to new values instead of jumping (#4).
 
 **Look and accessibility**
-- eurth.org's look: Eurth blue bars at the top and bottom (the bottom one linking Eurth's forums, map, news and status), the Eurth globe turning as on eurth.org (with a switch to stop it), the forum's light and Solarized dark schemes, Font Awesome icons in Eurth's category colours (#1; icons #2; Eurth blue #3).
+- eurth.org's look: Eurth blue bars at the top and bottom (the bottom one linking Eurth's forums, map, news and status), the Eurth coin as logo, favicon and app icon, the forum's light and Solarized dark schemes, Font Awesome icons in Eurth's category colours (#1; icons #2; Eurth blue #3).
 - The Deluminator switch, with its animated sun and moon: light, dark, or Auto to follow the device (#2; animation restored #3; Auto #4).
 - Small delights: a shine on each new name, fictional country names as placeholder, a waving flag, popping check marks and more, all off for reduced motion (#3). Round 4 added sixteen more (see feedback 63) and buttons that act out their click (#4); the footer's hearts beat (#5).
 - About Governmint in a window (the "?" button, the About link or the ? key): what it does, privacy, keyboard shortcuts, sound and ideas. The footer keeps thanks, credits, the licence and Eurth (#5).
 - Privacy and security: no trackers or cookies; names cleaned wherever they go; a strict Content-Security-Policy and Permissions-Policy (#8).
 - Accessibility: a skip link, one h1, the main landmark, field help tied to its question, labelled downloads, tooltips that stay while pointed at and go with Escape, a switch for single-key shortcuts, and the country's name in the page once. axe-core finds nothing but the Eurth blue brand pairs, in light and dark (#5).
 - A contrast test for every colour pair in both themes, with the Eurth-blue brand decisions listed as named exceptions (#2; exceptions #3).
-- The favicon is the Eurth globe, turning where the browser allows (#2; turning #3).
+- The favicon and app icons are the Eurth coin, made by scripts/make-icons.sh; a web app manifest puts it on phones' home screens (#2; turning globe #3; coin #9).
 - Links to other sites carry `?ref=gov.eurth.org`; the logo goes home; a 404 page, "Unclaimed territory" (#4).
 - A sharing image and Open Graph and X card tags, for link previews on Reddit, Facebook, LinkedIn, X, Bluesky, Mastodon, Discord, Slack and WhatsApp (#5).
 
@@ -228,6 +229,9 @@ Every numbered point from the reviews, and the update that did it.
 | 136 | Harden the name and search fields | There's no server or database, so no SQL to inject, and the page escapes what it shows. Still: names are capped at 60 characters and stripped of invisible and direction-flipping characters; Markdown, wikitext and the forum post keep a name as plain text; saved countries are checked when read back; file names are cleaned; searches are capped. A Content-Security-Policy now lets only Governmint's own scripts run, and a Permissions-Policy turns off camera, microphone and location (#8) |
 | 137 | A real coin, like Twemoji's, with the yurt | The Eurth coin: gold, with a deeper rim and the yurt embossed in pale gold, on the name card, in the bursts and on the sharing image (#8) |
 | 138 | When does the coin clink? | Explained in About: only with sound on, when you save, copy a link, a text or an image, or when a scale reaches 100% and you can see it (#8) |
+| 139 | The coin as favicon and app icon | An SVG favicon, a favicon.ico (16, 32 and 48 pixels), and app icons with the coin on Eurth blue for iOS and Android, with a web app manifest; scripts/make-icons.sh makes them all. The turning globe favicon is gone (#9) |
+| 140 | The coin as the logo, where the globe was | In the header and in the sticky bar's way back to the top. It flips when the page opens and when pointed at, and spins when you choose "The whole world"; the About switch now stops only the footer's hearts (#9) |
+| 141 | No Eurth link in the header | Gone from the top bar, so it doesn't read as advertising; Eurth stays in the footer and the bottom bar (#9) |
 
 ## Ideas
 

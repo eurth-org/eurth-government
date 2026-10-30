@@ -1,7 +1,6 @@
 <script lang="ts">
   import { faGithub, faWikipediaW } from '@fortawesome/free-brands-svg-icons';
   import {
-    faArrowUpRightFromSquare,
     faBookOpen,
     faCircleInfo,
     faCircleQuestion,
@@ -37,7 +36,7 @@
   import Export from './ui/Export.svelte';
   import Field from './ui/Field.svelte';
   import { clink, setSound, soundOn, toast } from './ui/fun';
-  import Globe from './ui/Globe.svelte';
+  import Coin from './ui/Coin.svelte';
   import Info from './ui/Info.svelte';
   import NameCard from './ui/NameCard.svelte';
   import { save } from './ui/saved';
@@ -295,7 +294,7 @@
     if (sound) clink();
   }
 
-  // Easter egg: choosing "The whole world" sets the globe spinning faster for a while.
+  // Easter egg: choosing "The whole world" sets the coin in the header spinning.
   let worldSpin = $state(0);
   let lastExtent = untrack(() => country.extent);
   $effect(() => {
@@ -383,7 +382,6 @@
     <nav aria-label="Links">
       <button class="pill-link" onclick={() => (infoOpen = true)}><Icon icon={faCircleInfo} /> About</button>
       <a href={ref('https://github.com/eurth-org/eurth-government')}><Icon icon={faGithub} /> GitHub</a>
-      <a href={ref('https://eurth.org')}><Icon icon={faArrowUpRightFromSquare} /> Eurth.org</a>
       <ThemeSwitch />
     </nav>
   </div>
@@ -395,7 +393,7 @@
       <!-- Like any site's logo, this one goes home: a fresh, default country. -->
       <h1 class="title">
         <a class="home" href="/" title="Governmint: start afresh">
-          <Globe spin={worldSpin} />
+          <Coin spin={worldSpin} />
           Governmint
         </a>
       </h1>
@@ -910,7 +908,7 @@
     display: inline-flex;
   }
 
-  /* The footer's hearts beat now and then while it's in view (stopped with the globe, in
+  /* The footer's hearts beat now and then while it's in view (stopped with the switch in
      About), and at once when pointed at. */
   @media (prefers-reduced-motion: no-preference) {
     .beating .heart :global(.icon) {

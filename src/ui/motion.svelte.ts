@@ -1,7 +1,7 @@
 /**
- * Whether the things that keep moving on their own do: the turning Eurth globe and the beating
- * hearts in the footer. They do, unless the visitor stops them in About (the pause WCAG 2.2.2
- * asks for) or prefers reduced motion.
+ * Whether what keeps moving on its own does: the footer's hearts, which beat every few seconds.
+ * They do, unless the visitor stops them in About (the pause WCAG 2.2.2 asks for) or prefers
+ * reduced motion.
  */
 const key = 'governmint:motion';
 
