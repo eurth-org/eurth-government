@@ -146,6 +146,6 @@ Every numbered point from the reviews, and the release that did it (the pull req
 | 140 | The coin as the logo, where the globe was | In the header and in the sticky bar's way back to the top. It flips when the page opens and when pointed at, and spins when you choose "The whole world"; the About switch now stops only the footer's hearts (#9) |
 | 141 | No Eurth link in the header | Gone from the top bar, so it doesn't read as advertising; Eurth stays in the footer and the bottom bar (#9) |
 | 142 | Going from dark to light skips the Deluminator circle | The circle now comes from the stylesheet, so it's in place from the first frame; before, the light page could show in full for a moment (#10) |
-| 143 | A count of the countries minted so far | Not built yet: it needs a decision on how to count. See Next in [roadmap.md](../roadmap.md) |
+| 143 | A count of the countries minted so far | In the header: a country counts when it's saved, its link copied, or it's shared or exported, once per visit. Only "one more" leaves the page; a small Worker keeps a single number (#11) |
 | 144 | Footer buttons: an icon animation on hover, as with line-md | Each icon draws its outline, then fills in (#10) |
 | 145 | Offline, as on the Tofo dive club site | A service worker keeps a copy of the site on the device after the first visit (flags as they're shown), and a "No signal" note says it's working offline (#10) |

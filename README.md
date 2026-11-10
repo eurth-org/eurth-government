@@ -8,9 +8,9 @@ Status: preview. Government settings work; economy and law come next. See the [r
 
 ## How it works
 
-- A static site built with Vite, Svelte and TypeScript. There is no server, database or account: everything runs in the browser, and a country's settings live in its link (`?c=…`).
+- A static site built with Vite, Svelte and TypeScript. There is no account, and nothing about you or your country is kept on a server: everything runs in the browser, and a country's settings live in its link (`?c=…`).
 - The model in `src/model/` is data plus a small engine: settings, axes, naming rules and contradiction checks. [docs/model.md](docs/model.md) explains it and how to change it.
-- A Cloudflare Worker serves the built files from `dist/` on the `gov.eurth.org` custom domain (`wrangler.jsonc`). It runs no code of its own.
+- A Cloudflare Worker serves the built files from `dist/` on the `gov.eurth.org` custom domain (`wrangler.jsonc`). Its only code (`worker/`) answers `/api/*`: it counts minted countries, one number in one Durable Object, which the header shows. A country counts when someone saves, copies its link, shares or exports it, once per visit, and at most 60 a minute.
 - `public/_headers` sets security and caching headers, and allows embedding on eurth.org.
 - The look follows eurth.org and the Eurth design system (`src/app.css`), light, dark or Auto (following the device) through the Deluminator-style switch. `src/contrast.test.ts` checks every colour pair against WCAG 2.2 AA, and the top bar against AAA.
 - Icons by [Font Awesome](https://fontawesome.com) (CC BY 4.0); sun and moon by [line-md](https://github.com/cyberalien/line-md) (MIT); flags by [Twemoji](https://github.com/jdecked/twemoji) (CC BY 4.0).

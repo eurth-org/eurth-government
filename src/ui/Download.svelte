@@ -2,6 +2,7 @@
   import { faCheck, faCopy, faDownload } from '@fortawesome/free-solid-svg-icons';
   import { canCopyImage, canWebp, copyImage, downloadImage, downloadSvg, downloadText } from './download';
   import { clink, toast } from './fun';
+  import { mint } from './minted.svelte';
   import Icon from './Icon.svelte';
 
   /**
@@ -26,6 +27,7 @@
     if (!chart) return;
     try {
       await copyImage(chart);
+      mint();
       copied = true;
       toast('Image copied: paste it anywhere.');
       clink();
@@ -38,13 +40,13 @@
 
 <div class="download">
   <span class="label"><Icon icon={faDownload} /> Download as</span>
-  <button class="btn" aria-label="Download {name} as PNG" onclick={() => svg() && downloadImage(svg()!, name, 'png')}>PNG</button>
-  <button class="btn" aria-label="Download {name} as SVG" onclick={() => svg() && downloadSvg(svg()!, name)}>SVG</button>
+  <button class="btn" aria-label="Download {name} as PNG" onclick={() => svg() && (mint(), downloadImage(svg()!, name, 'png'))}>PNG</button>
+  <button class="btn" aria-label="Download {name} as SVG" onclick={() => svg() && (mint(), downloadSvg(svg()!, name))}>SVG</button>
   {#if canWebp}
-    <button class="btn" aria-label="Download {name} as WebP" onclick={() => svg() && downloadImage(svg()!, name, 'webp')}>WebP</button>
+    <button class="btn" aria-label="Download {name} as WebP" onclick={() => svg() && (mint(), downloadImage(svg()!, name, 'webp'))}>WebP</button>
   {/if}
   {#each texts as t (t.label)}
-    <button class="btn" aria-label="Download {name} as {t.label}" onclick={() => downloadText(t.make(), `${name}.${t.extension}`, t.type)}>
+    <button class="btn" aria-label="Download {name} as {t.label}" onclick={() => (mint(), downloadText(t.make(), `${name}.${t.extension}`, t.type))}>
       {t.label}
     </button>
   {/each}

@@ -2,6 +2,7 @@
   import { faCheck, faFloppyDisk, faLink, faShareNodes } from '@fortawesome/free-solid-svg-icons';
   import type { Profile } from '../model/engine';
   import { clink, paperPlane, toast } from './fun';
+  import { mint } from './minted.svelte';
   import Icon from './Icon.svelte';
   import ShareDialog from './ShareDialog.svelte';
 
@@ -13,6 +14,7 @@
 
   async function copy(button: HTMLElement) {
     await navigator.clipboard.writeText(link);
+    mint();
     copied = true;
     clink();
     paperPlane(button);
@@ -26,7 +28,7 @@
     <Icon icon={copied ? faCheck : faLink} />
     {copied ? 'Copied' : 'Copy link'}
   </button>
-  <button class="btn" onclick={() => (sharing = true)}>
+  <button class="btn" onclick={() => ((sharing = true), mint())}>
     <Icon icon={faShareNodes} /> Share
   </button>
   <button class="btn" data-click="bounce" onclick={onsave}>

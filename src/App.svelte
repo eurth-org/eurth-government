@@ -38,6 +38,8 @@
   import { clink, setSound, soundOn, toast } from './ui/fun';
   import Coin from './ui/Coin.svelte';
   import Info from './ui/Info.svelte';
+  import { mint } from './ui/minted.svelte';
+  import Mints from './ui/Mints.svelte';
   import NameCard from './ui/NameCard.svelte';
   import Offline from './ui/Offline.svelte';
   import { save } from './ui/saved';
@@ -278,6 +280,7 @@
 
   // Save: kept on this device, and the link copied, since the link is what travels.
   async function saveCountry() {
+    mint();
     save({ name: shownName, code, flag, government: profile.name, at: new Date().toISOString() });
     try {
       await navigator.clipboard.writeText(link);
@@ -400,6 +403,7 @@
       </h1>
       <span class="tagline">Freshly minted governments</span>
       <span class="badge">Preview</span>
+      <Mints />
     </div>
     <div class="actions">
       <button class="btn" onclick={() => (pickerOpen = true)} data-tip="Start from an example or a real country (E)">
@@ -622,7 +626,8 @@
       <p>
         No Google Analytics, no trackers, no cookies, and no data to sell: there's nowhere to type your contact
         details. What Governmint remembers (light or dark, sound, your saved countries) stays in your own browser, on
-        your device.
+        your device. The one thing it counts is how many countries are minted: a single number, with nothing about
+        you or your country.
       </p>
     </li>
     <li>

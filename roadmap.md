@@ -6,7 +6,6 @@ Three parts: what comes next, what each release added (newest first, times in UT
 
 ## Next
 
-- **A count of the countries minted so far** (feedback 143). Waiting on a decision: Cloudflare's own analytics count page loads, not countries, and need an API token in the Worker; a true count needs the page to send one anonymous "minted" signal to a tiny counter (a Worker with one stored number), which changes the privacy line.
 - **The economy beyond the budget:** sectors, taxes, GDP, ownership and regulation, and with them economic left and right on the compass.
 - **Law and society:** what's legal or illegal, rights, and a society scale.
 - **More ways to share:** BBCode, an image card, and link previews per country with its own name and shape (the Worker would render the images).
@@ -15,7 +14,14 @@ Three parts: what comes next, what each release added (newest first, times in UT
 - **Launch:** replace the old Filteries links in Eurth's Worldbuilding Tools docs, announce on the forum and Discord, and add Governmint to status.eurth.org.
 - **Automatic deploys:** add the `CLOUDFLARE_API_TOKEN` secret (see the README); until then, releases are deployed by hand.
 
-## 10 November 2026: round 10 (#10)
+## 10 November 2026: round 11 (#11)
+
+Feedback 143.
+
+- A count of the countries minted so far, in the header. A country counts when someone saves it, copies its link, shares or exports it, once per visit. The page sends only "one more"; a small Worker (`worker/`) keeps the count as a single number in one Durable Object, and caps it at 60 a minute against floods.
+- The privacy line and About say so.
+
+## 10 November 2026, 10:56: round 10 (#10)
 
 Feedback 142, 144 and 145.
 
