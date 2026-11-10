@@ -91,7 +91,8 @@
         <h3 id="info-yours"><Icon icon={faUserShield} /> Your country stays yours</h3>
         <p>
           A country lives in its link: copy it to share it or come back later. Save also keeps a list in this browser.
-          Nothing is stored anywhere else, and there's no account.
+          Nothing is stored anywhere else, and there's no account. After your first visit, Governmint works
+          offline too: it keeps a copy of itself on this device.
         </p>
       </section>
 

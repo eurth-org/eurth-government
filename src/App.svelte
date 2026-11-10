@@ -39,6 +39,7 @@
   import Coin from './ui/Coin.svelte';
   import Info from './ui/Info.svelte';
   import NameCard from './ui/NameCard.svelte';
+  import Offline from './ui/Offline.svelte';
   import { save } from './ui/saved';
   import Icon from './ui/Icon.svelte';
   import { groupIcons, groupSwatches, panelIcons, ruleIcon, severityIcons } from './ui/icons';
@@ -637,14 +638,15 @@
 <!-- The rest of Eurth, in a bar like the one at the top. -->
 <nav class="bottombar" aria-label="Eurth">
   <div class="bar">
-    <a href={ref('https://eurth.org')}><Icon icon={faComments} /> Forums</a>
-    <a href={ref('https://map.eurth.org')}><Icon icon={faMap} /> Map</a>
-    <a href={ref('https://news.eurth.org')}><Icon icon={faNewspaper} /> News</a>
-    <a href={ref('https://status.eurth.org')}><Icon icon={faHeartPulse} /> Status</a>
+    <a href={ref('https://eurth.org')}><Icon icon={faComments} draw /> Forums</a>
+    <a href={ref('https://map.eurth.org')}><Icon icon={faMap} draw /> Map</a>
+    <a href={ref('https://news.eurth.org')}><Icon icon={faNewspaper} draw /> News</a>
+    <a href={ref('https://status.eurth.org')}><Icon icon={faHeartPulse} draw /> Status</a>
   </div>
 </nav>
 
 <Picker open={pickerOpen} onpick={load} onclose={() => (pickerOpen = false)} />
+<Offline />
 <Info
   open={infoOpen}
   onclose={() => (infoOpen = false)}
@@ -1133,6 +1135,41 @@
 
   .bottombar a:focus-visible {
     outline-color: #ffffff;
+  }
+
+  /* Pointed at, each icon draws its own outline and then fills in, as line-md's icons do. */
+  .bottombar a :global(.icon path) {
+    stroke: currentColor;
+    stroke-width: 0;
+    stroke-linejoin: round;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .bottombar a:hover :global(.icon path),
+    .bottombar a:focus-visible :global(.icon path) {
+      animation: draw 1s ease-out;
+    }
+  }
+
+  @keyframes draw {
+    0% {
+      fill-opacity: 0;
+      stroke-width: 28;
+      stroke-dasharray: 1;
+      stroke-dashoffset: 1;
+    }
+    65% {
+      fill-opacity: 0;
+      stroke-width: 28;
+      stroke-dasharray: 1;
+      stroke-dashoffset: 0;
+    }
+    100% {
+      fill-opacity: 1;
+      stroke-width: 0;
+      stroke-dasharray: 1;
+      stroke-dashoffset: 0;
+    }
   }
 
   /* For keyboard users: a way past the header, shown when it has focus (WCAG 2.4.1). */
