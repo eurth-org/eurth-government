@@ -96,26 +96,13 @@
     const x = event.clientX || r.left + r.width / 2;
     const y = event.clientY || r.top + r.height / 2;
     const far = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
-    const grow = !goal;
-    root.classList.add(grow ? 'vt-grow' : 'vt-shrink');
+    // The circle itself is drawn by app.css, from these: where it starts, and how far it reaches.
+    // Its last frame holds (fill-mode forwards), so the old page never shows again for a moment.
+    root.style.setProperty('--vt-x', `${x}px`);
+    root.style.setProperty('--vt-y', `${y}px`);
+    root.style.setProperty('--vt-r', `${far}px`);
+    root.classList.add(goal ? 'vt-shrink' : 'vt-grow');
     const transition = document.startViewTransition(() => paint(goal));
-    transition.ready
-      .then(() => {
-        const dot = `circle(0px at ${x}px ${y}px)`;
-        const all = `circle(${far}px at ${x}px ${y}px)`;
-        root.animate(
-          { clipPath: grow ? [dot, all] : [all, dot] },
-          {
-            duration: 500,
-            easing: grow ? 'cubic-bezier(.25,.55,.45,1)' : 'cubic-bezier(.55,0,.75,.45)',
-            // Hold the last frame: without it the old page shows again for a moment before the
-            // transition ends, a white flash when going dark.
-            fill: 'forwards',
-            pseudoElement: grow ? '::view-transition-new(root)' : '::view-transition-old(root)',
-          },
-        );
-      })
-      .catch(() => {});
     transition.finished.finally(() => root.classList.remove('vt-grow', 'vt-shrink'));
   }
 

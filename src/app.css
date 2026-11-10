@@ -143,20 +143,44 @@ textarea {
   mix-blend-mode: normal;
 }
 
+/* Going light, the new page grows out of the switch; going dark, the lit page shrinks into it.
+   The circle comes from here, not from script, so it's in place from the very first frame (with
+   script, the new page could show in full for a moment, and going light looked instant).
+   ThemeSwitch.svelte sets --vt-x, --vt-y (the switch) and --vt-r (the farthest corner). */
 html.vt-grow::view-transition-old(root) {
   z-index: 1;
 }
 
 html.vt-grow::view-transition-new(root) {
   z-index: 9999;
+  animation: vt-grow 0.5s cubic-bezier(0.25, 0.55, 0.45, 1) forwards;
 }
 
 html.vt-shrink::view-transition-old(root) {
   z-index: 9999;
+  animation: vt-shrink 0.5s cubic-bezier(0.55, 0, 0.75, 0.45) forwards;
 }
 
 html.vt-shrink::view-transition-new(root) {
   z-index: 1;
+}
+
+@keyframes vt-grow {
+  from {
+    clip-path: circle(0 at var(--vt-x) var(--vt-y));
+  }
+  to {
+    clip-path: circle(var(--vt-r) at var(--vt-x) var(--vt-y));
+  }
+}
+
+@keyframes vt-shrink {
+  from {
+    clip-path: circle(var(--vt-r) at var(--vt-x) var(--vt-y));
+  }
+  to {
+    clip-path: circle(0 at var(--vt-x) var(--vt-y));
+  }
 }
 
 /* Buttons and option pills: slightly rounded, lifting a little on hover. */
