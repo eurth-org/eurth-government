@@ -5,6 +5,7 @@
   import { toJson, toMarkdown, toWikitext } from '../model/formats';
   import type { Country } from '../model/settings';
   import { clink } from './fun';
+  import { mint } from './minted.svelte';
   import Icon from './Icon.svelte';
 
   // The country as text to paste elsewhere: Markdown, wikitext or JSON. Copied text gets postmarked.
@@ -42,6 +43,7 @@
 
   async function copy() {
     await navigator.clipboard.writeText(text);
+    mint();
     copied = true;
     clink();
     postmarked += 1;

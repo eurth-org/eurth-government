@@ -1,13 +1,22 @@
-// A static site: the Worker only serves the files Vite builds into dist/.
+// A static site (dist/), plus one small Worker for /api/*: it counts minted countries.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "eurth-government",
   // The Cloudflare account that holds the eurth.org zone. Not a secret.
   "account_id": "0954ead81ed9fd06d343580d95902280",
   "compatibility_date": "2026-09-01",
+  "main": "worker/index.ts",
   "assets": {
     "directory": "./dist",
-    "not_found_handling": "404-page"
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    // Only these paths run the Worker; everything else is served straight from dist/.
+    "run_worker_first": ["/api/*"]
   },
+  // The count of minted countries: one number, in one Durable Object.
+  "durable_objects": {
+    "bindings": [{ "name": "MINTS", "class_name": "Mints" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Mints"] }],
   "routes": [{ "pattern": "gov.eurth.org", "custom_domain": true }]
 }
