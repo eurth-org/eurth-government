@@ -1,29 +1,37 @@
 {
   "name": "eurth-government",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.12.0",
   "type": "module",
+  "description": "Governmint: set up a country's government and budget, and see what kind of state you've made.",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "check": "svelte-check --tsconfig ./tsconfig.json && tsc -p worker",
-    "test": "vitest run --passWithNoTests",
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "npm run build && wrangler dev",
+    "check": "astro check && svelte-check --tsconfig ./tsconfig.json && tsc -p worker",
+    "test": "vitest run",
+    "axe": "eurth-axe dist",
+    "smoke": "eurth-smoke",
+    "images": "node tools/make-images.mjs",
     "deploy": "npm run build && wrangler deploy"
   },
-  "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "^7.3.1",
-    "@tsconfig/svelte": "^5.0.8",
-    "@types/node": "^22.20.5",
-    "svelte": "^5.57.3",
-    "svelte-check": "^4.7.7",
-    "typescript": "^6.0.3",
-    "vite": "^8.3.5",
-    "vitest": "^5.0.5",
-    "wrangler": "^4.155.0"
-  },
   "dependencies": {
+    "@astrojs/svelte": "^9.1.6",
+    "@eurth/profile": "github:eurth-org/eurth-profile#semver:^1",
+    "@eurth/style": "github:eurth-org/eurth-style#semver:^1",
     "@fortawesome/free-brands-svg-icons": "^7.3.1",
-    "@fortawesome/free-solid-svg-icons": "^7.3.1"
+    "@fortawesome/free-solid-svg-icons": "^7.3.1",
+    "astro": "^7.4.12",
+    "svelte": "^5.57.3"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.12",
+    "svelte-check": "^4.7.8",
+    "typescript": "^6.0.3",
+    "vitest": "^5.1.0",
+    "wrangler": "^4.162.0"
   }
 }

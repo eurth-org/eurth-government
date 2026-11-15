@@ -5,11 +5,15 @@
   // The Cloudflare account that holds the eurth.org zone. Not a secret.
   "account_id": "0954ead81ed9fd06d343580d95902280",
   "compatibility_date": "2026-09-01",
+  // No workers.dev address and no preview addresses: the site lives at gov.eurth.org only.
+  "workers_dev": false,
+  "preview_urls": false,
   "main": "worker/index.ts",
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
     "not_found_handling": "404-page",
+    "html_handling": "auto-trailing-slash",
     // Only these paths run the Worker; everything else is served straight from dist/.
     "run_worker_first": ["/api/*"]
   },
