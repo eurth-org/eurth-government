@@ -75,31 +75,39 @@ export const groupIcons: Record<string, IconDefinition> = {
   Budget: faChartPie,
 };
 
-/** Eurth's forum category colours, as small swatches beside each section. */
+/**
+ * Eurth's forum category colours, as marks beside each section: the name of a colour token of
+ * @eurth/style (--cat-teal and the rest). They colour icons and bars, never text or its ground.
+ */
 export const groupSwatches: Record<string, string> = {
-  'The state': '#12a89d',
-  'Head of state': '#2698d4',
-  Government: '#bf1e2e',
-  Legislature: '#f7941d',
-  Elections: '#3ab54a',
-  'Courts and rulers': '#9eb83b',
-  Religion: '#f1592a',
-  'Defence and borders': '#808281',
-  Budget: '#e45735',
+  'The state': 'cat-teal',
+  'Head of state': 'cat-blue',
+  Government: 'cat-red',
+  Legislature: 'cat-amber',
+  Elections: 'cat-green',
+  'Courts and rulers': 'cat-lime',
+  Religion: 'cat-orange',
+  'Defence and borders': 'cat-grey',
+  Budget: 'cat-vermilion',
 };
 
-/** Each budget area's icon, and its colour in the budget bar (Eurth's category colours). */
+/**
+ * Each budget area's icon, and the colour token of its part of the budget chart. Ten of the
+ * suite's category colours, set out so that neighbours in the chart alternate between lighter
+ * and darker (not only in hue, which red-green colour blindness can hide); every part also has
+ * its name and its icon in the legend, so no part is told by colour alone.
+ */
 export const budgetStyle: Record<BudgetId, { icon: IconDefinition; colour: string }> = {
-  budgetGeneral: { icon: faBuildingColumns, colour: '#808281' },
-  budgetDefence: { icon: faShieldHalved, colour: '#bf1e2e' },
-  budgetOrder: { icon: faBuildingShield, colour: '#0088cc' },
-  budgetEconomy: { icon: faIndustry, colour: '#f7941d' },
-  budgetEnvironment: { icon: faLeaf, colour: '#3ab54a' },
-  budgetHousing: { icon: faHouse, colour: '#f1592a' },
-  budgetHealth: { icon: faHeartPulse, colour: '#12a89d' },
-  budgetCulture: { icon: faMasksTheater, colour: '#9eb83b' },
-  budgetEducation: { icon: faGraduationCap, colour: '#25aae2' },
-  budgetSocial: { icon: faHandHoldingHeart, colour: '#2698d4' },
+  budgetGeneral: { icon: faBuildingColumns, colour: 'cat-grey' },
+  budgetDefence: { icon: faShieldHalved, colour: 'cat-red' },
+  budgetOrder: { icon: faBuildingShield, colour: 'cat-sky' },
+  budgetEconomy: { icon: faIndustry, colour: 'cat-silver' },
+  budgetEnvironment: { icon: faLeaf, colour: 'cat-green' },
+  budgetHousing: { icon: faHouse, colour: 'cat-cerulean' },
+  budgetHealth: { icon: faHeartPulse, colour: 'cat-lime' },
+  budgetCulture: { icon: faMasksTheater, colour: 'cat-orange' },
+  budgetEducation: { icon: faGraduationCap, colour: 'cat-amber' },
+  budgetSocial: { icon: faHandHoldingHeart, colour: 'cat-teal' },
 };
 
 /** The icon at each end of an axis: low, then high. */

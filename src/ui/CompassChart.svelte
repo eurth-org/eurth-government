@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { calm } from '@eurth/style';
   import { cubicOut } from 'svelte/easing';
   import { Tween } from 'svelte/motion';
   import { compassAxes, compassPoint, quadrants } from '../model/compass';
@@ -8,9 +9,10 @@
   export type Mode = 'examples' | 'countries' | 'none';
 
   /**
-   * The compass itself. `half` is half the plot's width in SVG units: a bigger plot (the
-   * enlarged view) has room for more labels at the same text size. Countries that land on the
-   * same spot share one dot, sized by how many it holds; pointing at a dot lists them.
+   * The compass itself. `half` is half the plot's width, in pixels: the chart is drawn at the
+   * size it's shown at, so its text is always the size the suite sets, and a bigger plot (the
+   * enlarged view) has room for more labels. Countries that land on the same spot share one
+   * dot, sized by how many it holds; pointing at a dot lists them.
    */
   let {
     scores,
@@ -30,15 +32,17 @@
 
   const here = $derived(compassPoint(scores));
   // This country's dot glides to its new place.
-  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const moving = Tween.of(() => here, { duration: calm ? 0 : 450, easing: cubicOut });
+  const moving = Tween.of(() => here, { duration: calm() ? 0 : 450, easing: cubicOut });
 
+  // The quadrants' names, each over two lines ("Authoritarian", "progressive") beside a small
+  // swatch in one of the suite's category colours. `y` is the first line's.
   const corners = $derived([
-    { name: quadrants.topLeft, x: -half + 6, y: -half + 14, anchor: 'start', swatch: '#bf1e2e' },
-    { name: quadrants.topRight, x: half - 6, y: -half + 14, anchor: 'end', swatch: '#f7941d' },
-    { name: quadrants.bottomLeft, x: -half + 6, y: half - 8, anchor: 'start', swatch: '#3ab54a' },
-    { name: quadrants.bottomRight, x: half - 6, y: half - 8, anchor: 'end', swatch: '#2698d4' },
+    { name: quadrants.topLeft, x: -half + 8, y: -half + 16, anchor: 'start', swatch: 'cat-red' },
+    { name: quadrants.topRight, x: half - 8, y: -half + 16, anchor: 'end', swatch: 'cat-amber' },
+    { name: quadrants.bottomLeft, x: -half + 8, y: half - 28, anchor: 'start', swatch: 'cat-green' },
+    { name: quadrants.bottomRight, x: half - 8, y: half - 28, anchor: 'end', swatch: 'cat-blue' },
   ] as const);
+  const words = (name: string) => name.split(' ');
 
   type Box = [number, number, number, number];
 
@@ -63,8 +67,8 @@
     const boxes: Box[] = [
       [here.x * scale - 9, -here.y * scale - 9, 18, 18],
       ...corners.map((c): Box => {
-        const w = c.name.length * 5.2 + 14;
-        return [c.anchor === 'start' ? c.x : c.x - w, c.y - 9, w, 12];
+        const w = Math.max(...words(c.name).map((word) => word.length)) * 6.8 + 18;
+        return [c.anchor === 'start' ? c.x : c.x - w, c.y - 9, w, 36];
       }),
     ];
     const overlaps = (b: Box) =>
@@ -81,8 +85,8 @@
     for (const d of dots) boxes.push([d.cx - d.r, d.cy - d.r, d.r * 2, d.r * 2]);
     return dots.map((d) => {
       const value = d.names.length === 1 ? d.names[0]! : `${d.names[0]} +${d.names.length - 1}`;
-      const w = value.length * 5.4;
-      const h = 11;
+      const w = value.length * 6.8;
+      const h = 16;
       const gap = d.r + 3;
       const options = [
         { box: [d.cx + gap, d.cy - h / 2, w, h], text: { x: d.cx + gap, y: d.cy, anchor: 'start' } },
@@ -112,11 +116,13 @@
 <div class="chart" bind:this={wrapper} role="presentation" onpointerleave={() => (tip = null)}>
   <svg
     bind:this={svg}
-    viewBox="{-half - pad} {-half - 26} {(half + pad) * 2} {half * 2 + 52}"
+    viewBox="{-half - pad} {-half - 28} {(half + pad) * 2} {half * 2 + 56}"
+    width={(half + pad) * 2}
+    height={half * 2 + 56}
     role="img"
     aria-label="Compass: {fmt(here.x)} from {compassAxes.x.low.toLowerCase()} to {compassAxes.x.high.toLowerCase()}, {fmt(here.y)} from {compassAxes.y.low.toLowerCase()} to {compassAxes.y.high.toLowerCase()}"
   >
-    <rect class="plot" x={-half} y={-half} width={half * 2} height={half * 2} rx="4" />
+    <rect class="plot" x={-half} y={-half} width={half * 2} height={half * 2} rx="2" />
     {#each [-80, -60, -40, -20, 20, 40, 60, 80] as g (g)}
       <line class="grid" x1={g * scale} y1={-half} x2={g * scale} y2={half} />
       <line class="grid" x1={-half} y1={g * scale} x2={half} y2={g * scale} />
@@ -140,6 +146,17 @@
       {/if}
     {/each}
 
+    <!-- Quadrant names over the reference dots, with a halo, so dots never hide them; this
+         country's own dot over everything, since it is what the chart is for. -->
+    {#each corners as c (c.name)}
+      <rect class="swatch" x={c.anchor === 'start' ? c.x : c.x - 10} y={c.y - 9} width="10" height="10" rx="2" style:fill="var(--{c.swatch})" />
+      <text class="corner" text-anchor={c.anchor}>
+        {#each words(c.name) as word, i (i)}
+          <tspan x={c.anchor === 'start' ? c.x + 16 : c.x - 16} y={c.y + i * 17}>{word}</tspan>
+        {/each}
+      </text>
+    {/each}
+
     <circle class="here-ring" cx={moving.current.x * scale} cy={-moving.current.y * scale} r="9" />
     <circle
       class="here"
@@ -150,16 +167,10 @@
       onpointerenter={(e) => show(e, ['This country'])}
     ><title>This country</title></circle>
 
-    <!-- Quadrant names last, with a halo, so dots never hide them. -->
-    {#each corners as c (c.name)}
-      <rect class="swatch" x={c.anchor === 'start' ? c.x : c.x - 8} y={c.y - 7} width="8" height="8" rx="1.5" fill={c.swatch} />
-      <text class="corner" x={c.anchor === 'start' ? c.x + 12 : c.x - 12} y={c.y} text-anchor={c.anchor}>{c.name}</text>
-    {/each}
-
     <text class="end" x="0" y={-half - 10} text-anchor="middle">{compassAxes.y.high}</text>
-    <text class="end" x="0" y={half + 18} text-anchor="middle">{compassAxes.y.low}</text>
-    <text class="end" x={-half - 10} y="0" text-anchor="middle" transform="rotate(-90 {-half - 10} 0)">{compassAxes.x.low}</text>
-    <text class="end" x={half + 10} y="0" text-anchor="middle" transform="rotate(90 {half + 10} 0)">{compassAxes.x.high}</text>
+    <text class="end" x="0" y={half + 20} text-anchor="middle">{compassAxes.y.low}</text>
+    <text class="end" x={-half - 12} y="0" text-anchor="middle" transform="rotate(-90 {-half - 12} 0)">{compassAxes.x.low}</text>
+    <text class="end" x={half + 12} y="0" text-anchor="middle" transform="rotate(90 {half + 12} 0)">{compassAxes.x.high}</text>
   </svg>
   {#if tip}
     <div class="tip" style:left="{tip.x}px" style:top="{tip.y}px" aria-hidden="true">{tip.text}</div>
@@ -173,8 +184,9 @@
 
   svg {
     display: block;
-    width: 100%;
+    max-width: 100%;
     height: auto;
+    margin: 0 auto;
   }
 
   .plot {
@@ -185,17 +197,22 @@
 
   .grid {
     stroke: var(--line);
-    stroke-width: 0.8;
+    stroke-width: 1;
   }
 
   .axis {
     stroke: var(--line-strong);
-    stroke-width: 1.2;
+    stroke-width: 1;
+  }
+
+  .swatch {
+    stroke: var(--line-strong);
+    stroke-width: 1;
   }
 
   .corner {
     fill: var(--ink-muted);
-    font-size: 9.5px;
+    font: var(--type-note);
     paint-order: stroke;
     stroke: var(--surface);
     stroke-width: 3px;
@@ -208,7 +225,6 @@
   }
 
   .ref.group {
-    fill-opacity: 0.75;
     stroke: var(--surface);
     stroke-width: 1;
   }
@@ -219,35 +235,37 @@
 
   .ref-label {
     fill: var(--ink-muted);
-    font-size: 9px;
+    font: var(--type-note);
   }
 
+  /* This country: a filled dot in a ring, so it is told from the others by its shape too. */
   .here-ring {
     fill: var(--surface);
-    stroke: var(--accent-fill);
+    stroke: var(--selected);
     stroke-width: 2;
   }
 
   .here {
-    fill: var(--accent-fill);
+    fill: var(--selected);
   }
 
   .end {
     fill: var(--ink);
-    font-size: 13px;
-    font-weight: 700;
+    font: var(--type-label);
   }
 
   .tip {
     position: absolute;
-    max-width: 280px;
-    transform: translate(-50%, calc(-100% - 12px));
-    padding: 4px 8px;
-    border-radius: var(--radius-control);
+    z-index: 2;
+    width: max-content;
+    max-width: min(280px, 80vw);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-md);
     background: var(--ink);
     color: var(--surface);
-    font-size: 13px;
-    font-weight: 600;
+    font: var(--type-note);
+    font-weight: 700;
     pointer-events: none;
+    transform: translate(-50%, calc(-100% - var(--space-3)));
   }
 </style>

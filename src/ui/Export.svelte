@@ -1,12 +1,13 @@
 <script lang="ts">
   import { faMarkdown, faWikipediaW } from '@fortawesome/free-brands-svg-icons';
   import { faCheck, faCopy, faFileCode, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
+  import { copyText, toast } from '@eurth/style';
+  import Icon from '@eurth/style/components/Icon.svelte';
   import type { Profile } from '../model/engine';
   import { toJson, toMarkdown, toWikitext } from '../model/formats';
   import type { Country } from '../model/settings';
   import { clink } from './fun';
   import { mint } from './minted.svelte';
-  import Icon from './Icon.svelte';
 
   // The country as text to paste elsewhere: Markdown, wikitext or JSON. Copied text gets postmarked.
   let { name, country, profile, link }: { name: string; country: Country; profile: Profile; link: string } = $props();
@@ -39,31 +40,36 @@
   const text = $derived(writers[format](name, country, profile, link));
 
   let postmarked = $state(0);
-  const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).toUpperCase();
+  let today = $state('');
 
   async function copy() {
-    await navigator.clipboard.writeText(text);
+    if (!(await copyText(text))) {
+      toast("That didn't copy. Select the text and copy it.");
+      return;
+    }
     mint();
     copied = true;
     clink();
+    today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).toUpperCase();
     postmarked += 1;
     setTimeout(() => (copied = false), 2000);
   }
 </script>
 
-<div class="formats" role="radiogroup" aria-label="Format">
+<div class="eu-row formats" role="radiogroup" aria-label="Format">
   {#each formats as f (f.id)}
-    <label class="pill plain">
+    <label class="eu-pill">
       <input type="radio" name="export-format" value={f.id} bind:group={format} />
+      <span class="eu-check"><Icon icon={faCheck} /></span>
       <Icon icon={f.icon} />
-      <span class="steady" data-text={f.label}>{f.label}</span>
+      {f.label}
     </label>
   {/each}
 </div>
-<p class="help">{formats.find((f) => f.id === format)!.help}</p>
-<label class="visually-hidden" for="export-text">{formats.find((f) => f.id === format)!.label}</label>
+<p class="eu-help">{formats.find((f) => f.id === format)!.help}</p>
+<label class="eu-visually-hidden" for="export-text">{formats.find((f) => f.id === format)!.label}</label>
 <div class="paper">
-  <textarea id="export-text" readonly rows="9" value={text}></textarea>
+  <textarea id="export-text" class="eu-textarea" readonly rows="9" value={text}></textarea>
   {#key postmarked}
     {#if postmarked}
       <span class="postmark" aria-hidden="true">
@@ -74,34 +80,15 @@
     {/if}
   {/key}
 </div>
-<div class="copy-row">
-  <button class="btn" onclick={copy}>
+<div class="eu-row">
+  <button type="button" class="eu-btn" onclick={copy}>
     <Icon icon={copied ? faCheck : faCopy} />
     {copied ? 'Copied' : 'Copy text'}
   </button>
 </div>
 
 <style>
-  /* Like the charts' "Download as" row, with "Copy image". */
-  .copy-row {
-    display: flex;
-    margin-top: var(--space-2);
-    font-size: 13px;
-  }
-
-  .copy-row .btn {
-    padding: 3px 10px;
-  }
-
-  .help {
-    margin: var(--space-1) 0 var(--space-3);
-    color: var(--ink-muted);
-    font-size: 13px;
-  }
-
   .formats {
-    display: flex;
-    flex-wrap: wrap;
     gap: var(--space-2);
   }
 
@@ -109,22 +96,27 @@
     position: relative;
   }
 
-  /* A postmark, stamped on the text when it's copied. */
+  textarea {
+    display: block;
+    font: var(--type-data);
+  }
+
+  /* A postmark, stamped on the text when it's copied, and gone again. Only ever shown while
+     it moves, so with motion off it never appears: the button's "Copied" says the same. */
   .postmark {
     position: absolute;
     top: var(--space-2);
     right: var(--space-3);
     display: grid;
     place-content: center;
-    width: 96px;
-    height: 96px;
+    width: calc(3 * var(--size-target));
+    height: calc(3 * var(--size-target));
     border: 3px double var(--accent-text);
-    border-radius: 50%;
+    border-radius: var(--radius-full);
+    background: var(--surface);
     color: var(--accent-text);
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    line-height: 1.3;
+    font: var(--type-note);
+    font-weight: 700;
     text-align: center;
     text-transform: uppercase;
     pointer-events: none;
@@ -134,10 +126,9 @@
   }
 
   .postmark .date {
-    margin: 2px 0;
-    padding: 2px 0;
+    margin: var(--space-1) 0;
+    padding: var(--space-1) 0;
     border-block: 1px solid currentColor;
-    font-size: 11px;
   }
 
   @keyframes postmark {
@@ -146,46 +137,18 @@
       transform: scale(1.6) rotate(-30deg);
     }
     10% {
-      opacity: 0.9;
+      opacity: 1;
       transform: scale(0.96) rotate(-12deg);
     }
     16% {
       transform: scale(1) rotate(-12deg);
     }
     80% {
-      opacity: 0.9;
+      opacity: 1;
     }
     100% {
       opacity: 0;
       transform: rotate(-12deg);
     }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .postmark {
-      animation: postmark-calm 2.6s steps(1);
-    }
-
-    @keyframes postmark-calm {
-      0% {
-        opacity: 0.9;
-      }
-      100% {
-        opacity: 0;
-      }
-    }
-  }
-
-  textarea {
-    display: block;
-    width: 100%;
-    margin-bottom: var(--space-2);
-    padding: var(--space-2);
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius-control);
-    background: var(--surface);
-    font-family: ui-monospace, Menlo, monospace;
-    font-size: 12px;
-    resize: vertical;
   }
 </style>

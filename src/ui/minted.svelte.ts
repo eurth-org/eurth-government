@@ -1,28 +1,13 @@
 /**
- * The count of countries minted with Governmint, as the header shows it. A country is minted
- * when someone saves it, copies its link, shares or exports it: each country once per visit.
- * The page sends nothing but "one more" (worker/index.ts keeps a single number); the country
- * itself never leaves the browser.
+ * The count of countries minted with Governmint, as the toolbar shows it. A country is minted
+ * when someone copies its link, shares or exports it: each country once per visit. The page
+ * sends nothing but "one more" (worker/index.ts keeps a single number); the country itself
+ * never leaves the browser. Which countries this visit has already counted is kept in memory
+ * only, and is gone with the page.
  */
 export const mints = $state<{ count: number | undefined }>({ count: undefined });
 
-const key = 'governmint:minted';
-
-function minted(): Set<string> {
-  try {
-    return new Set(JSON.parse(sessionStorage.getItem(key) ?? '[]'));
-  } catch {
-    return new Set();
-  }
-}
-
-function remember(list: Set<string>) {
-  try {
-    sessionStorage.setItem(key, JSON.stringify([...list].slice(-200)));
-  } catch {
-    // Private mode: it may count twice, which is fine.
-  }
-}
+const counted = new Set<string>();
 
 function read(response: Response) {
   if (!response.ok || !response.headers.get('Content-Type')?.includes('json')) return;
@@ -40,11 +25,9 @@ export function loadMints() {
 
 /** One more minted country: the one in the page's link, unless it was counted this visit. */
 export function mint() {
-  const list = minted();
   const country = location.search;
-  if (list.has(country)) return;
-  list.add(country);
-  remember(list);
+  if (counted.has(country)) return;
+  counted.add(country);
   fetch('/api/mint', { method: 'POST', keepalive: true })
     .then(read)
     .catch(() => {});

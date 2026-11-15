@@ -1,9 +1,11 @@
 <script lang="ts">
   import { faCheck, faCopy, faDownload } from '@fortawesome/free-solid-svg-icons';
+  import { toast } from '@eurth/style';
+  import Icon from '@eurth/style/components/Icon.svelte';
+  import { onMount } from 'svelte';
   import { canCopyImage, canWebp, copyImage, downloadImage, downloadSvg, downloadText } from './download';
-  import { clink, toast } from './fun';
+  import { clink } from './fun';
   import { mint } from './minted.svelte';
-  import Icon from './Icon.svelte';
 
   /**
    * Saving a chart, all in the browser: PNG, SVG or WebP (where the browser can make one), any
@@ -21,37 +23,43 @@
     $props();
 
   let copied = $state(false);
+  // What this browser can do, asked once the page is in it.
+  let webp = $state(false);
+  let clipboard = $state(false);
+  onMount(() => {
+    webp = canWebp();
+    clipboard = canCopyImage();
+  });
 
   async function copy() {
     const chart = svg();
     if (!chart) return;
-    try {
-      await copyImage(chart);
-      mint();
-      copied = true;
-      toast('Image copied: paste it anywhere.');
-      clink();
-      setTimeout(() => (copied = false), 2000);
-    } catch {
+    if (!(await copyImage(chart))) {
       toast("This browser wouldn't copy the image. Download it instead.");
+      return;
     }
+    mint();
+    copied = true;
+    toast('Image copied: paste it anywhere.');
+    clink();
+    setTimeout(() => (copied = false), 2000);
   }
 </script>
 
 <div class="download">
-  <span class="label"><Icon icon={faDownload} /> Download as</span>
-  <button class="btn" aria-label="Download {name} as PNG" onclick={() => svg() && (mint(), downloadImage(svg()!, name, 'png'))}>PNG</button>
-  <button class="btn" aria-label="Download {name} as SVG" onclick={() => svg() && (mint(), downloadSvg(svg()!, name))}>SVG</button>
-  {#if canWebp}
-    <button class="btn" aria-label="Download {name} as WebP" onclick={() => svg() && (mint(), downloadImage(svg()!, name, 'webp'))}>WebP</button>
+  <span class="eu-muted label"><Icon icon={faDownload} /> Download as</span>
+  <button type="button" class="eu-btn" aria-label="Download {name} as PNG" onclick={() => svg() && (mint(), downloadImage(svg()!, name, 'png'))}>PNG</button>
+  <button type="button" class="eu-btn" aria-label="Download {name} as SVG" onclick={() => svg() && (mint(), downloadSvg(svg()!, name))}>SVG</button>
+  {#if webp}
+    <button type="button" class="eu-btn" aria-label="Download {name} as WebP" onclick={() => svg() && (mint(), downloadImage(svg()!, name, 'webp'))}>WebP</button>
   {/if}
   {#each texts as t (t.label)}
-    <button class="btn" aria-label="Download {name} as {t.label}" onclick={() => (mint(), downloadText(t.make(), `${name}.${t.extension}`, t.type))}>
+    <button type="button" class="eu-btn" aria-label="Download {name} as {t.label}" onclick={() => (mint(), downloadText(t.make(), `${name}.${t.extension}`, t.type))}>
       {t.label}
     </button>
   {/each}
-  {#if canCopyImage}
-    <button class="btn" aria-label="Copy {name} as an image" onclick={copy}>
+  {#if clipboard}
+    <button type="button" class="eu-btn" aria-label={copied ? `Copied: ${name}` : `Copy image of ${name}`} onclick={copy}>
       <Icon icon={copied ? faCheck : faCopy} />
       {copied ? 'Copied' : 'Copy image'}
     </button>
@@ -64,18 +72,17 @@
     flex-wrap: wrap;
     align-items: center;
     gap: var(--space-2);
-    margin-top: var(--space-3);
-    font-size: 13px;
   }
 
   .label {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    color: var(--ink-muted);
+    gap: var(--space-2);
+    font: var(--type-body-sm);
   }
 
-  .btn {
-    padding: 3px 10px;
+  /* Six to a row in a narrow column: a little less padding each. */
+  .eu-btn {
+    padding: 0 var(--space-3);
   }
 </style>

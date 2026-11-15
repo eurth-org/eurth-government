@@ -2,17 +2,33 @@
 
 Governmint is a tool, not a game: you set up a country and it tells you what you've built, what to call it, why, and where it contradicts itself. It's for anyone, with Eurth in the background as the community that makes it. The Filteries Political Simulator (2016–2018) and StateCrafter answer "which ideology is this?"; Governmint answers "what is my country like, and does it hold together?"
 
-Three parts: what comes next, what each release added (newest first, times in UTC), and what's not planned. Every numbered point from the reviews is in the [feedback log](docs/feedback-log.md). Have an idea? [Table a motion in Ideas](https://github.com/eurth-org/eurth-government/discussions/categories/ideas) on GitHub Discussions.
+Three parts: what comes next, what each release added (newest first, times in UTC), and what's not planned. Every numbered point from the reviews is in the [feedback log](docs/feedback-log.md). Have an idea? Table a motion on [the Eurth forum](https://eurth.org), or in [Ideas](https://github.com/eurth-org/eurth-government/discussions/categories/ideas) on GitHub Discussions.
 
 ## Next
 
+- **A guide, a glossary and examples pages**, as every Eurth tool has: forms of government explained well, with sources and a last-updated date; the words Governmint uses, each with its definition; and the 18 examples as pages that open in the maker. Linked from the header, each with its own structured data and sharing image.
 - **The economy beyond the budget:** sectors, taxes, GDP, ownership and regulation, and with them economic left and right on the compass.
 - **Law and society:** what's legal or illegal, rights, and a society scale.
-- **More ways to share:** BBCode, an image card, and link previews per country with its own name and shape (the Worker would render the images).
+- **More ways to share:** BBCode, an image card (the suite's picture sizes), and link previews per country with its own name and shape (the Worker would render the images).
+- **More of the profile:** read `identity` and `flag` from a loaded profile (the nation's names, its own flag on the name card), and write names for the offices once Governmint asks for them.
 - **Eurth's own countries** in the picker and on the compass, once their data is ready.
 - **Two countries side by side**, and **a guided mode** for beginners.
+- **Flags offline:** the flags of real countries need signal the first time each is shown; before the shared shell they were kept as they were shown.
 - **Launch:** replace the old Filteries links in Eurth's Worldbuilding Tools docs, announce on the forum and Discord, and add Governmint to status.eurth.org.
-- **Automatic deploys:** add the `CLOUDFLARE_API_TOKEN` secret (see the README); until then, releases are deployed by hand.
+- **Automatic deploys:** they need the organisation's `CLOUDFLARE_API_TOKEN` secret (the handbook, Stack and hosting); until it is set, releases are deployed by hand.
+
+## 15 November 2026: round 12, onto the shared shell (#12, 0.12.0)
+
+Feedback 146–155.
+
+- Governmint stands on the shared shell of Eurth's tools (`@eurth/style`): the header with the yurt and "Governmint by Eurth", the Tools menu, the Deluminator, the footer with this visit's sound and motion switches, the share row and dialog, toasts and the offline note. Its own top bar, header, footer, theme switch and share window are gone; its actions (Examples & countries, Undo, Redo, Copy link, About) sit in its own toolbar, with the coin and the count of minted countries.
+- Built with Astro: the page is real HTML before any script runs, with one heading, an introduction, how it works and questions and answers. The shared build writes the security headers, the service worker, the web manifest, the sitemap, `robots.txt` and `llms.txt`.
+- Nothing is stored. The theme, sound and motion last for the visit; so do the single-key shortcuts switch and undo. "Saved on this device" is gone, and the offline copy the old version kept is cleared away.
+- The nation's profile file: Load profile and Save profile. Governmint writes the `government` section and leaves every other section as it was; a loaded profile with a Governmint link opens that country.
+- Links are unchanged (`?c=3…&n=…&f=…`), and links from the live site are kept as a test.
+- Only the suite's tokens: Night and light at WCAG 2.2 AAA, every target at least 44 by 44 pixels, charts in the category colours with their words on the page's own ground, and drawn at the size they're shown so their text never shrinks on a phone.
+- Copy description: the country in words. A label and its dropdown no longer share an id with their section.
+- The suite's checks (`npm test`, `npm run axe`, `npm run smoke`), its CI and a nightly run that keeps the shell up to date.
 
 ## 10 November 2026: round 11 (#11)
 
@@ -117,9 +133,11 @@ Feedback 1–26.
 
 ## Not planned
 
-- **Accounts, galleries, comments, or anything else that keeps your data on a server.** A country lives in its link, and Save keeps a list in your own browser.
+- **Accounts, galleries, comments, or anything else that keeps your data on a server.** A country lives in its link and in the nation's profile file.
+- **Saved countries in the browser: nothing is stored.** No localStorage, sessionStorage, IndexedDB or cookies (the handbook, Privacy). The list earlier versions kept is not read any more; a link is the save, and the profile file carries a nation between Eurth's tools.
 - **Tracking.** No Google Analytics, trackers or cookies, and nothing to sell (feedback 135).
 - **A Creative Commons licence for the text** (feedback 119, 125). Everything stays under Apache 2.0, and the countries people make are theirs.
 - **A log scale for the compass** (feedback 46, 74). Scores are bounded at ±100, the clusters come from shared settings, and grouping and Enlarge handle the overlap.
-- **A footer in Eurth blue with white text** (feedback 95). White on Eurth blue is 3.2:1, too low for small text, and red hearts clash on blue.
+- **A footer in Eurth blue with white text** (feedback 95). White on Eurth blue is 3.2:1, too low for small text, and red hearts clash on blue. The footer is the suite's now.
+- **A header, footer or theme switch of Governmint's own.** They come from `@eurth/style` and are never rebuilt here; a gap in them is fixed there, for every tool.
 - **Anything copied from Filteries.** It was "all rights reserved", so no code, text, artwork or scoring formulas from it; and no links to filteries.com, which now belongs to someone else.

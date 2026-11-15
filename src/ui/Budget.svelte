@@ -2,6 +2,7 @@
   import {
     faChartPie,
     faChartSimple,
+    faCheck,
     faClockRotateLeft,
     faLock,
     faLockOpen,
@@ -15,9 +16,9 @@
   import { budgetJson, budgetMarkdown } from '../model/formats';
   import { budgetIds, settings, type BudgetId, type Country, type SettingId } from '../model/settings';
   import type { ShareSettingDef } from '../model/types';
+  import { calm, niceWatcher } from '@eurth/style';
+  import Icon from '@eurth/style/components/Icon.svelte';
   import Download from './Download.svelte';
-  import { niceWatcher } from './fun';
-  import Icon from './Icon.svelte';
   import { budgetStyle } from './icons';
   import { treemap } from './treemap';
 
@@ -50,7 +51,6 @@
     { label: 'JSON', extension: 'json', type: 'application/json', make: () => budgetJson(name, country, link) },
   ]);
 
-  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const fresh = defaultCountry();
 
   const lines = budgetIds.map((id) => {
@@ -68,11 +68,22 @@
   const summary = $derived(lines.map((l) => `${l.def.label} ${country[l.id]}%`).join(', '));
 
   // The charts glide to new shares instead of jumping.
-  const shares = Tween.of(() => budgetIds.map((id) => country[id]), { duration: calm ? 0 : 350, easing: cubicOut });
+  const shares = Tween.of(() => budgetIds.map((id) => country[id]), { duration: calm() ? 0 : 350, easing: cubicOut });
 
   // The chart: a bar, a pie or a treemap, each part showing its area and share on hover, with
-  // a legend inside the picture so a download explains itself.
+  // a legend inside the picture so a download explains itself. The picture is drawn at the
+  // width it's shown at (one unit to the pixel), so its text stays the size the suite sets and
+  // never shrinks with the screen: a narrow screen gets a one-column legend instead.
   let chart = $state<'bar' | 'pie' | 'treemap'>('bar');
+  let room = $state(540);
+  const W = $derived(Math.max(280, Math.min(540, Math.round(room))));
+  const columns = $derived(W >= 440 ? 2 : 1);
+  const column = $derived(columns === 2 ? (W - 20) / 2 : W);
+  const rows = $derived(Math.ceil(lines.length / columns));
+  const row = 24;
+  // The pie sits beside its legend where there's room, and above it where there isn't.
+  const beside = $derived(W >= 440);
+  const tilesHeight = $derived(Math.round(W / 2));
   let svg = $state<SVGSVGElement>();
   let tip = $state<{ text: string; x: number; y: number } | null>(null);
   let wrapper: HTMLDivElement;
@@ -90,30 +101,17 @@
   });
 
   // Tiles about twice as wide as tall, so the names fit beside the shares.
-  const tiles = $derived(treemap(parts, (p) => p.share, 0, 0, 440, 220, 2));
+  const tiles = $derived(treemap(parts, (p) => p.share, 0, 0, W, tilesHeight, 2));
 
   /** A tile's name in one line if it fits, else two (split at the middle space), else none. */
   function nameLines(label: string, width: number, height: number): string[] {
-    const fits = (text: string) => text.length * 6.8 + 16 <= width;
-    if (height >= 50 && fits(label)) return [label];
+    const fits = (text: string) => text.length * 7.4 + 28 <= width;
+    if (height >= 62 && fits(label)) return [label];
     const spaces = [...label.matchAll(/ /g)].map((m) => m.index!);
-    if (height < 66 || !spaces.length) return [];
+    if (height < 80 || !spaces.length) return [];
     const middle = spaces.reduce((best, i) => (Math.abs(i - label.length / 2) < Math.abs(best - label.length / 2) ? i : best));
     const lines = [label.slice(0, middle), label.slice(middle + 1)];
     return lines.every(fits) ? lines : [];
-  }
-
-  /**
-   * Text on a tile: white, unless white falls below WCAG's 3:1 on that colour (the minimum for
-   * bold labels and graphics), and then near-black.
-   */
-  function ink(hex: string): string {
-    const channel = (i: number) => {
-      const c = parseInt(hex.slice(i, i + 2), 16) / 255;
-      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-    };
-    const light = 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5);
-    return 1.05 / (light + 0.05) >= 3 ? '#ffffff' : '#1c1c1c';
   }
 
   function show(event: PointerEvent, label: string, share: number) {
@@ -122,11 +120,11 @@
   }
 
   /** A pie slice from `start` to `end` percent, as a ring between radii r1 and r2. */
-  function slice(start: number, end: number, r1 = 52, r2 = 100): string {
+  function slice(start: number, end: number, cx = 110, r1 = 52, r2 = 100): string {
     if (end - start >= 100) end = start + 99.999;
     const at = (p: number, r: number) => {
       const a = (p / 100) * Math.PI * 2 - Math.PI / 2;
-      return `${(110 + Math.cos(a) * r).toFixed(2)} ${(110 + Math.sin(a) * r).toFixed(2)}`;
+      return `${(cx + Math.cos(a) * r).toFixed(2)} ${(110 + Math.sin(a) * r).toFixed(2)}`;
     };
     const large = end - start > 50 ? 1 : 0;
     return `M ${at(start, r2)} A ${r2} ${r2} 0 ${large} 1 ${at(end, r2)} L ${at(end, r1)} A ${r1} ${r1} 0 ${large} 0 ${at(start, r1)} Z`;
@@ -180,43 +178,45 @@
 </script>
 
 {#snippet legend(x: number, y: number, columns: number, width: number)}
-  {@const rows = Math.ceil(lines.length / columns)}
+  {@const perColumn = Math.ceil(lines.length / columns)}
   {#each parts as part, i (part.id)}
-    <g class="key" transform="translate({x + Math.floor(i / rows) * (width + 20)} {y + (i % rows) * 19})">
-      <svg x="0" y="-7" width="14" height="14" viewBox={part.glyph.box}><path d={part.glyph.d} fill={part.colour} /></svg>
-      <text class="key-label" x="20" y="0">{part.def.label}</text>
+    <g class="key" transform="translate({x + Math.floor(i / perColumn) * (width + 20)} {y + (i % perColumn) * row})">
+      <rect class="key-swatch" x="0.5" y="-6.5" width="13" height="13" rx="2" style:fill="var(--{part.colour})" />
+      <svg x="20" y="-7" width="14" height="14" viewBox={part.glyph.box}><path class="key-icon" d={part.glyph.d} /></svg>
+      <text class="key-label" x="40" y="0">{part.def.label}</text>
       <text class="key-share" x={width} y="0">{part.exact}%</text>
     </g>
   {/each}
 {/snippet}
 
-<p class="intro">
+<p class="eu-help">
   Each area's share of all government spending. Move one and the others make room, so the total stays at 100%.
 </p>
 
 <!-- Chart types on the left; ways back to an earlier budget on the right. -->
 <div class="toolbar">
-  <div class="chart-modes" role="radiogroup" aria-label="Chart">
-    <label class="pill plain mode">
+  <div class="eu-row tight" role="radiogroup" aria-label="Chart">
+    <label class="eu-pill">
       <input type="radio" name="budget-chart" value="bar" bind:group={chart} />
-      <Icon icon={faChartSimple} />
-      <span class="steady" data-text="Bar">Bar</span>
+      <span class="eu-check"><Icon icon={faCheck} /></span>
+      <Icon icon={faChartSimple} /> Bar
     </label>
-    <label class="pill plain mode">
+    <label class="eu-pill">
       <input type="radio" name="budget-chart" value="pie" bind:group={chart} />
-      <Icon icon={faChartPie} />
-      <span class="steady" data-text="Pie">Pie</span>
+      <span class="eu-check"><Icon icon={faCheck} /></span>
+      <Icon icon={faChartPie} /> Pie
     </label>
-    <label class="pill plain mode">
+    <label class="eu-pill">
       <input type="radio" name="budget-chart" value="treemap" bind:group={chart} />
-      <Icon icon={faTableCellsLarge} />
-      <span class="steady" data-text="Treemap">Treemap</span>
+      <span class="eu-check"><Icon icon={faCheck} /></span>
+      <Icon icon={faTableCellsLarge} /> Treemap
     </label>
   </div>
-  <div class="budget-actions">
+  <div class="eu-row tight">
     <button
-      class="btn"
-      data-click="spin-back"
+      type="button"
+      class="eu-btn"
+      data-click="spin"
       disabled={same(baseline)}
       data-tip="Back to the budget this country started with"
       onclick={() => resetTo(baseline)}
@@ -224,91 +224,97 @@
       <Icon icon={faClockRotateLeft} /> Restore budget
     </button>
     {#if !baselineIsDefault}
-      <button
-        class="btn"
-        data-click="spin-back"
-        disabled={same(fresh)}
-        data-tip="Governmint's default shares"
-        onclick={() => resetTo(fresh)}
-      >
+      <button type="button" class="eu-btn" data-click="spin" disabled={same(fresh)} data-tip="Governmint's default shares" onclick={() => resetTo(fresh)}>
         <Icon icon={faRotateLeft} /> Default budget
       </button>
     {/if}
   </div>
 </div>
 
-<div class="chart" bind:this={wrapper} role="presentation" onpointerleave={() => (tip = null)}>
-  {#if chart === 'bar'}
-    <svg bind:this={svg} viewBox="0 0 440 136" role="img" aria-label="Budget: {summary}">
-      <clipPath id="budget-bar"><rect width="440" height="32" rx="6" /></clipPath>
-      <g clip-path="url(#budget-bar)">
+<div class="room" bind:clientWidth={room}>
+  <div class="chart" bind:this={wrapper} role="presentation" onpointerleave={() => (tip = null)}>
+    {#if chart === 'bar'}
+      {@const H = 56 + rows * row}
+      <svg bind:this={svg} viewBox="0 0 {W} {H}" width={W} height={H} role="img" aria-label="Budget: {summary}">
+        <clipPath id="budget-bar"><rect width={W} height="32" rx="12" /></clipPath>
+        <g clip-path="url(#budget-bar)">
+          {#each parts as part (part.id)}
+            {#if part.share > 0}
+              <rect
+                class="part"
+                x={(part.start * W) / 100}
+                y="0"
+                width={(part.share * W) / 100}
+                height="32"
+                style:fill="var(--{part.colour})"
+                role="presentation"
+                onpointermove={(e) => show(e, part.def.label, part.exact)}
+              ><title>{part.def.label}: {part.exact}%</title></rect>
+            {/if}
+          {/each}
+        </g>
+        {@render legend(0, 56, columns, column)}
+      </svg>
+    {:else if chart === 'pie'}
+      {@const cx = beside ? 110 : W / 2}
+      {@const H = beside ? Math.max(220, 24 + lines.length * row) : 244 + lines.length * row}
+      <svg bind:this={svg} viewBox="0 0 {W} {H}" width={W} height={H} role="img" aria-label="Budget: {summary}">
         {#each parts as part (part.id)}
           {#if part.share > 0}
-            <rect
-              class="part"
-              x={part.start * 4.4}
-              y="0"
-              width={part.share * 4.4}
-              height="32"
-              fill={part.colour}
+            <path
+              class="part slice"
+              d={slice(part.start, part.start + part.share, cx)}
+              style:fill="var(--{part.colour})"
+              style:--dx="{part.dx}px"
+              style:--dy="{part.dy}px"
               role="presentation"
               onpointermove={(e) => show(e, part.def.label, part.exact)}
-            ><title>{part.def.label}: {part.exact}%</title></rect>
+            ><title>{part.def.label}: {part.exact}%</title></path>
           {/if}
         {/each}
-      </g>
-      {@render legend(0, 52, 2, 200)}
-    </svg>
-  {:else if chart === 'pie'}
-    <svg bind:this={svg} viewBox="0 0 440 220" role="img" aria-label="Budget: {summary}">
-      {#each parts as part (part.id)}
-        {#if part.share > 0}
-          <path
-            class="part slice"
-            d={slice(part.start, part.start + part.share)}
-            fill={part.colour}
-            style:--dx="{part.dx}px"
-            style:--dy="{part.dy}px"
-            role="presentation"
-            onpointermove={(e) => show(e, part.def.label, part.exact)}
-          ><title>{part.def.label}: {part.exact}%</title></path>
+        <text class="centre" x={cx} y="110">100%</text>
+        {#if beside}
+          {@render legend(240, 20, 1, W - 240)}
+        {:else}
+          {@render legend(0, 244, 1, W)}
         {/if}
-      {/each}
-      <text class="centre" x="110" y="110">100%</text>
-      {@render legend(240, 25, 1, 200)}
-    </svg>
-  {:else}
-    <svg bind:this={svg} viewBox="0 0 440 324" role="img" aria-label="Budget: {summary}">
-      {#each tiles as tile (tile.item.id)}
-        {@const part = tile.item}
-        {@const colour = ink(part.colour)}
-        <g class="part tile" role="presentation" onpointermove={(e) => show(e, part.def.label, part.exact)}>
-          <rect x={tile.x + 1} y={tile.y + 1} width={Math.max(0, tile.w - 2)} height={Math.max(0, tile.h - 2)} rx="3" fill={part.colour}
-            ><title>{part.def.label}: {part.exact}%</title></rect
-          >
-          <!-- The icon first, as there's room: then the share beside it (or under it), then the name. -->
-          {#if tile.w >= 26 && tile.h >= 26}
-            {@const beside = tile.w >= 62 && tile.h >= 30}
-            <svg x={tile.x + 8} y={tile.y + 8} width="15" height="15" viewBox={part.glyph.box}>
-              <path d={part.glyph.d} fill={colour} />
-            </svg>
-            {#if beside}
-              <text class="tile-share" x={tile.x + 28} y={tile.y + 16} fill={colour}>{part.exact}%</text>
-              {#each nameLines(part.def.label, tile.w, tile.h) as line, i (i)}
-                <text class="tile-label" x={tile.x + 8} y={tile.y + 37 + i * 15} fill={colour}>{line}</text>
-              {/each}
-            {:else if tile.w >= 38 && tile.h >= 50}
-              <text class="tile-share" x={tile.x + 8} y={tile.y + 36} fill={colour}>{part.exact}%</text>
+      </svg>
+    {:else}
+      {@const H = tilesHeight + 24 + rows * row}
+      <svg bind:this={svg} viewBox="0 0 {W} {H}" width={W} height={H} role="img" aria-label="Budget: {summary}">
+        {#each tiles as tile (tile.item.id)}
+          {@const part = tile.item}
+          <!-- A tile is its area's colour. Where there's room for words, they sit on a plate in
+               the page's own colour, framed by the tile: text never sits on the colour itself. -->
+          {@const plate = tile.w >= 40 && tile.h >= 36}
+          <g class="part tile" role="presentation" onpointermove={(e) => show(e, part.def.label, part.exact)}>
+            <rect x={tile.x + 1} y={tile.y + 1} width={Math.max(0, tile.w - 2)} height={Math.max(0, tile.h - 2)} rx="2" style:fill="var(--{part.colour})"
+              ><title>{part.def.label}: {part.exact}%</title></rect
+            >
+            {#if plate}
+              {@const wide = tile.w >= 86}
+              <rect class="plate" x={tile.x + 6} y={tile.y + 6} width={tile.w - 12} height={tile.h - 12} rx="2" />
+              <svg x={tile.x + 12} y={tile.y + 12} width="15" height="15" viewBox={part.glyph.box}>
+                <path class="key-icon" d={part.glyph.d} />
+              </svg>
+              {#if wide}
+                <text class="tile-share" x={tile.x + 34} y={tile.y + 20}>{part.exact}%</text>
+                {#each nameLines(part.def.label, tile.w, tile.h) as line, i (i)}
+                  <text class="tile-label" x={tile.x + 12} y={tile.y + 44 + i * 18}>{line}</text>
+                {/each}
+              {:else if tile.h >= 62}
+                <text class="tile-share" x={tile.x + 12} y={tile.y + 44}>{part.exact}%</text>
+              {/if}
             {/if}
-          {/if}
-        </g>
-      {/each}
-      {@render legend(0, 240, 2, 200)}
-    </svg>
-  {/if}
-  {#if tip}
-    <div class="tip" style:left="{tip.x}px" style:top="{tip.y}px" aria-hidden="true">{tip.text}</div>
-  {/if}
+          </g>
+        {/each}
+        {@render legend(0, tilesHeight + 24, columns, column)}
+      </svg>
+    {/if}
+    {#if tip}
+      <div class="tip" style:left="{tip.x}px" style:top="{tip.y}px" aria-hidden="true">{tip.text}</div>
+    {/if}
+  </div>
 </div>
 <Download svg={() => svg} name="{name} budget" {texts} />
 
@@ -321,15 +327,17 @@
       class:matched={hits.includes(line.id)}
       class:current={currentHit === line.id}
       class:angry={strained === line.id}
-      class:locked
       id="field-{line.id}"
     >
-      <span class="icon" style:color={line.colour}><Icon icon={line.icon} /></span>
-      <label for="share-{line.id}">{line.def.label}</label>
-      <output for="share-{line.id}">{country[line.id]}%</output>
+      <span class="mark">
+        <span class="eu-swatch" style:--swatch="var(--{line.colour})"></span>
+        <span class="mark-icon"><Icon icon={line.icon} /></span>
+      </span>
+      <label class="eu-label" for="share-{line.id}"><span class="question">{line.def.label}</span></label>
+      <output class="eu-data" for="share-{line.id}">{country[line.id]}%</output>
       <input
         id="share-{line.id}"
-        class="range"
+        class="eu-range"
         style:--fill="{country[line.id]}%"
         type="range"
         min="0"
@@ -340,7 +348,8 @@
         oninput={(e) => set(line.id, Number(e.currentTarget.value), e.currentTarget)}
       />
       <button
-        class="lock"
+        type="button"
+        class="eu-btn eu-btn--quiet eu-btn--icon lock"
         class:strain={strained !== null && locked}
         aria-pressed={locked}
         aria-label="{locked ? 'Unlock' : 'Lock'} {line.def.label} at {country[line.id]}%"
@@ -349,253 +358,215 @@
       >
         <Icon icon={locked ? faLock : faLockOpen} />
       </button>
-      <p class="help" id="help-{line.id}">{line.def.help}</p>
+      <p class="eu-help" id="help-{line.id}">{line.def.help}</p>
     </li>
   {/each}
 </ul>
-<p class="visually-hidden" aria-live="polite">{strainNote}</p>
-
+<p class="eu-visually-hidden" aria-live="polite">{strainNote}</p>
 
 <style>
-  .intro {
-    margin: 0 0 var(--space-3);
-    color: var(--ink-muted);
-    font-size: 13px;
-  }
-
   .toolbar {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
     gap: var(--space-2);
-    margin-bottom: var(--space-3);
   }
 
-  .chart-modes {
-    display: flex;
-    flex-wrap: wrap;
+  .tight {
     gap: var(--space-2);
   }
 
-  .mode {
-    --pad: 10px;
-    padding-block: 3px;
-    font-size: 13px;
+  /* The room the chart has: the chart is drawn to fit it, at one unit to the pixel. */
+  .room {
+    min-width: 0;
   }
 
   .chart {
     position: relative;
   }
 
-  /* Charts line up with the buttons above them, on the left. */
   .chart > svg {
     display: block;
-    width: 100%;
-    max-width: 540px;
+    max-width: 100%;
     height: auto;
     overflow: visible;
   }
 
+  /* Parts are told apart by a gap in the panel's own colour, as well as by their colours. */
   rect.part,
-  path.part {
+  path.part,
+  .tile > rect:first-child {
     stroke: var(--surface-raised);
-    stroke-width: 1;
+    stroke-width: 2;
   }
 
   .part {
     cursor: crosshair;
-    transition: opacity 0.15s;
   }
 
-  .part:hover {
-    opacity: 0.85;
+  .slice {
+    transition: transform 0.2s cubic-bezier(0.3, 1.4, 0.6, 1);
   }
 
-  @media (prefers-reduced-motion: no-preference) {
-    .slice {
-      transition:
-        opacity 0.15s,
-        transform 0.2s cubic-bezier(0.3, 1.4, 0.6, 1);
-    }
-
-    .slice:hover {
-      transform: translate(var(--dx), var(--dy));
-    }
+  .slice:hover {
+    transform: translate(var(--dx), var(--dy));
   }
 
   .centre {
     fill: var(--ink);
-    font-size: 18px;
-    font-weight: 700;
+    font: var(--type-heading);
     text-anchor: middle;
     dominant-baseline: middle;
   }
 
+  /* The legend: a swatch with an edge that shows on any ground, the area's icon and name, and
+     its share. */
+  .key-swatch {
+    stroke: var(--line-strong);
+    stroke-width: 1;
+  }
+
+  .key-icon {
+    fill: var(--ink);
+  }
+
   .key text {
     fill: var(--ink);
-    font-size: 13px;
+    font: var(--type-note);
     dominant-baseline: middle;
   }
 
   .key .key-share {
+    font: var(--type-data);
     font-weight: 700;
     text-anchor: end;
   }
 
-  /* Labels on the treemap's tiles, in white or near-black, whichever reads better. */
+  /* Words on the treemap sit on a plate in the page's colour, inside the tile's own. */
+  .plate {
+    fill: var(--surface);
+  }
+
   .tile-share,
   .tile-label {
+    fill: var(--ink);
     dominant-baseline: middle;
     pointer-events: none;
   }
 
   .tile-share {
-    font-size: 15px;
-    font-weight: 700;
+    font: var(--type-label);
   }
 
   .tile-label {
-    font-size: 12px;
-    font-weight: 600;
+    font: var(--type-note);
   }
 
-  .tile svg {
+  .tile svg,
+  .plate {
     pointer-events: none;
-  }
-
-  .budget-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-  }
-
-  .budget-actions .btn {
-    padding: 3px 10px;
-    font-size: 13px;
-  }
-
-  .budget-actions .btn:disabled {
-    opacity: 0.45;
-    cursor: default;
   }
 
   .tip {
     position: absolute;
-    transform: translate(-50%, calc(-100% - 10px));
-    padding: 3px 8px;
-    border-radius: var(--radius-control);
+    z-index: 2;
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-md);
     background: var(--ink);
     color: var(--surface);
-    font-size: 13px;
-    font-weight: 600;
+    font: var(--type-note);
+    font-weight: 700;
     white-space: nowrap;
     pointer-events: none;
+    transform: translate(-50%, calc(-100% - var(--space-3)));
   }
 
   .lines {
-    margin: var(--space-3) 0;
-    padding: 0;
-    list-style: none;
     display: grid;
     gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
   }
 
   .line {
     display: grid;
-    grid-template-columns: 22px 1fr auto auto;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
     grid-template-areas:
-      'icon label value lock'
-      'icon slider slider lock'
-      'icon help help help';
+      'mark label value lock'
+      'mark slider slider lock'
+      'mark help help help';
     column-gap: var(--space-2);
+    align-items: center;
     margin: 0 calc(-1 * var(--space-2));
     padding: var(--space-1) var(--space-2);
-    border-radius: var(--radius-control);
+    border-radius: var(--radius-md);
+    scroll-margin-top: calc(var(--size-target) + var(--space-8));
   }
 
-  .icon {
-    grid-area: icon;
-    padding-top: 2px;
-    font-size: 16px;
+  /* The area's colour as a swatch, and its icon: the same pair as in the chart's legend. */
+  .mark {
+    grid-area: mark;
+    align-self: start;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding-top: var(--space-1);
+  }
+
+  /* Icons differ in width; their column doesn't. */
+  .mark-icon {
+    display: inline-flex;
+    justify-content: center;
+    width: var(--space-5);
   }
 
   label {
     grid-area: label;
-    font-weight: 600;
   }
 
   output {
     grid-area: value;
-    font-variant-numeric: tabular-nums;
-    font-weight: 600;
+    font-weight: 700;
   }
 
-  .range {
+  .eu-range {
     grid-area: slider;
   }
 
-  .help {
-    grid-area: help;
-    margin: 0;
-    color: var(--ink-muted);
-    font-size: 13px;
+  .eu-range:disabled {
+    cursor: not-allowed;
   }
 
-  /* The lock, to the right of each share. */
+  .eu-help {
+    grid-area: help;
+  }
+
+  /* The lock, to the right of each share. Locked, it is filled (aria-pressed) and its icon closes. */
   .lock {
     grid-area: lock;
-    align-self: center;
-    display: grid;
-    place-items: center;
-    width: 30px;
-    height: 30px;
     margin-left: var(--space-1);
-    padding: 0;
-    border: 1px solid transparent;
-    border-radius: var(--radius-control);
-    background: none;
-    color: var(--ink-muted);
-    cursor: pointer;
-    transition:
-      background-color 0.15s,
-      color 0.15s,
-      box-shadow 0.2s;
   }
 
-  .lock:hover {
-    background: var(--hover);
-  }
-
-  .locked .lock {
-    color: var(--accent-fill);
-  }
-
-  .locked .range {
-    cursor: not-allowed;
-    opacity: 0.6;
-  }
-
-  /* Too far: the slider turns a little red and shakes, and the locks in the way light up. */
+  /* Too far: the share gets a red edge and shakes, and the locks in the way are ringed. A
+     note for screen readers says how much room the locks leave. */
   .angry {
-    background: color-mix(in srgb, var(--danger) 14%, transparent);
-  }
-
-  .angry .range {
-    background: linear-gradient(to right, var(--danger) 0 var(--fill), var(--track) var(--fill) 100%);
+    outline: var(--size-ring) solid var(--danger-text);
+    animation: shake 0.3s ease-in-out 2;
   }
 
   .lock.strain {
-    color: var(--danger);
-    box-shadow: 0 0 0 2px var(--danger);
+    outline: var(--size-ring) solid var(--danger-text);
+    outline-offset: var(--size-ring);
   }
 
-  @media (prefers-reduced-motion: no-preference) {
-    .angry {
-      animation: shake 0.3s ease-in-out 2;
-    }
+  .lock.strain :global(.eu-icon) {
+    animation: pop 0.3s ease-out;
+  }
 
-    .lock.strain :global(.icon) {
-      animation: pop 0.3s ease-out;
+  @keyframes pop {
+    from {
+      transform: scale(0);
     }
   }
 
@@ -614,39 +585,31 @@
     }
   }
 
-  .matched {
-    background: var(--flash);
+  /* Search matches and "look here", as on the other settings (Field.svelte). */
+  .matched,
+  .current {
+    outline: 1px dashed var(--line-strong);
+  }
+
+  .matched .question,
+  .current .question,
+  .flash .question {
+    background: var(--highlight);
+    color: var(--on-highlight);
   }
 
   .current {
-    background: var(--flash);
-    box-shadow: 0 0 0 2px var(--focus-ring);
+    outline: var(--size-ring) solid var(--ink);
   }
 
   .flash {
+    outline: var(--size-ring) solid var(--ink);
     animation: flash 0.7s ease-in-out 4 alternate;
   }
 
   @keyframes flash {
     from {
-      background: transparent;
-      box-shadow: none;
-    }
-    to {
-      background: var(--flash);
-      box-shadow: 0 0 0 2px var(--focus-ring);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .flash {
-      animation: none;
-      background: var(--flash);
-      box-shadow: 0 0 0 2px var(--focus-ring);
-    }
-
-    .part {
-      transition: none;
+      outline-color: transparent;
     }
   }
 </style>

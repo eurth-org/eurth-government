@@ -9,14 +9,16 @@
     faXmark,
     type IconDefinition,
   } from '@fortawesome/free-solid-svg-icons';
+  import { calm } from '@eurth/style';
+  import Icon from '@eurth/style/components/Icon.svelte';
   import { scale } from 'svelte/transition';
   import Coin from './Coin.svelte';
-  import Icon from './Icon.svelte';
 
   interface Section {
     id: string;
     name: string;
     icon: IconDefinition;
+    /** The name of a colour token: "cat-teal". */
     swatch: string;
   }
 
@@ -56,15 +58,14 @@
   let list: HTMLUListElement;
 
   // How far down the page you are, as a thin bar along the bottom of the sticky bar. Once the
-  // header has scrolled away, the Eurth coin joins the bar as a way back to the top.
-  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // suite's header has scrolled away, the Eurth coin joins the bar as a way back to the top.
   let progress = $state(0);
   let away = $state(false);
   $effect(() => {
     const update = () => {
       const max = document.documentElement.scrollHeight - innerHeight;
       progress = max > 0 ? Math.min(100, (scrollY / max) * 100) : 0;
-      away = (document.querySelector('.header')?.getBoundingClientRect().bottom ?? 0) < 0;
+      away = (document.querySelector('.eu-header')?.getBoundingClientRect().bottom ?? 0) < 0;
     };
     update();
     addEventListener('scroll', update, { passive: true });
@@ -92,7 +93,7 @@
   });
 
   function scrollChips(direction: 1 | -1) {
-    list.scrollBy({ left: direction * list.clientWidth * 0.7, behavior: 'smooth' });
+    list.scrollBy({ left: direction * list.clientWidth * 0.7, behavior: calm() ? 'auto' : 'smooth' });
   }
 
   function search() {
@@ -116,7 +117,7 @@
     if (!chip) return;
     const left = chip.offsetLeft - list.offsetLeft;
     if (left < list.scrollLeft || left + chip.offsetWidth > list.scrollLeft + list.clientWidth) {
-      list.scrollTo({ left: left - 16, behavior: 'smooth' });
+      list.scrollTo({ left: left - 16, behavior: calm() ? 'auto' : 'smooth' });
     }
   });
 </script>
@@ -125,14 +126,15 @@
   <div class="inner">
     {#if away}
       <button
-        class="to-top"
+        type="button"
+        class="eu-btn eu-btn--quiet eu-btn--icon to-top"
         aria-label="Back to the top"
         data-tip="Back to the top"
         data-tip-align="start"
-        transition:scale={{ duration: calm ? 0 : 200, start: 0.6 }}
-        onclick={() => scrollTo({ top: 0, behavior: calm ? 'auto' : 'smooth' })}
+        transition:scale={{ duration: calm() ? 0 : 200, start: 0.6 }}
+        onclick={() => scrollTo({ top: 0, behavior: calm() ? 'auto' : 'smooth' })}
       >
-        <Coin size={30} />
+        <Coin size={32} />
       </button>
     {/if}
     <form
@@ -145,14 +147,14 @@
         else onstep((e.submitter as HTMLElement | null)?.dataset.step === '-1' ? -1 : 1);
       }}
     >
-      <label class="visually-hidden" for="setting-search">Search settings</label>
       <Icon icon={faMagnifyingGlass} />
+      <!-- While stepping through picked-out settings, their name stands in for the search box. -->
       {#if reviewing}
         <span class="review">{review}</span>
-      {/if}
+      {:else}
+      <label class="eu-visually-hidden" for="setting-search">Search settings</label>
       <input
         id="setting-search"
-        class:hidden={reviewing}
         maxlength="100"
         autocomplete="off"
         type="search"
@@ -167,52 +169,49 @@
           }
         }}
       />
+      {/if}
       {#if query.trim() || reviewing}
         <span class="found" aria-live="polite">{hitCount ? `${hit + 1} of ${hitCount}` : 'No matches'}</span>
-        <button class="step" type="button" aria-label="Previous" disabled={!hitCount} onclick={() => onstep(-1)}>
+        <button class="eu-btn eu-btn--quiet eu-btn--icon" type="button" aria-label="Previous" disabled={!hitCount} onclick={() => onstep(-1)}>
           <Icon icon={faChevronUp} />
         </button>
-        <button class="step" type="submit" aria-label="Next" disabled={!hitCount}>
+        <button class="eu-btn eu-btn--quiet eu-btn--icon" type="submit" aria-label="Next" disabled={!hitCount}>
           <Icon icon={faChevronDown} />
         </button>
       {/if}
       {#if reviewing}
-        <button class="step" type="button" aria-label="Done" onclick={onclose}>
+        <button class="eu-btn eu-btn--quiet eu-btn--icon" type="button" aria-label="Done" onclick={onclose}>
           <Icon icon={faXmark} />
         </button>
       {/if}
     </form>
-    <div class="chips-wrap" class:more-left={more.left} class:more-right={more.right}>
+    <div class="chips-wrap">
       {#if more.left}
-        <button class="scroll left" aria-label="Show earlier sections" onclick={() => scrollChips(-1)}>
+        <button type="button" class="eu-btn eu-btn--icon scroll left" aria-label="Show earlier sections" onclick={() => scrollChips(-1)}>
           <Icon icon={faChevronLeft} />
         </button>
       {/if}
-    <ul class="chips" bind:this={list} onscroll={measure}>
-      {#each sections as section (section.id)}
-        <li>
-          <a
-            href="#{section.id}"
-            aria-current={current === section.id ? 'location' : undefined}
-            style:--swatch={section.swatch}
-          >
-            <span class="chip-icon"><Icon icon={section.icon} /></span>
-            <span class="chip-label" data-label={section.name}>{section.name}</span>
-            {#if hitCounts[section.id]}
-              <span class="hits" aria-label="{hitCounts[section.id]} search matches">{hitCounts[section.id]}</span>
-            {/if}
+      <ul class="chips" bind:this={list} onscroll={measure}>
+        {#each sections as section (section.id)}
+          <li>
+            <a href="#{section.id}" aria-current={current === section.id ? 'location' : undefined} style:--swatch="var(--{section.swatch})">
+              <span class="chip-icon"><Icon icon={section.icon} /></span>
+              <span class="chip-label" data-label={section.name}>{section.name}</span>
+              {#if hitCounts[section.id]}
+                <span class="hits" aria-label="{hitCounts[section.id]} search matches">{hitCounts[section.id]}</span>
+              {/if}
+            </a>
+          </li>
+        {/each}
+        <li class="small-only">
+          <a href="#results" aria-current={current === 'results' ? 'location' : undefined}>
+            <Icon icon={faFlag} />
+            <span class="chip-label" data-label="Result">Result</span>
           </a>
         </li>
-      {/each}
-      <li class="small-only">
-        <a href="#results" aria-current={current === 'results' ? 'location' : undefined}>
-          <Icon icon={faFlag} />
-          <span class="chip-label" data-label="Result">Result</span>
-        </a>
-      </li>
-    </ul>
+      </ul>
       {#if more.right}
-        <button class="scroll right" aria-label="Show more sections" onclick={() => scrollChips(1)}>
+        <button type="button" class="eu-btn eu-btn--icon scroll right" aria-label="Show more sections" onclick={() => scrollChips(1)}>
           <Icon icon={faChevronRight} />
         </button>
       {/if}
@@ -223,52 +222,53 @@
 </nav>
 
 <style>
+  /* The sticky bar: search, the sections and how far down you are. It sits under the suite's
+     header and its menus, and over the page as that scrolls by. */
   .nav {
     position: sticky;
     top: 0;
-    z-index: 2;
-    background: var(--header);
+    z-index: 20;
     border-bottom: 1px solid var(--line);
+    background: var(--surface);
   }
 
   .inner {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: var(--space-2) var(--space-4);
     display: flex;
     align-items: center;
     gap: var(--space-3);
+    padding: var(--space-2) 0;
   }
 
   .to-top {
-    display: grid;
     flex: none;
-    place-items: center;
-    padding: 0;
-    border: 0;
-    border-radius: 50%;
-    background: none;
-    cursor: pointer;
   }
 
+  /* One box for the search: the magnifier, the field, the count and the arrows. */
   .search {
     display: flex;
+    flex: none;
     align-items: center;
     gap: var(--space-2);
-    flex: none;
-    padding: 0 var(--space-2);
+    padding-left: var(--space-3);
     border: 1px solid var(--line-strong);
-    border-radius: var(--radius-control);
+    border-radius: var(--radius-md);
     background: var(--surface);
     color: var(--ink-muted);
   }
 
   .search input {
-    width: 11rem;
-    padding: 6px 0;
+    width: calc(4 * var(--size-target));
+    min-height: var(--size-target);
+    padding: 0 var(--space-2) 0 0;
     border: 0;
     background: transparent;
     color: var(--ink);
+    font: var(--type-body);
+  }
+
+  .search input::placeholder {
+    color: var(--ink-muted);
+    opacity: 1;
   }
 
   .search input:focus-visible {
@@ -276,118 +276,72 @@
   }
 
   .search:focus-within {
-    outline: 2px solid var(--focus-ring);
-    outline-offset: 2px;
+    outline: var(--size-ring) solid var(--focus-ring);
+    outline-offset: var(--size-ring);
+  }
+
+  /* The arrows keep their own ring inside the box. */
+  .search:has(button:focus-visible) {
+    outline: none;
   }
 
   /* While stepping through picked-out settings, their name stands in for the search box. */
   .review {
-    max-width: 11rem;
-    padding: 6px 0;
+    max-width: calc(4 * var(--size-target));
     overflow: hidden;
     color: var(--ink);
-    font-weight: 600;
+    font: var(--type-label);
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .search input.hidden {
-    display: none;
-  }
-
   .found {
-    font-size: 13px;
-    white-space: nowrap;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .step {
-    display: inline-grid;
-    place-items: center;
-    width: 24px;
-    height: 24px;
-    padding: 0;
-    border: 0;
-    border-radius: var(--radius-control);
-    background: transparent;
     color: var(--ink);
-    cursor: pointer;
-  }
-
-  .step:hover:not(:disabled) {
-    background: var(--hover);
-  }
-
-  .step:disabled {
-    color: var(--ink-muted);
-    cursor: default;
+    font: var(--type-data);
+    white-space: nowrap;
   }
 
   /* How many search matches a section holds. */
   .hits {
-    min-width: 18px;
-    padding: 0 5px;
-    border-radius: 999px;
-    background: var(--flash);
-    color: var(--ink);
-    font-size: 12px;
+    min-width: var(--space-5);
+    padding: 0 var(--space-1);
+    border-radius: var(--radius-md);
+    background: var(--highlight);
+    color: var(--on-highlight);
+    font: var(--type-note);
     font-weight: 700;
     text-align: center;
   }
 
   .chips {
     display: flex;
+    flex: 1;
     gap: var(--space-1);
     margin: 0;
-    padding: 2px;
+    padding: var(--size-ring);
     list-style: none;
     overflow-x: auto;
     scrollbar-width: none;
   }
 
-  /* More sections off to one side: a fade and an arrow on that side. */
+  /* More sections off to one side: an arrow on that side. */
   .chips-wrap {
     position: relative;
     display: flex;
+    flex: 1;
     min-width: 0;
-    flex: 1;
-  }
-
-  .chips-wrap .chips {
-    flex: 1;
-  }
-
-  .more-left .chips {
-    mask-image: linear-gradient(to right, transparent 0, #000 48px);
-  }
-
-  .more-right .chips {
-    mask-image: linear-gradient(to left, transparent 0, #000 48px);
-  }
-
-  .more-left.more-right .chips {
-    mask-image: linear-gradient(to right, transparent 0, #000 48px, #000 calc(100% - 48px), transparent 100%);
   }
 
   .scroll {
     position: absolute;
     top: 50%;
     z-index: 1;
-    display: inline-grid;
-    place-items: center;
-    width: 28px;
-    height: 28px;
-    padding: 0;
-    border: 1px solid var(--line-strong);
-    border-radius: 50%;
     background: var(--surface);
-    color: var(--ink);
     transform: translateY(-50%);
-    cursor: pointer;
   }
 
   .scroll:hover {
-    background: var(--hover);
+    transform: translateY(-50%);
   }
 
   .scroll.left {
@@ -401,25 +355,25 @@
   .chips a {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 6px 10px;
+    gap: var(--space-2);
+    min-height: var(--size-target);
+    padding: 0 var(--space-3);
+    border-radius: var(--radius-md);
     color: var(--ink);
+    font: var(--type-body-sm);
     text-decoration: none;
     white-space: nowrap;
-    font-size: 14px;
-    transition:
-      background-color 0.15s,
-      box-shadow 0.25s;
+    transition: background-color 0.15s;
   }
 
   .chips a:hover {
     background: var(--hover);
   }
 
-  /* Where you are: the current section's chip, underlined in its own colour. */
+  /* Where you are: the current section's chip is bold, with a bar under it in its own colour. */
   .chips a[aria-current] {
+    box-shadow: inset 0 calc(-1 * var(--space-1)) 0 var(--swatch, var(--accent-fill));
     font-weight: 700;
-    box-shadow: inset 0 -3px 0 var(--swatch);
   }
 
   /* Each label keeps room for its bold self (an invisible bold copy sets the width), so chips
@@ -445,35 +399,28 @@
   .chip-icon {
     display: inline-flex;
     color: var(--swatch);
+    transition: transform 0.2s cubic-bezier(0.3, 1.6, 0.6, 1);
   }
 
   /* Section icons give a little nudge under the pointer. */
-  @media (prefers-reduced-motion: no-preference) {
-    .chip-icon {
-      transition: transform 0.2s cubic-bezier(0.3, 1.6, 0.6, 1);
-    }
-
-    .chips a:hover .chip-icon {
-      transform: translateY(-2px) rotate(-8deg);
-    }
+  .chips a:hover .chip-icon {
+    transform: translateY(-2px) rotate(-8deg);
   }
 
   .progress {
-    height: 3px;
+    height: var(--space-1);
     background: var(--line);
   }
 
   .progress span {
     display: block;
     height: 100%;
-    background: var(--eurth-blue);
+    background: var(--accent-fill);
   }
 
-
   .name {
-    margin: 0;
-    padding: 0 var(--space-4) var(--space-2);
-    font-weight: 700;
+    padding-bottom: var(--space-2);
+    font: var(--type-label);
   }
 
   .small-only {
@@ -497,7 +444,9 @@
     }
 
     .search input {
+      flex: 1;
       width: 100%;
+      min-width: var(--size-target);
     }
 
     .chips-wrap {

@@ -4,9 +4,9 @@
   import { compassAxes, compassPoint } from '../model/compass';
   import { compassJson, compassMarkdown } from '../model/compassText';
   import type { AxisScore } from '../model/engine';
+  import Icon from '@eurth/style/components/Icon.svelte';
   import CompassChart, { type Mode } from './CompassChart.svelte';
   import Download from './Download.svelte';
-  import Icon from './Icon.svelte';
 
   let { scores, name, link }: { scores: AxisScore[]; name: string; link: string } = $props();
 
@@ -20,6 +20,14 @@
   let small = $state<SVGSVGElement>();
   let large = $state<SVGSVGElement>();
   let dialog: HTMLDialogElement;
+  // The enlarged compass is drawn once its window has been opened, not with the page.
+  let enlarged = $state(false);
+
+  // Each chart is drawn to fit the room it has, one unit to the pixel: 38 either side of the
+  // plot for the words at its ends.
+  let room = $state(388);
+  let roomLarge = $state(700);
+  const fit = (width: number, most: number) => Math.round(Math.max(100, Math.min(most, (width - 76) / 2)));
 
   const here = $derived(compassPoint(scores));
   const label = (id: string) => axes.find((a) => a.id === id)!.label;
@@ -32,12 +40,12 @@
 </script>
 
 {#snippet modePicker(group: string)}
-  <div class="modes" role="radiogroup" aria-label="Reference points">
+  <div class="eu-row tight" role="radiogroup" aria-label="Reference points">
     {#each modes as [value, text] (value)}
-      <label class="pill mode">
+      <label class="eu-pill">
         <input type="radio" name={group} {value} bind:group={mode} />
-        <span class="check"><Icon icon={faCheck} /></span>
-        <span class="steady" data-text={text}>{text}</span>
+        <span class="eu-check"><Icon icon={faCheck} /></span>
+        {text}
       </label>
     {/each}
   </div>
@@ -46,11 +54,13 @@
 <!-- Reference points on the left, Enlarge on the right. -->
 <div class="toolbar">
   {@render modePicker('compass-mode')}
-  <button class="btn enlarge" onclick={() => dialog.showModal()}><Icon icon={faExpand} /> Enlarge</button>
+  <button type="button" class="eu-btn" onclick={() => ((enlarged = true), dialog.showModal())}><Icon icon={faExpand} /> Enlarge</button>
 </div>
-<CompassChart {scores} {mode} bind:svg={small} />
+<div class="room" bind:clientWidth={room}>
+  <CompassChart {scores} {mode} half={fit(room, 170)} bind:svg={small} />
+</div>
 
-<dl class="explain">
+<dl class="eu-help explain">
   <div>
     <dt>Across: {fmt(here.x)}</dt>
     <dd>
@@ -70,14 +80,20 @@
 
 <Download svg={() => small} name="{name} compass" {texts} />
 
-<dialog bind:this={dialog} aria-labelledby="compass-large-title">
-  <div class="top">
+<dialog bind:this={dialog} class="eu-dialog large" aria-labelledby="compass-large-title">
+  <div class="eu-dialog-top">
     <h2 id="compass-large-title">Compass</h2>
-    <button class="btn" aria-label="Close" onclick={() => dialog.close()}><Icon icon={faXmark} /></button>
+    <button type="button" class="eu-btn eu-btn--quiet eu-btn--icon" aria-label="Close" onclick={() => dialog.close()}><Icon icon={faXmark} /></button>
   </div>
-  {@render modePicker('compass-mode-large')}
-  <CompassChart {scores} {mode} half={300} bind:svg={large} />
-  <Download svg={() => large} name="{name} compass" {texts} />
+  <div class="eu-stack">
+    {@render modePicker('compass-mode-large')}
+    <div class="room" bind:clientWidth={roomLarge}>
+      {#if enlarged}
+        <CompassChart {scores} {mode} half={fit(roomLarge, 300)} bind:svg={large} />
+      {/if}
+    </div>
+    <Download svg={() => large} name="{name} compass" {texts} />
+  </div>
 </dialog>
 
 <style>
@@ -86,34 +102,15 @@
     flex-wrap: wrap;
     justify-content: space-between;
     gap: var(--space-2);
-    margin-bottom: var(--space-2);
   }
 
-  .modes {
-    display: flex;
-    flex-wrap: wrap;
+  .tight {
     gap: var(--space-2);
   }
 
-  dialog .modes {
-    margin-bottom: var(--space-2);
-  }
-
-  .enlarge {
-    padding: 3px 10px;
-    font-size: 13px;
-  }
-
-  .mode {
-    --pad: 10px;
-    padding-block: 3px;
-    font-size: 13px;
-  }
-
-  .explain {
-    margin: var(--space-2) 0 0;
-    font-size: 13px;
-    color: var(--ink-muted);
+  /* The room the chart has: the chart is drawn to fit it. */
+  .room {
+    min-width: 0;
   }
 
   .explain div + div {
@@ -122,8 +119,8 @@
 
   dt {
     display: inline;
-    font-weight: 700;
     color: var(--ink);
+    font-weight: 700;
   }
 
   dt::after {
@@ -135,30 +132,8 @@
     margin: 0;
   }
 
-  dialog {
-    width: min(960px, calc(100vw - 2 * var(--space-4)));
-    max-height: calc(100dvh - 2 * var(--space-4));
-    padding: var(--space-4);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-panel);
-    background: var(--surface-raised);
-    color: var(--ink);
-    overflow-y: auto;
-  }
-
-  dialog::backdrop {
-    background: rgb(0 0 0 / 0.55);
-  }
-
-  .top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: var(--space-2);
-  }
-
-  .top h2 {
-    margin: 0;
-    font-size: 18px;
+  /* The enlarged compass: as wide as a column of text, or the screen. */
+  .large {
+    width: min(var(--size-measure), calc(100vw - 2 * var(--space-4)));
   }
 </style>

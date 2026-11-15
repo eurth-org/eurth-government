@@ -1,79 +1,60 @@
 <script lang="ts">
-  import { faGithub } from '@fortawesome/free-brands-svg-icons';
-  import {
-    faCircleInfo,
-    faCircleQuestion,
-    faKeyboard,
-    faLightbulb,
-    faUserShield,
-    faVolumeHigh,
-    faVolumeXmark,
-    faXmark,
-  } from '@fortawesome/free-solid-svg-icons';
-  import Icon from './Icon.svelte';
-  import { motion, setMotion } from './motion.svelte';
+  import { faCircleInfo, faCircleQuestion, faEarthEurope, faKeyboard, faLightbulb, faUserShield, faVolumeHigh, faXmark } from '@fortawesome/free-solid-svg-icons';
+  import Icon from '@eurth/style/components/Icon.svelte';
   import { ref } from './ref';
 
   /**
-   * About Governmint, opened with the "?" button, the About link or the ? key: what it does,
-   * where your country is kept, the keyboard shortcuts (with a switch to turn the single keys
-   * off, for speech input; WCAG 2.1.4), the sound switch, and where to suggest ideas.
+   * About Governmint, opened with the "?" button or the ? key: what it does, where your
+   * country is kept, a word on real countries, the keyboard shortcuts (with a switch to turn
+   * the single keys off, for speech input; WCAG 2.1.4), and where to suggest ideas. The sound
+   * and motion switches are the suite's, in the footer.
    */
   let {
     open,
     onclose,
-    sound,
-    ontogglesound,
     shortcuts,
     ontoggleshortcuts,
+    mod,
+    host,
   }: {
     open: boolean;
     onclose: () => void;
-    sound: boolean;
-    ontogglesound: () => void;
     shortcuts: boolean;
     ontoggleshortcuts: () => void;
+    /** The command key as this device writes it: "⌘" or "Ctrl+". */
+    mod: string;
+    /** This site's host, for the ?ref on links to other sites. */
+    host: string;
   } = $props();
   let dialog: HTMLDialogElement;
-  let body = $state<HTMLDivElement>();
 
-  // Is there more below? Then the bottom edge fades, as a hint to scroll.
-  let more = $state(false);
-  function measure() {
-    if (body) more = body.scrollTop + body.clientHeight < body.scrollHeight - 4;
-  }
-
-  const mac = /Mac|iPhone|iPad/.test(navigator.platform);
-  const mod = mac ? '⌘' : 'Ctrl';
-  const keys: [string[], string][] = [
+  const command = $derived(mod.replace('+', ''));
+  const keys: [string[], string][] = $derived([
     [['/'], 'Search settings'],
     [['E'], 'Examples and real countries'],
     [['R'], 'A random country'],
-    [['S'], 'Save, and copy the link'],
+    [['S'], 'Copy the link'],
     [['[', ']'], 'Previous or next section'],
     [['?'], 'This window'],
-    [[mod, 'Z'], 'Undo'],
-    [[mod, '⇧', 'Z'], 'Redo'],
+    [[command, 'Z'], 'Undo'],
+    [[command, '⇧', 'Z'], 'Redo'],
     [['Esc'], 'Close, or clear the search'],
-  ];
+  ]);
 
   $effect(() => {
     if (open && !dialog.open) dialog.showModal();
     if (!open && dialog.open) dialog.close();
-    if (open) requestAnimationFrame(measure);
   });
 </script>
 
-<svelte:window onresize={measure} />
-
-<dialog bind:this={dialog} onclose={onclose} aria-labelledby="info-title">
+<dialog bind:this={dialog} class="eu-dialog about" {onclose} aria-labelledby="info-title">
   <!-- The title and Close stay in view; only the text below scrolls. -->
-  <div class="top">
+  <div class="eu-dialog-top">
     <h2 id="info-title"><Icon icon={faCircleQuestion} /> About Governmint</h2>
-    <button class="btn close" aria-label="Close" onclick={() => dialog.close()}><Icon icon={faXmark} /></button>
+    <button type="button" class="eu-btn eu-btn--quiet eu-btn--icon" aria-label="Close" onclick={() => dialog.close()}><Icon icon={faXmark} /></button>
   </div>
-  <div class="body" class:more bind:this={body} onscroll={measure}>
-    <!-- Two columns on a desktop: about Governmint on the left, using it on the right. -->
+  <div class="body">
+    <!-- Two columns where there's room: about Governmint on the left, using it on the right. -->
     <div class="column">
       <section aria-labelledby="info-what">
         <h3 id="info-what"><Icon icon={faCircleInfo} /> What it does</h3>
@@ -90,21 +71,27 @@
       <section aria-labelledby="info-yours">
         <h3 id="info-yours"><Icon icon={faUserShield} /> Your country stays yours</h3>
         <p>
-          A country lives in its link: copy it to share it or come back later. Save also keeps a list in this browser.
-          Nothing about you or your country is stored anywhere else, and there's no account; Governmint only counts
-          how many countries are minted (saved, shared or exported). After your first visit, Governmint works
-          offline too: it keeps a copy of itself on this device.
+          A country lives in its link: copy it to share it or to come back later. The profile file carries your nation
+          from one Eurth tool to the next. Nothing about you or your country is stored, in this browser or anywhere
+          else, and there's no account. Governmint only counts how many countries are minted (copied, shared or
+          exported): a single number. After your first visit it works offline too, from a copy of itself on this
+          device.
+        </p>
+      </section>
+
+      <section aria-labelledby="info-real">
+        <h3 id="info-real"><Icon icon={faEarthEurope} /> Real countries</h3>
+        <p>
+          Governmint is a worldbuilding tool, made for fiction and fun. Its pictures of real countries are simplified
+          and approximate, as of 2026: not an assessment of any government, and not legal or political advice.
         </p>
       </section>
 
       <section aria-labelledby="info-ideas">
         <h3 id="info-ideas"><Icon icon={faLightbulb} /> Ideas</h3>
         <p>
-          Fellow worldbuilder?
-          <a href={ref('https://github.com/eurth-org/eurth-government/discussions/categories/ideas')}>
-            <Icon icon={faGithub} /> Table a motion for the roadmap</a
-          >
-          on GitHub. No quorum required.
+          Fellow worldbuilder? Table a motion for the roadmap on
+          <a href={ref('https://eurth.org', host)}>the Eurth forum</a>. No quorum required.
         </p>
       </section>
     </div>
@@ -119,28 +106,20 @@
             </div>
           {/each}
         </dl>
-        <p class="setting">
-          <button class="btn" aria-pressed={shortcuts} onclick={ontoggleshortcuts}>
-            Single-key shortcuts: {shortcuts ? 'on' : 'off'}
-          </button>
-          <span class="note">Turn them off if you use speech input, so a spoken word can't set one off.</span>
+        <button type="button" class="eu-btn" aria-pressed={shortcuts} onclick={ontoggleshortcuts}>
+          Single-key shortcuts: {shortcuts ? 'on' : 'off'}
+        </button>
+        <p class="eu-help">
+          Turn them off if you use speech input, so a spoken word can't set one off. The switch lasts for this visit.
         </p>
       </section>
 
       <section aria-labelledby="info-sound">
-        <h3 id="info-sound"><Icon icon={sound ? faVolumeHigh : faVolumeXmark} /> Sound and motion</h3>
-        <p class="setting">
-          <button class="btn" aria-pressed={sound} onclick={ontogglesound}>Coin clink: {sound ? 'on' : 'off'}</button>
-          <span class="note">
-            Off unless you turn it on. Then a soft clink when you save, copy a link, a text or an image, or when a
-            scale reaches 100% and coins burst out (only if you can see it).
-          </span>
-        </p>
-        <p class="setting">
-          <button class="btn" aria-pressed={motion.on} onclick={() => setMotion(!motion.on)}>
-            Hearts: {motion.on ? 'beating' : 'still'}
-          </button>
-          <span class="note">The footer's hearts beat every few seconds. Stop them here.</span>
+        <h3 id="info-sound"><Icon icon={faVolumeHigh} /> Sound and motion</h3>
+        <p>
+          Both switches are in the footer, and both last for this visit. Sound is off unless you turn it on: then a
+          soft coin clink when you copy a link, a text or an image, or when a scale reaches 100% and coins burst out
+          (only if you can see it).
         </p>
       </section>
     </div>
@@ -148,109 +127,61 @@
 </dialog>
 
 <style>
-  /* Wide enough on a desktop to read everything at a glance, in two columns; one column on
-     a phone, where the text scrolls under a fixed title and Close. */
-  dialog {
-    width: min(980px, calc(100vw - 2 * var(--space-4)));
-    max-height: min(820px, calc(100dvh - 2 * var(--space-4)));
-    padding: 0;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-panel);
-    background: var(--surface-raised);
-    color: var(--ink);
-    overflow: hidden;
-  }
-
-  dialog[open] {
-    display: flex;
-    flex-direction: column;
+  /* As wide as a column of text, or the screen: two columns where there's room, one on a phone. */
+  .about {
+    width: min(var(--size-measure), calc(100vw - 2 * var(--space-4)));
   }
 
   .body {
-    overflow-y: auto;
-    padding: 0 var(--space-4) var(--space-4);
+    display: grid;
+    gap: var(--space-4) var(--space-8);
+    margin-top: var(--space-3);
   }
 
-  @media (min-width: 820px) {
+  @media (min-width: 720px) {
     .body {
-      display: grid;
       grid-template-columns: 1fr 1fr;
-      column-gap: var(--space-8);
     }
   }
 
-  .body.more {
-    mask-image: linear-gradient(to bottom, #000 calc(100% - 56px), transparent);
-  }
-
-  .column > section:first-child h3 {
-    margin-top: var(--space-1);
-  }
-
-  dialog::backdrop {
-    background: rgb(0 0 0 / 0.55);
-  }
-
-  .top {
+  .column,
+  section {
     display: flex;
-    flex: none;
-    align-items: center;
-    justify-content: space-between;
-    padding: var(--space-4) var(--space-4) var(--space-2);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
   }
 
-  h2,
+  .column {
+    gap: var(--space-4);
+  }
+
   h3 {
     display: flex;
     align-items: center;
     gap: var(--space-2);
-    margin: 0;
   }
 
-  h2 {
-    font-size: 18px;
-  }
-
-  h3 {
-    margin: var(--space-4) 0 var(--space-1);
-    font-size: 15px;
-  }
-
-  h3 :global(.icon) {
-    color: var(--accent-fill);
-  }
-
-  p {
-    margin: 0 0 var(--space-2);
-  }
-
-  .setting {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--space-2) var(--space-3);
-  }
-
-  .note {
-    color: var(--ink-muted);
-    font-size: 13px;
+  h3 :global(.eu-icon) {
+    color: var(--accent-text);
   }
 
   dl {
     display: grid;
     gap: var(--space-1);
-    margin: 0 0 var(--space-3);
+    width: 100%;
+    margin: 0;
   }
 
   dl div {
     display: grid;
-    grid-template-columns: 110px 1fr;
+    grid-template-columns: calc(3 * var(--size-target)) minmax(0, 1fr);
     align-items: center;
   }
 
   dt {
     display: flex;
-    gap: 4px;
+    gap: var(--space-1);
   }
 
   dd {
@@ -258,20 +189,12 @@
   }
 
   kbd {
-    min-width: 24px;
-    padding: 2px 6px;
+    min-width: var(--space-6);
+    padding: 0 var(--space-2);
     border: 1px solid var(--line-strong);
     border-bottom-width: 2px;
-    border-radius: var(--radius-control);
-    background: var(--surface);
-    font: inherit;
-    font-size: 13px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-raised);
     text-align: center;
-  }
-
-  a {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
   }
 </style>

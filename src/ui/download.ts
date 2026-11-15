@@ -1,9 +1,11 @@
+import { copyPicture, download } from '@eurth/style';
 import { fileName } from '../model/text';
 
 /**
- * Saves a chart as SVG or PNG, entirely in the browser. The page styles charts with CSS
- * variables, so the copy gets each element's computed colours and sizes written in, and wide
- * gamut colours (Eurth blue in P3) converted to sRGB, which every image viewer understands.
+ * Saves a chart as SVG, PNG or WebP, entirely in the browser. The page styles charts with the
+ * suite's tokens (custom properties), which a picture on its own can't use, so the copy gets
+ * each element's computed colours and sizes written in as plain values, and any wide-gamut
+ * colour converted to sRGB, which every image viewer understands.
  */
 const painted = [
   'fill',
@@ -17,6 +19,7 @@ const painted = [
   'font-size',
   'font-family',
   'font-weight',
+  'font-style',
   'text-anchor',
   'dominant-baseline',
   'paint-order',
@@ -56,19 +59,20 @@ function standalone(svg: SVGSVGElement): { text: string; width: number; height: 
   const view = svg.viewBox.baseVal;
   const size = Math.max(7, view.width / 45);
   const box = { x: view.x, y: view.y, width: view.width, height: view.height + size * 1.8 };
-  const background = srgb(getComputedStyle(svg.closest('.panel') ?? document.body).backgroundColor);
+  const background = srgb(getComputedStyle(svg.closest('dialog, .panel') ?? document.body).backgroundColor);
   const ground = document.createElementNS(svgNS, 'rect');
   for (const [key, value] of Object.entries({ x: box.x, y: box.y, width: box.width, height: box.height, fill: background })) {
     ground.setAttribute(key, String(value));
   }
   clone.insertBefore(ground, clone.firstChild);
   const credit = document.createElementNS(svgNS, 'text');
-  const muted = getComputedStyle(document.documentElement).getPropertyValue('--ink-muted').trim() || '#5f5f5f';
+  const root = getComputedStyle(document.documentElement);
+  const muted = root.getPropertyValue('--ink-muted').trim() || root.color;
   for (const [key, value] of Object.entries({
     x: box.x + box.width - size * 0.6,
     y: box.y + box.height - size * 0.6,
     'text-anchor': 'end',
-    'font-family': 'system-ui, Arial, sans-serif',
+    'font-family': root.getPropertyValue('--font-sans').trim() || root.fontFamily,
     'font-size': size,
     fill: srgb(muted),
   })) {
@@ -86,13 +90,7 @@ function standalone(svg: SVGSVGElement): { text: string; width: number; height: 
 
 function save(blob: Blob, filename: string) {
   const dot = filename.lastIndexOf('.');
-  filename = `${fileName(filename.slice(0, dot))}${filename.slice(dot)}`;
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  link.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  download(blob, `${fileName(filename.slice(0, dot))}${filename.slice(dot)}`);
 }
 
 /** A text file (Markdown, JSON) made in the browser. */
@@ -123,13 +121,16 @@ export async function downloadImage(svg: SVGSVGElement, name: string, format: 'p
   save(await render(svg, `image/${format}`), `${name}.${format}`);
 }
 
-/** Puts the chart on the clipboard as a PNG, to paste into a chat, a post or a document. */
-export function copyImage(svg: SVGSVGElement): Promise<void> {
-  return navigator.clipboard.write([new ClipboardItem({ 'image/png': render(svg, 'image/png') })]);
+/**
+ * Puts the chart on the clipboard as a PNG, to paste into a chat, a post or a document. True
+ * if it worked. The picture is handed over as a promise, within the click: Safari asks for that.
+ */
+export function copyImage(svg: SVGSVGElement): Promise<boolean> {
+  return copyPicture(render(svg, 'image/png'));
 }
 
-/** Whether this browser can make WebP images (Safari, for one, can't yet). */
-export const canWebp = (() => {
+/** Whether this browser can make WebP images (Safari, for one, can't yet). Ask in the browser only. */
+export function canWebp(): boolean {
   try {
     const canvas = document.createElement('canvas');
     canvas.width = canvas.height = 1;
@@ -137,6 +138,9 @@ export const canWebp = (() => {
   } catch {
     return false;
   }
-})();
+}
 
-export const canCopyImage = typeof ClipboardItem !== 'undefined' && typeof navigator.clipboard?.write === 'function';
+/** Whether this browser can put a picture on the clipboard. Ask in the browser only. */
+export function canCopyImage(): boolean {
+  return typeof ClipboardItem !== 'undefined' && typeof navigator.clipboard?.write === 'function';
+}
