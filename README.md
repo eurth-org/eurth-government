@@ -1,20 +1,29 @@
 # Governmint
 
+> A friendly note: Governmint is live, and it is the first of a suite. The other Eurth tools arrive through Eurth's advent calendar from 10 December 2026, so please don't spoil the surprise before their doors open.
+
 Freshly minted governments. A free web tool for designing a country's government, laws and economy, and seeing what kind of state you've made: what to call it, why, and where it contradicts itself. Made for worldbuilders, writers, roleplayers and anyone curious how states work, by [Eurth](https://eurth.org).
 
 Live page: https://gov.eurth.org
 
-Status: preview. Government settings work; economy and law come next. See the [roadmap](roadmap.md) and the [feedback log](docs/feedback-log.md).
+Status: preview. Government settings and the budget work; economy and law come next. See the [roadmap](roadmap.md) and the [feedback log](docs/feedback-log.md).
+
+The rules every Eurth tool follows are in the handbook, [`node_modules/@eurth/style/HANDBOOK.md`](https://style.eurth.org/handbook/). On anything the tools share, the handbook wins.
+
+## Use
+
+Answer the questions on the left, or start from an example or a real country; read what you've made on the right. Copy the link (it holds the whole country), copy its description, share it, export it as Markdown, wikitext or JSON, or save your nation's profile file to carry it to the next Eurth tool. Nothing is stored in the browser.
 
 ## How it works
 
-- A static site built with Vite, Svelte and TypeScript. There is no account, and nothing about you or your country is kept on a server: everything runs in the browser, and a country's settings live in its link (`?c=…`).
+- A static site built with Astro, Svelte 5 and TypeScript, the same setup as every Eurth tool. The page is real HTML before any script runs: the tool is drawn on the server with the default country (`src/pages/index.astro`), then woken up in the browser, where it reads the country from the link.
+- The shell comes from [`@eurth/style`](https://style.eurth.org): the header, the footer, the Deluminator (light, Night or Auto), the share row and dialog, toasts, the offline note, the service worker, the security headers and the web manifest. None of it is rebuilt here. Governmint uses only its tokens and `eu-` classes: no colours, fonts or spacing of its own.
+- **Nothing is stored**: no cookies, localStorage, sessionStorage or IndexedDB, and no account. A country lives in its link, in the query string: `?c=<settings>&n=<name>&f=<flag>`. The settings code starts with its version (3 today); `src/model/link.ts` writes and reads it, checking every value, and `tests/link.test.ts` holds links from the live site that must open the same countries for good.
+- The nation's profile file (`<nation>.eurth.json`, [`@eurth/profile`](https://github.com/eurth-org/eurth-profile)) carries a nation between Eurth's tools. Governmint owns its `government` section (the link, a summary, the form of government, the offices) and leaves every other section exactly as it was (`src/model/profile.ts`).
 - The model in `src/model/` is data plus a small engine: settings, axes, naming rules and contradiction checks. [docs/model.md](docs/model.md) explains it and how to change it.
-- A Cloudflare Worker serves the built files from `dist/` on the `gov.eurth.org` custom domain (`wrangler.jsonc`). Its only code (`worker/`) answers `/api/*`: it counts minted countries, one number in one Durable Object, which the header shows. A country counts when someone saves, copies its link, shares or exports it, once per visit, and at most 60 a minute.
-- `public/_headers` sets security and caching headers, and allows embedding on eurth.org.
-- The look follows eurth.org and the Eurth design system (`src/app.css`), light, dark or Auto (following the device) through the Deluminator-style switch. `src/contrast.test.ts` checks every colour pair against WCAG 2.2 AA, and the top bar against AAA.
+- A Cloudflare Worker serves the built files from `dist/` on the `gov.eurth.org` custom domain (`wrangler.jsonc`). Its only code (`worker/`) answers `/api/*`: it counts minted countries, one number in one Durable Object, which the toolbar shows. A country counts when someone copies its link, shares or exports it, once per visit, and at most 60 a minute. The page sends "one more" and nothing else.
 - Icons by [Font Awesome](https://fontawesome.com) (CC BY 4.0); sun and moon by [line-md](https://github.com/cyberalien/line-md) (MIT); flags by [Twemoji](https://github.com/jdecked/twemoji) (CC BY 4.0).
-- After the first visit it works offline: the build writes a service worker (`src/offline/sw.js`, filled in by `vite.config.ts`) that keeps a copy of the site on the device.
+- After the first visit it works offline: the shared service worker keeps a copy of the site on the device. The 197 flags are left out of that first download (`astro.config.mjs`), so a flag needs signal the first time it is shown.
 
 ## What's in it
 
@@ -31,60 +40,63 @@ The release that added each item is in brackets; see [roadmap.md](roadmap.md).
 ### The tool
 - Settings as buttons or dropdowns, with a one-line explanation of each choice (#1; buttons #2).
 - A sticky section bar: where you are, a progress line, arrows when sections are off to the side, and settings search that works like find-in-page (#2; arrows and find-in-page #3; steady chip widths #4).
-- Start from an example, a real country (with its flag) or a country saved on this device, searchable by name or type (#2; flags and saved #4).
-- Undo and Redo, Save, and a Random country beside the name, named after a famous fictional nation or one from NationStates issues, with its source; keyboard shortcuts for each (press ?) (#4; names and dice #5).
+- Start from an example or a real country (with its flag), searchable by name or type (#2; flags #4).
+- Undo and Redo, Copy link, and a Random country beside the name, named after a famous fictional nation or one from NationStates issues, with its source; keyboard shortcuts for each (press ?) (#4; names and dice #5).
 - Type a real country's name and its real government is a click away, with its flag (#5).
 - The result: the name, a motto, a one-sentence summary, why each label applies (the label itself links to Wikipedia), and what to look at again, stepping through the settings involved (#1; summary #3; motto and label links #4; stepping #5).
 - Scales you can drag: they suggest the changes that would move them, and apply them (#2).
 - A spider chart, a compass with examples or real countries as reference points (grouped where they overlap, enlargeable), and a budget chart as bar, pie or treemap with its legend inside; restore the budget a country started with, and lock shares while moving the rest (#2; grouping, enlarge and pie #3; treemap, legend and restore #4; locks #7).
 - Share to the Eurth forum, Reddit, Bluesky, X, Facebook, LinkedIn, Tumblr, WhatsApp, Telegram or email, or the device's share sheet (#5).
-- Copy the link, save on this device, Markdown for the Eurth.org forum, wikitext for IIWiki or JSON for tools, and every chart as PNG, SVG or WebP with a small gov.eurth.org credit, or copied as an image, all in the browser (link #1; Markdown and wikitext #2; downloads #3; saving and credit #4; JSON, WebP and Copy image #6).
+- Copy the link or the country's description, load and save the nation's profile file, Markdown for the Eurth.org forum, wikitext for IIWiki or JSON for tools, and every chart as PNG, SVG or WebP with a small gov.eurth.org credit, or copied as an image, all in the browser (link #1; Markdown and wikitext #2; downloads #3; credit #4; JSON, WebP and Copy image #6; description and profile file #12).
 - Charts, scales and the compass glide to new values instead of jumping (#4).
 
 ### Look and accessibility
-- eurth.org's look: Eurth blue bars at the top and bottom (the bottom one linking Eurth's forums, map, news and status, with icons that draw themselves on hover), the Eurth coin as logo, favicon and app icon, the forum's light and Solarized dark schemes, Font Awesome icons in Eurth's category colours (#1; icons #2; Eurth blue #3).
-- The Deluminator switch, with its animated sun and moon: light, dark, or Auto to follow the device (#2; animation restored #3; Auto #4; a steady circle both ways #10).
-- Small delights: a shine on each new name, fictional country names as placeholder, a waving flag, popping check marks and more, all off for reduced motion (#3). Round 4 added sixteen more (see feedback 63) and buttons that act out their click (#4); the footer's hearts beat (#5).
-- About Governmint in a window (the "?" button, the About link or the ? key): what it does, privacy, keyboard shortcuts, sound and ideas. The footer keeps thanks, credits, the licence and Eurth (#5).
-- Privacy and security: no trackers or cookies; names cleaned wherever they go; a strict Content-Security-Policy and Permissions-Policy (#8).
-- Works offline after the first visit: a service worker keeps a copy of the site on the device, and a note says when there's no signal (#10).
-- Accessibility: a skip link, one h1, the main landmark, field help tied to its question, labelled downloads, tooltips that stay while pointed at and go with Escape, a switch for single-key shortcuts, and the country's name in the page once. axe-core finds nothing but the Eurth blue brand pairs, in light and dark (#5).
-- A contrast test for every colour pair in both themes, with the Eurth-blue brand decisions listed as named exceptions (#2; exceptions #3).
-- The favicon and app icons are the Eurth coin, made by scripts/make-icons.sh; a web app manifest puts it on phones' home screens (#2; turning globe #3; coin #9).
-- Links to other sites carry `?ref=gov.eurth.org`; the logo goes home; a 404 page, "Unclaimed territory" (#4).
-- A sharing image and Open Graph and X card tags, for link previews on Reddit, Facebook, LinkedIn, X, Bluesky, Mastodon, Discord, Slack and WhatsApp (#5).
+- The suite's look, from `@eurth/style`: Night (the forum's Solarized dark) and light, the device's own fonts, flat, 12 pixel corners. Section icons, budget parts and compass quadrants take Eurth's category colours as marks; text never sits on them (#12).
+- WCAG 2.2 AAA where it can be met: 7:1 text in both themes, a visible focus ring, every target at least 44 by 44 pixels, never colour alone (a word or an icon as well), a written description of every country ("Copy description"), and axe on every build (#12; the first accessibility pass #5).
+- Charts are drawn at the size they're shown, so their text never shrinks on a phone: a narrow screen gets a one-column legend and a smaller web instead (#12).
+- The Eurth coin is Governmint's own mark and its signature: the favicon, the app icon and the sharing image (`npm run images`), the coin that flips on each new name, the burst when a scale reaches 100% and the clink, once sound is switched on in the footer (#8; coin as icon #9; token colours #12).
+- Small delights, all off for reduced motion or with motion switched off: a seal on each new name, fictional country names as placeholder, a waving flag, a crown for monarchies, a spider on the spider chart, a postmark on copied text, and buttons that act out their click (#3, #4; the suite's own, such as the Konami emu, #12).
+- About Governmint in a window (the "?" button or the ? key): what it does, privacy, real countries, keyboard shortcuts and ideas (#5).
+- Privacy and security: nothing stored, no trackers; names cleaned wherever they go; the suite's strict Content-Security-Policy and Permissions-Policy (#8; nothing stored #12).
+- Links to other sites carry `?ref=gov.eurth.org`; a 404 page, "Unclaimed territory" (#4).
+- Search: the title pattern of the suite, one h1, WebApplication and FAQ structured data, a sitemap, `robots.txt` and `llms.txt` (#12).
 
-## Local development
+## Development
 
-```bash
+Node 22 or later.
+
+```sh
 npm install
-npm run dev      # dev server on http://localhost:5173
-npm run check    # Svelte and TypeScript checks
-npm test         # unit tests
-npm run build    # static build into dist/
+npm run dev          # the site while you work (the counter needs the Worker: use preview for that)
+npm run check        # types: Astro, the Svelte components and the Worker
+npm run build        # the static site, into dist/
+npm test             # the model's tests, the Worker's, the links and the suite's checks (they read dist/)
+npm run axe          # accessibility: every page, both themes
+npm run smoke        # the built site in real Chrome: theme, nothing stored, offline
+npm run preview      # the built site with its real headers and the Worker (wrangler dev)
+npm run images       # the favicon, the icons and the sharing image, from the coin
 ```
+
+- `eurth.config.mjs`: the tool's name, address, title and pages. Build time only.
+- `src/pages/`: the maker and the 404 page. `src/App.svelte`: the tool itself. `src/ui/`: its parts. `src/model/`: its logic, free of the page.
+- `src/app.css`: the few styles that live outside components (the coin burst). Everything else is tokens.
+- `tests/shell.test.js`: the checks every Eurth tool runs. `tests/link.test.ts` and `tests/profile.test.ts`: links and the profile file. The model's tests sit beside the model, the Worker's beside the Worker.
+- `LAUNCH_AT`: the moment Governmint's door opened (29 October 2026).
 
 ## Deployment
 
-The site runs as the `eurth-government` Worker on the Cloudflare account that holds the eurth.org zone. The custom domain in `wrangler.jsonc` owns the `gov.eurth.org` DNS record.
+The site runs as the `eurth-government` Worker on the Cloudflare account that holds the eurth.org zone. The custom domain in `wrangler.jsonc` owns the `gov.eurth.org` DNS record; there is no workers.dev address.
 
-GitHub Actions (`.github/workflows/ci.yml`) checks, tests and builds every push and pull request. Pushes to `main` that pass are deployed to gov.eurth.org.
-
-Deploying needs one repository secret, `CLOUDFLARE_API_TOKEN`. To create or replace it:
-
-1. Open [this pre-filled token form](https://dash.cloudflare.com/profile/api-tokens?permissionGroupKeys=%5B%7B%22key%22%3A%22workers_scripts%22%2C%22type%22%3A%22edit%22%7D%2C%7B%22key%22%3A%22workers_routes%22%2C%22type%22%3A%22edit%22%7D%5D&accountId=%2A&zoneId=all&name=Governmint%20deploys%20from%20GitHub) (Workers Scripts and Workers Routes, edit), choose **Continue to summary**, then **Create Token**, and copy it.
-2. Run `gh secret set CLOUDFLARE_API_TOKEN --repo eurth-org/eurth-government` and paste it.
-
-Without the secret, the deploy step is skipped with a warning. To deploy by hand from a machine logged in with `npx wrangler login`, run `npm run deploy`.
+GitHub Actions checks, builds and tests every push and pull request, and deploys `main` (`.github/workflows/ci.yml`); a nightly run (`nightly.yml`) updates `@eurth/style` and `@eurth/profile` within version 1, rebuilds and deploys if anything changed. Both call the reusable workflows in `eurth-org/eurth-style`. Deploying uses the organisation secret `CLOUDFLARE_API_TOKEN`; without it, the deploy step is skipped with a warning. To deploy by hand from a machine logged in with `npx wrangler login`, run `npm run deploy`.
 
 ## Releasing
 
 Work comes in rounds of numbered feedback, one pull request per round:
 
-1. Work on a `feedback-round-N` branch.
+1. Work on a branch; `main` is the live site.
 2. In the same commits as the work, update [roadmap.md](roadmap.md) (move finished items out of Next, and add or extend the round's dated section) and [docs/feedback-log.md](docs/feedback-log.md).
-3. Run `npm run check`, `npm test` and `npm run build`, open the pull request, and deploy it by hand (`npm run deploy`) to try it on gov.eurth.org.
-4. Once CI passes, squash-merge it, and set the round's time in roadmap.md to the merge time with the next round.
+3. Run `npm run check`, `npm run build`, `npm test`, `npm run axe` and `npm run smoke`, try it with `npm run preview`, and open the pull request.
+4. Once CI passes, squash-merge it: CI deploys `main`. Set the round's time in roadmap.md to the merge time with the next round.
 
 ## Written from scratch
 
