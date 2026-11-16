@@ -302,9 +302,9 @@
 
   // The dice beside the name and the R key press the toolbar's Random, so all three ask the
   // one question, once between them.
-  let randomHost: HTMLElement | undefined = $state();
+  let randomButton: RandomButton | undefined = $state();
   function askRandom() {
-    randomHost?.querySelector<HTMLButtonElement>(':scope > button')?.click();
+    randomButton?.press();
   }
 
   // Typed the name of a real country? Offer its real government, with its flag.
@@ -437,8 +437,8 @@
       <button type="button" class="eu-btn" onclick={() => (pickerOpen = true)} data-tip="Start from an example or a real country (E)" data-tip-align="start">
         <Icon icon={faBookOpen} /> <span>Examples<span class="wide-only">{' '}&amp; countries</span></span>
       </button>
-      <span class="random" bind:this={randomHost}>
-        <RandomButton onrandom={random} guard={changed} what="country" />
+      <span class="random">
+        <RandomButton bind:this={randomButton} onrandom={random} guard={changed} what="country" />
       </span>
       <button type="button" class="eu-btn eu-btn--icon" data-click="swing-left" onclick={undo} disabled={!canUndo} aria-label="Undo" data-tip="Undo ({mod}Z)">
         <Icon icon={faUndo} />
