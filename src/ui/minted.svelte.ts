@@ -1,5 +1,6 @@
 /**
- * The count of countries minted with Governmint, as the toolbar shows it. A country is minted
+ * The count of countries minted with Governmint. It is no longer shown in the toolbar (Stijn,
+ * 16 November 2026), but still kept. A country is minted
  * when someone copies its link, shares or exports it: each country once per visit. The page
  * sends nothing but "one more" (worker/index.ts keeps a single number); the country itself
  * never leaves the browser. Which countries this visit has already counted is kept in memory
@@ -14,13 +15,6 @@ function read(response: Response) {
   return response.json().then((data: { count?: unknown }) => {
     if (typeof data.count === 'number') mints.count = data.count;
   });
-}
-
-/** The count so far. Without signal, or without the Worker (the dev server), it stays hidden. */
-export function loadMints() {
-  fetch('/api/mints')
-    .then(read)
-    .catch(() => {});
 }
 
 /** One more minted country: the one in the page's link, unless it was counted this visit. */

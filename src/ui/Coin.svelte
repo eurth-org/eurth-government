@@ -2,14 +2,17 @@
   import { calm } from '@eurth/style';
   import { onMount } from 'svelte';
   import coin from '../assets/eurth-coin.svg?url';
+  import { world } from './spin.svelte';
 
   /*
    * The Eurth coin as Governmint's logo. It flips once when the page opens and whenever the link or
    * button it sits in is pointed at or focused; each time `spin` goes up (someone chose "The whole
-   * world"), it spins five times. Every turn is short, and none happen for reduced motion or with
+   * world"), it spins five times. With `follow`, it spins for the tool's shared count as well:
+   * that is the coin in front of the name, in the suite's header, which the tool can't reach
+   * with a prop. Every turn is short, and none happen for reduced motion or with
    * motion switched off.
    */
-  let { size = 36, spin = 0 }: { size?: number; spin?: number } = $props();
+  let { size = 36, spin = 0, follow = false }: { size?: number; spin?: number; follow?: boolean } = $props();
   let image: HTMLImageElement;
 
   function flip(turns = 1, duration = 900) {
@@ -34,7 +37,7 @@
   });
 
   $effect(() => {
-    if (spin) flip(5, 2000);
+    if (spin || (follow && world.spins)) flip(5, 2000);
   });
 </script>
 

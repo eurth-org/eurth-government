@@ -1,9 +1,11 @@
 ---
 import Page from '@eurth/style/components/Page.astro';
+import Coin from '../ui/Coin.svelte';
 import { site } from '../../eurth.config.mjs';
 ---
 
 <Page site={site} title="Unclaimed territory" description="No government has claimed this page yet. The maker is at the start, with every government you could want." noindex>
+  <Coin slot="mark" client:load size={32} />
   <div class="eu-prose">
     <h1>Unclaimed territory</h1>
     <p class="eu-lead">No government has claimed this page yet: no flag, no constitution, not even a customs post. Perhaps the map was wrong.</p>

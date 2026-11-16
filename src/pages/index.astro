@@ -9,9 +9,12 @@
 // to edge, as it does on its own. There is no intro block above it, as there never was: the
 // page's one <h1> is there for screen readers and search engines.
 import { faqPage, githubLinksAllowed, ref, webApplication } from '@eurth/style/build';
+import { faCircleInfo } from '@fortawesome/free-solid-svg-icons';
+import Fa from '@eurth/style/components/Fa.astro';
 import Page from '@eurth/style/components/Page.astro';
 import { site } from '../../eurth.config.mjs';
 import Governmint from '../App.svelte';
+import Coin from '../ui/Coin.svelte';
 
 const out = (href: string) => ref(href, site.host);
 // Until 25 December 2026 no page links to GitHub (the handbook, Shell); after it, the nightly
@@ -60,6 +63,12 @@ const faq = [
     faqPage(faq),
   ]}
 >
+  <!-- Governmint's own mark in front of its name, in the suite's header: the gold coin, as a
+       component, so it still flips when the name is pointed at and spins for "The whole world". -->
+  <Coin slot="mark" client:load follow size={32} />
+  <!-- About, where Governmint has always had it: a pill in the blue bar. The tool opens it. -->
+  <a slot="bar" class="eu-barlink" href="#about"><Fa icon={faCircleInfo} /> About</a>
+
   <h1 class="eu-visually-hidden">Governmint: freshly minted governments</h1>
 
   <!-- client:load draws the maker as real HTML first, then wakes it up. -->
