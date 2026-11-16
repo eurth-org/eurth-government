@@ -478,7 +478,7 @@
     <div class="settings" id="settings">
       {#each groups as group (group.id)}
         <section class="eu-card eu-card--outline panel" id={group.id} aria-labelledby="{group.id}-title">
-          <h2 id="{group.id}-title">
+          <h2 class="eu-card-title" id="{group.id}-title">
             <span class="group-icon" style:color="var(--{group.swatch})"><Icon icon={group.icon} /></span>
             {group.name}
           </h2>
@@ -525,7 +525,7 @@
       {#if profile.checks.length}
         <section class="eu-card eu-card--outline panel" aria-labelledby="checks-title" transition:slide={{ duration: calm() ? 0 : 250 }}>
           <!-- The panel arrives when a check does: its warning sign draws itself as it opens. -->
-          <h2 id="checks-title"><Line icon={lineAlert} /> Worth a second look</h2>
+          <h2 class="eu-card-title" id="checks-title"><Line icon={lineAlert} /> Worth a second look</h2>
           <ul class="points">
             {#each profile.checks as check (check.id)}
               {@const kind = check.severity === 'conflict' ? 'Contradiction' : 'Unusual'}
@@ -546,7 +546,7 @@
       {/if}
 
       <section class="eu-card eu-card--outline panel" aria-labelledby="why-title">
-        <h2 id="why-title"><Icon icon={panelIcons.why} /> Why this name</h2>
+        <h2 class="eu-card-title" id="why-title"><Icon icon={panelIcons.why} /> Why this name</h2>
         <ul class="points">
           {#each familyOrder as family (family)}
             {@const label = profile.labels[family]}
@@ -571,23 +571,23 @@
       </section>
 
       <section class="eu-card eu-card--outline panel" aria-labelledby="scales-title">
-        <h2 id="scales-title"><Icon icon={panelIcons.scales} /> Scales</h2>
+        <h2 class="eu-card-title" id="scales-title"><Icon icon={panelIcons.scales} /> Scales</h2>
         <p class="eu-help">Each scale runs from 0% to 100%. Drag one to see which settings move it.</p>
         <Scales scores={profile.axes} {country} onapply={(next) => (country = next)} onflash={flash} />
       </section>
 
       <section class="eu-card eu-card--outline panel" aria-labelledby="radar-title">
-        <h2 id="radar-title"><Icon icon={panelIcons.radar} /> Shape</h2>
+        <h2 class="eu-card-title" id="radar-title"><Icon icon={panelIcons.radar} /> Shape</h2>
         <Radar scores={profile.axes} name={shownName} {link} />
       </section>
 
       <section class="eu-card eu-card--outline panel" aria-labelledby="compass-title">
-        <h2 id="compass-title"><Icon icon={panelIcons.compass} /> Compass</h2>
+        <h2 class="eu-card-title" id="compass-title"><Icon icon={panelIcons.compass} /> Compass</h2>
         <Compass scores={profile.axes} name={shownName} {link} />
       </section>
 
       <section class="eu-card eu-card--outline panel" aria-labelledby="share-title">
-        <h2 id="share-title">
+        <h2 class="eu-card-title" id="share-title">
           <span title="The share icon, designed by the late, great Alex King"><Icon icon={faShareNodes} /></span>
           Save &amp; share
         </h2>
@@ -622,7 +622,7 @@
       </section>
 
       <section class="eu-card eu-card--outline panel" aria-labelledby="export-title">
-        <h2 id="export-title"><Icon icon={faFileExport} /> Export</h2>
+        <h2 class="eu-card-title" id="export-title"><Icon icon={faFileExport} /> Export</h2>
         <Export name={shownName} {country} {profile} {link} />
       </section>
     </section>
@@ -702,13 +702,6 @@
   /* Nothing in the name card (the stamp, the coin) may reach past its edges and shake the page. */
   .summary {
     overflow: clip;
-  }
-
-  h2 {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    font: var(--type-heading);
   }
 
   .group-icon {

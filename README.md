@@ -39,7 +39,7 @@ The release that added each item is in brackets; see [roadmap.md](roadmap.md).
 
 ### The tool
 - Settings as buttons or dropdowns, with a one-line explanation of each choice (#1; buttons #2).
-- A sticky section bar: where you are, a progress line, arrows when sections are off to the side, and settings search that works like find-in-page (#2; arrows and find-in-page #3; steady chip widths #4).
+- A sticky section bar: where you are, arrows when sections are off to the side, and settings search that works like find-in-page (#2; arrows and find-in-page #3; steady chip widths #4).
 - Start from an example or a real country (with its flag), searchable by name or type (#2; flags #4).
 - Undo and Redo, Copy link, and Random in the toolbar and as dice beside the name: a random country named after a famous fictional nation or one from NationStates issues, with its source. Random replaces the whole country, so it turns red when pointed at and asks once before replacing one you've changed. Keyboard shortcuts for each (press ?) (#4; names and dice #5; in the toolbar, asking once #12).
 - Type a real country's name and its real government is a click away, with its flag (#5).

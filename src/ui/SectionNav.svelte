@@ -57,14 +57,11 @@
   let timer: ReturnType<typeof setTimeout> | undefined;
   let list: HTMLUListElement;
 
-  // How far down the page you are, as a thin bar along the bottom of the sticky bar. Once the
-  // suite's header has scrolled away, the Eurth coin joins the bar as a way back to the top.
-  let progress = $state(0);
+  // Once the suite's header has scrolled away, the Eurth coin joins the bar as a way back to
+  // the top. (How far down the page you are is the suite's own scroll line, from @eurth/style.)
   let away = $state(false);
   $effect(() => {
     const update = () => {
-      const max = document.documentElement.scrollHeight - innerHeight;
-      progress = max > 0 ? Math.min(100, (scrollY / max) * 100) : 0;
       away = (document.querySelector('.eu-header')?.getBoundingClientRect().bottom ?? 0) < 0;
     };
     update();
@@ -218,7 +215,6 @@
     </div>
   </div>
   <p class="name small-only">{name}</p>
-  <div class="progress" aria-hidden="true"><span style:width="{progress}%"></span></div>
 </nav>
 
 <style>
@@ -405,17 +401,6 @@
   /* Section icons give a little nudge under the pointer. */
   .chips a:hover .chip-icon {
     transform: translateY(-2px) rotate(-8deg);
-  }
-
-  .progress {
-    height: var(--space-1);
-    background: var(--line);
-  }
-
-  .progress span {
-    display: block;
-    height: 100%;
-    background: var(--accent-fill);
   }
 
   .name {
