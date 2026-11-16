@@ -1,13 +1,17 @@
 ---
-// The maker, and around it what search engines and newcomers both want: what it is, how to
-// use it, and answers to the usual questions (also given to search engines as structured data).
+// The maker, and under it what search engines and newcomers both want: how to use it, and
+// answers to the usual questions (also given to search engines as structured data).
 // The page is real HTML before any script runs: the tool is drawn on the server with the
 // default country, then woken up in the browser, where it reads the country from the link.
+//
+// Governmint keeps its own design between the suite's header and footer (CLAUDE.md): the tool
+// brings its own stylesheet (src/app.css, by way of App.svelte) and fills the page from edge
+// to edge, as it does on its own. There is no intro block above it, as there never was: the
+// page's one <h1> is there for screen readers and search engines.
 import { faqPage, githubLinksAllowed, ref, webApplication } from '@eurth/style/build';
 import Page from '@eurth/style/components/Page.astro';
 import { site } from '../../eurth.config.mjs';
 import Governmint from '../App.svelte';
-import '../app.css';
 
 const out = (href: string) => ref(href, site.host);
 // Until 25 December 2026 no page links to GitHub (the handbook, Shell); after it, the nightly
@@ -56,26 +60,21 @@ const faq = [
     faqPage(faq),
   ]}
 >
-  <div class="eu-stack">
-    <header class="eu-stack intro">
-      <p class="eu-kicker">Governmint, by Eurth</p>
-      <h1>Freshly minted governments</h1>
-      <p class="eu-lead">
-        Set up a country and its budget, and see what kind of state you've made: what to call it, why, and where it
-        contradicts itself. Free, in your browser, no account needed.
-      </p>
-    </header>
+  <h1 class="eu-visually-hidden">Governmint: freshly minted governments</h1>
 
-    <!-- client:load draws the maker as real HTML first, then wakes it up. -->
-    <Governmint client:load siteUrl={site.url} host={site.host} />
+  <!-- client:load draws the maker as real HTML first, then wakes it up. -->
+  <Governmint client:load siteUrl={site.url} host={site.host} github={github} />
 
+  <!-- Under the tool, in the suite's column and the suite's type: these words are new with the
+       shared shell, and no part of Governmint's own design. -->
+  <div class="gov-after">
     <section class="eu-prose">
       <h2>How it works</h2>
       <ol>
-        <li>Answer the questions on the left, section by section, or start from an example or a real country. Random rolls one for you, and asks first if it would replace a country you've changed.</li>
+        <li>Answer the questions on the left, section by section, or start from an example or a real country. The dice beside the name roll one for you, and ask first if that would replace a country you've changed.</li>
         <li>Read the result on the right: the name of the kind of state you've made, why each label applies, and what's worth a second look.</li>
         <li>Drag a scale to see which settings would move it, and set the budget: move one share and the others make room.</li>
-        <li>Copy the link, which holds the whole country, share it with the Eurth forum, or take it away as Markdown, wikitext or JSON: copied, or as a file.</li>
+        <li>Save copies the link, which holds the whole country. Share it with the Eurth forum, or take it away as Markdown, wikitext or JSON: copied, or as a file.</li>
       </ol>
       <p>
         Governmint is a preview: it covers government and the budget, and the economy and law come next. Built a
@@ -104,9 +103,3 @@ const faq = [
     the late, great <a href={out('https://alexking.org')}>Alex King</a>. Flags by {github ? <a href={out('https://github.com/jdecked/twemoji')}>Twemoji</a> : 'Twemoji'} (CC BY 4.0).
   </Fragment>
 </Page>
-
-<style>
-  .intro {
-    gap: var(--space-2);
-  }
-</style>

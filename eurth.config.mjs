@@ -17,8 +17,10 @@ export const site = defineSite({
   pages: [{ href: '/', label: 'Maker' }],
   repo: 'https://github.com/eurth-org/eurth-government',
   ogAlt: 'Governmint, freshly minted governments, at gov.eurth.org: the Eurth yurt beside the gold Eurth coin.',
-  // The coin clinks, once sound is switched on in the footer.
+  // The coin clinks, once sound is switched on (in About, or in the footer).
   sound: true,
+  // Governmint draws its own progress line, in its section bar: the suite's is left out.
+  scrollLine: false,
   llms: `## What it does
 
 - 27 settings in 9 sections (the state, head of state, government, legislature, elections, courts and rulers, religion, defence and borders, and a budget of ten areas) name the kind of state a country is, with the reason for each label.

@@ -1,16 +1,14 @@
 <script lang="ts">
   import { faMarkdown, faWikipediaW } from '@fortawesome/free-brands-svg-icons';
-  import { faCheck, faCopy, faFileCode, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
+  import { faCheck, faCopy, faDownload, faFileCode, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
   import { copyText, toast } from '@eurth/style';
-  import Icon from '@eurth/style/components/Icon.svelte';
-  import Line from '@eurth/style/components/Line.svelte';
-  import { lineConfirm, lineDownloadOutline } from '@eurth/style/line';
   import type { Profile } from '../model/engine';
   import { toJson, toMarkdown, toWikitext } from '../model/formats';
   import type { Country } from '../model/settings';
   import { downloadText } from './download';
   import { clink } from './fun';
   import { mint } from './minted.svelte';
+  import Icon from './Icon.svelte';
 
   // The country as text to paste elsewhere, or to keep as a file: Markdown, wikitext or JSON.
   // Copied text gets postmarked.
@@ -73,20 +71,19 @@
   }
 </script>
 
-<div class="eu-row formats" role="radiogroup" aria-label="Format">
+<div class="formats" role="radiogroup" aria-label="Format">
   {#each formats as f (f.id)}
-    <label class="eu-pill">
+    <label class="pill plain">
       <input type="radio" name="export-format" value={f.id} bind:group={format} />
-      <span class="eu-check"><Icon icon={faCheck} /></span>
       <Icon icon={f.icon} />
-      {f.label}
+      <span class="steady" data-text={f.label}>{f.label}</span>
     </label>
   {/each}
 </div>
-<p class="eu-help">{chosen.help}</p>
-<label class="eu-visually-hidden" for="export-text">{chosen.label}</label>
+<p class="help">{chosen.help}</p>
+<label class="visually-hidden" for="export-text">{chosen.label}</label>
 <div class="paper">
-  <textarea id="export-text" class="eu-textarea" readonly rows="9" value={text}></textarea>
+  <textarea id="export-text" readonly rows="9" value={text}></textarea>
   {#key postmarked}
     {#if postmarked}
       <span class="postmark" aria-hidden="true">
@@ -97,18 +94,38 @@
     {/if}
   {/key}
 </div>
-<div class="eu-row">
-  <button type="button" class="eu-btn" onclick={copy}>
-    {#if copied}<Line icon={lineConfirm} />{:else}<Icon icon={faCopy} />{/if}
+<div class="copy-row">
+  <button class="btn" onclick={copy}>
+    <Icon icon={copied ? faCheck : faCopy} />
     {copied ? 'Copied' : 'Copy text'}
   </button>
-  <button type="button" class="eu-btn" data-click="bounce" aria-label="Download {name} as {chosen.label}" onclick={save}>
-    <Line icon={lineDownloadOutline} /> Download
+  <button class="btn" data-click="bounce" aria-label="Download {name} as {chosen.label}" onclick={save}>
+    <Icon icon={faDownload} /> Download
   </button>
 </div>
 
 <style>
+  /* Like the charts' "Download as" row, with "Copy image". */
+  .copy-row {
+    display: flex;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+    font-size: 13px;
+  }
+
+  .copy-row .btn {
+    padding: 3px 10px;
+  }
+
+  .help {
+    margin: var(--space-1) 0 var(--space-3);
+    color: var(--ink-muted);
+    font-size: 13px;
+  }
+
   .formats {
+    display: flex;
+    flex-wrap: wrap;
     gap: var(--space-2);
   }
 
@@ -116,27 +133,22 @@
     position: relative;
   }
 
-  textarea {
-    display: block;
-    font: var(--type-data);
-  }
-
-  /* A postmark, stamped on the text when it's copied, and gone again. Only ever shown while
-     it moves, so with motion off it never appears: the button's "Copied" says the same. */
+  /* A postmark, stamped on the text when it's copied. */
   .postmark {
     position: absolute;
     top: var(--space-2);
     right: var(--space-3);
     display: grid;
     place-content: center;
-    width: calc(3 * var(--size-target));
-    height: calc(3 * var(--size-target));
+    width: 96px;
+    height: 96px;
     border: 3px double var(--accent-text);
-    border-radius: var(--radius-full);
-    background: var(--surface);
+    border-radius: 50%;
     color: var(--accent-text);
-    font: var(--type-note);
-    font-weight: 700;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    line-height: 1.3;
     text-align: center;
     text-transform: uppercase;
     pointer-events: none;
@@ -146,9 +158,10 @@
   }
 
   .postmark .date {
-    margin: var(--space-1) 0;
-    padding: var(--space-1) 0;
+    margin: 2px 0;
+    padding: 2px 0;
     border-block: 1px solid currentColor;
+    font-size: 11px;
   }
 
   @keyframes postmark {
@@ -157,18 +170,49 @@
       transform: scale(1.6) rotate(-30deg);
     }
     10% {
-      opacity: 1;
+      opacity: 0.9;
       transform: scale(0.96) rotate(-12deg);
     }
     16% {
       transform: scale(1) rotate(-12deg);
     }
     80% {
-      opacity: 1;
+      opacity: 0.9;
     }
     100% {
       opacity: 0;
       transform: rotate(-12deg);
     }
+  }
+
+  /* For reduced motion the postmark doesn't stamp down: it is simply there for a moment. (The
+     suite cuts every animation short for reduced motion; this one is no movement, so it stays.) */
+  @media (prefers-reduced-motion: reduce) {
+    .postmark {
+      animation: postmark-calm 2.6s steps(1);
+      animation-duration: 2.6s !important;
+    }
+
+    @keyframes postmark-calm {
+      0% {
+        opacity: 0.9;
+      }
+      100% {
+        opacity: 0;
+      }
+    }
+  }
+
+  textarea {
+    display: block;
+    width: 100%;
+    margin-bottom: var(--space-2);
+    padding: var(--space-2);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-control);
+    background: var(--surface);
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 12px;
+    resize: vertical;
   }
 </style>

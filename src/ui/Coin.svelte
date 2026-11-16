@@ -4,12 +4,12 @@
   import coin from '../assets/eurth-coin.svg?url';
 
   /*
-   * The Eurth coin, Governmint's own mark. It flips once when the page opens and whenever the
-   * link or button it sits in is pointed at or focused; each time `spin` goes up (someone chose
-   * "The whole world"), it spins five times. Every turn is short, and none happen for reduced
-   * motion or with motion switched off.
+   * The Eurth coin as Governmint's logo. It flips once when the page opens and whenever the link or
+   * button it sits in is pointed at or focused; each time `spin` goes up (someone chose "The whole
+   * world"), it spins five times. Every turn is short, and none happen for reduced motion or with
+   * motion switched off.
    */
-  let { size = 32, spin = 0 }: { size?: number; spin?: number } = $props();
+  let { size = 36, spin = 0 }: { size?: number; spin?: number } = $props();
   let image: HTMLImageElement;
 
   function flip(turns = 1, duration = 900) {

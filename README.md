@@ -12,16 +12,17 @@ The rules every Eurth tool follows are in the handbook, [`node_modules/@eurth/st
 
 ## Use
 
-Answer the questions on the left, or start from an example or a real country; read what you've made on the right. Copy the link (it holds the whole country), copy its description, share it, export it as Markdown, wikitext or JSON, or save your nation's profile file to carry it to the next Eurth tool. Nothing is stored in the browser.
+Answer the questions on the left, or start from an example or a real country; read what you've made on the right. Save copies the link (it holds the whole country); copy its description, share it, export it as Markdown, wikitext or JSON, or save your nation's profile file to carry it to the next Eurth tool. Nothing is stored in the browser.
 
 ## How it works
 
 - A static site built with Astro, Svelte 5 and TypeScript, the same setup as every Eurth tool. The page is real HTML before any script runs: the tool is drawn on the server with the default country (`src/pages/index.astro`), then woken up in the browser, where it reads the country from the link.
-- The shell comes from [`@eurth/style`](https://style.eurth.org): the header, the footer, the Deluminator (light, Night or Auto), the share row and dialog, toasts, the offline note, the service worker, the security headers and the web manifest. None of it is rebuilt here. Governmint uses only its tokens and `eu-` classes: no colours, fonts or spacing of its own.
+- The shell comes from [`@eurth/style`](https://style.eurth.org): the header, the footer, the Deluminator (light, Night or Auto), the share dialog, toasts, the offline note, the service worker, the security headers and the web manifest. None of it is rebuilt here.
+- **Between the header and the footer, Governmint keeps its own design, exactly as it was perfected** (Stijn, 16 November 2026): its own styles, sizes and colours, the sticky section bar with its icons and progress line, its charts and windows. They live in `src/app.css` and in each component, inside the `.gov` wrapper, where Governmint's own tokens apply and the suite's base styles are undone. It is never restyled to the suite's rules, and is held to WCAG 2.2 AA with 24 pixel targets rather than the suite's AAA and 44 pixels.
 - **Nothing is stored**: no cookies, localStorage, sessionStorage or IndexedDB, and no account. A country lives in its link, in the query string: `?c=<settings>&n=<name>&f=<flag>`. The settings code starts with its version (3 today); `src/model/link.ts` writes and reads it, checking every value, and `tests/link.test.ts` holds links from the live site that must open the same countries for good.
 - The nation's profile file (`<nation>.eurth.json`, [`@eurth/profile`](https://github.com/eurth-org/eurth-profile)) carries a nation between Eurth's tools. Governmint owns its `government` section (the link, a summary, the form of government, the offices) and leaves every other section exactly as it was (`src/model/profile.ts`).
 - The model in `src/model/` is data plus a small engine: settings, axes, naming rules and contradiction checks. [docs/model.md](docs/model.md) explains it and how to change it.
-- A Cloudflare Worker serves the built files from `dist/` on the `gov.eurth.org` custom domain (`wrangler.jsonc`). Its only code (`worker/`) answers `/api/*`: it counts minted countries, one number in one Durable Object, which the toolbar shows. A country counts when someone copies its link, shares or exports it, once per visit, and at most 60 a minute. The page sends "one more" and nothing else.
+- A Cloudflare Worker serves the built files from `dist/` on the `gov.eurth.org` custom domain (`wrangler.jsonc`). Its only code (`worker/`) answers `/api/*`: it counts minted countries, one number in one Durable Object, which the row of actions under the header shows. A country counts when someone copies its link, shares or exports it, once per visit, and at most 60 a minute. The page sends "one more" and nothing else.
 - Icons by [Font Awesome](https://fontawesome.com) (CC BY 4.0); sun and moon by [line-md](https://github.com/cyberalien/line-md) (MIT); flags by [Twemoji](https://github.com/jdecked/twemoji) (CC BY 4.0).
 - After the first visit it works offline: the shared service worker keeps a copy of the site on the device. The 197 flags are left out of that first download (`astro.config.mjs`), so a flag needs signal the first time it is shown.
 
@@ -41,7 +42,7 @@ The release that added each item is in brackets; see [roadmap.md](roadmap.md).
 - Settings as buttons or dropdowns, with a one-line explanation of each choice (#1; buttons #2).
 - A sticky section bar: where you are, arrows when sections are off to the side, and settings search that works like find-in-page (#2; arrows and find-in-page #3; steady chip widths #4).
 - Start from an example or a real country (with its flag), searchable by name or type (#2; flags #4).
-- Undo and Redo, Copy link, and Random in the toolbar and as dice beside the name: a random country named after a famous fictional nation or one from NationStates issues, with its source. Random replaces the whole country, so it turns red when pointed at and asks once before replacing one you've changed. Keyboard shortcuts for each (press ?) (#4; names and dice #5; in the toolbar, asking once #12).
+- Undo and Redo, Save (it copies the link), and the dice beside the name: a random country named after a famous fictional nation or one from NationStates issues, with its source. A roll replaces the whole country, so once you've changed something the dice turn red when pointed at and ask once before the first roll. Keyboard shortcuts for each (press ?) (#4; names and dice #5; asking once #12).
 - Type a real country's name and its real government is a click away, with its flag (#5).
 - The result: the name, a motto, a one-sentence summary, why each label applies (the label itself links to Wikipedia), and what to look at again, stepping through the settings involved (#1; summary #3; motto and label links #4; stepping #5).
 - Scales you can drag: they suggest the changes that would move them, and apply them (#2).
@@ -51,12 +52,11 @@ The release that added each item is in brackets; see [roadmap.md](roadmap.md).
 - Charts, scales and the compass glide to new values instead of jumping (#4).
 
 ### Look and accessibility
-- The suite's look, from `@eurth/style`: Night (the forum's Solarized dark) and light, the device's own fonts, flat, 12 pixel corners. Section icons, budget parts and compass quadrants take Eurth's category colours as marks; text never sits on them (#12).
-- WCAG 2.2 AAA where it can be met: 7:1 text in both themes, a visible focus ring, every target at least 44 by 44 pixels, never colour alone (a word or an icon as well), a written description of every country ("Copy description"), and axe on every build (#12; the first accessibility pass #5).
-- Charts are drawn at the size they're shown, so their text never shrinks on a phone: a narrow screen gets a one-column legend and a smaller web instead (#12).
-- The Eurth coin is Governmint's own mark and its signature: the favicon, the app icon and the sharing image (`npm run images`), the coin that flips on each new name, the burst when a scale reaches 100% and the clink, once sound is switched on in the footer (#8; coin as icon #9; token colours #12).
-- Small delights, all off for reduced motion or with motion switched off: a seal on each new name, fictional country names as placeholder, a waving flag, a crown for monarchies, a spider on the spider chart, a postmark on copied text, buttons that act out their click, and icons that draw themselves where something happens: a tick once something is copied, a download arrow, a warning sign (#3, #4; the suite's own, such as the Konami emu, and the drawn icons #12).
-- About Governmint in a window (the "?" button or the ? key): what it does, privacy, real countries, keyboard shortcuts and ideas (#5).
+- Governmint's own look, as on eurth.org: Night (the forum's Solarized dark) and light, the device's own fonts, compact options, Eurth blue for what is chosen, with white labels. Section icons, budget parts and compass quadrants take Eurth's forum category colours. The header and the footer are the suite's (#3 to #11; the suite's shell #12).
+- WCAG 2.2 AA: 4.5:1 text in both themes (`src/contrast.test.ts`; white on Eurth blue is the brand's one exception), a visible focus ring, never colour alone (a word or an icon as well), a written description of every country ("Copy description"), and axe on every build, at AA with 24 pixel targets (the first accessibility pass #5; description and axe #12).
+- The Eurth coin is Governmint's own mark and its signature: the favicon, the app icon and the sharing image (`npm run images`), the coin that flips on each new name, the burst when a scale reaches 100% and the clink, once sound is switched on in About or in the footer (#8; coin as icon #9).
+- Small delights, all off for reduced motion or with motion switched off: a seal on each new name, fictional country names as placeholder, a waving flag, a crown for monarchies, a spider on the spider chart, a postmark on copied text, and buttons that act out their click (#3, #4; the suite's own, such as the Konami emu, #12).
+- About Governmint in a window (the "?" button or the ? key): what it does, privacy, keyboard shortcuts, the sound and motion switches, and ideas (#5).
 - Privacy and security: nothing stored, no trackers; names cleaned wherever they go; the suite's strict Content-Security-Policy and Permissions-Policy (#8; nothing stored #12).
 - Links to other sites carry `?ref=gov.eurth.org`; a 404 page, "Unclaimed territory" (#4).
 - Search: the title pattern of the suite, one h1, WebApplication and FAQ structured data, a sitemap, `robots.txt` and `llms.txt` (#12).
@@ -79,7 +79,7 @@ npm run images       # the favicon, the icons and the sharing image, from the co
 
 - `eurth.config.mjs`: the tool's name, address, title and pages. Build time only.
 - `src/pages/`: the maker and the 404 page. `src/App.svelte`: the tool itself. `src/ui/`: its parts. `src/model/`: its logic, free of the page.
-- `src/app.css`: the few styles that live outside components (the coin burst). Everything else is tokens.
+- `src/app.css`: Governmint's own tokens and shared styles (buttons, options, sliders, tooltips), all inside the `.gov` wrapper, and the rules that keep the suite's base styles out of it. `src/contrast.test.ts` checks its colour pairs.
 - `tests/shell.test.js`: the checks every Eurth tool runs. `tests/link.test.ts` and `tests/profile.test.ts`: links and the profile file. The model's tests sit beside the model, the Worker's beside the Worker.
 - `LAUNCH_AT`: the moment Governmint's door opened (29 October 2026).
 

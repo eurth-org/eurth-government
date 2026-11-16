@@ -2,10 +2,10 @@ import { copyPicture, download } from '@eurth/style';
 import { fileName } from '../model/text';
 
 /**
- * Saves a chart as SVG, PNG or WebP, entirely in the browser. The page styles charts with the
- * suite's tokens (custom properties), which a picture on its own can't use, so the copy gets
- * each element's computed colours and sizes written in as plain values, and any wide-gamut
- * colour converted to sRGB, which every image viewer understands.
+ * Saves a chart as SVG, PNG or WebP, entirely in the browser. The page styles charts with CSS
+ * variables, which a picture on its own can't use, so the copy gets each element's computed
+ * colours and sizes written in as plain values, and wide-gamut colours (Eurth blue in P3)
+ * converted to sRGB, which every image viewer understands.
  */
 const painted = [
   'fill',
@@ -66,7 +66,8 @@ function standalone(svg: SVGSVGElement): { text: string; width: number; height: 
   }
   clone.insertBefore(ground, clone.firstChild);
   const credit = document.createElementNS(svgNS, 'text');
-  const root = getComputedStyle(document.documentElement);
+  // Governmint's own tokens live on its wrapper (.gov, app.css), not on the page's root.
+  const root = getComputedStyle(svg.closest('.gov') ?? document.documentElement);
   const muted = root.getPropertyValue('--ink-muted').trim() || root.color;
   for (const [key, value] of Object.entries({
     x: box.x + box.width - size * 0.6,

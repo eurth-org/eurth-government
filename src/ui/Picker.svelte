@@ -1,23 +1,26 @@
 <script lang="ts">
-  import { faBookOpen, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
-  import Icon from '@eurth/style/components/Icon.svelte';
-  import Line from '@eurth/style/components/Line.svelte';
-  import { lineClose } from '@eurth/style/line';
+  import { faBookOpen, faMagnifyingGlass, faXmark } from '@fortawesome/free-solid-svg-icons';
   import { countries, type Region } from '../model/countries';
   import { describe } from '../model/engine';
   import { examples } from '../model/examples';
   import type { Country } from '../model/settings';
+  import Icon from './Icon.svelte';
   import { ref } from './ref';
 
+  // Start from an example or a real country. (The list of countries saved in the browser is
+  // gone: nothing is stored, and a country lives in its link.)
   let {
     open,
     host,
+    github = false,
     onpick,
     onclose,
   }: {
     open: boolean;
     /** This site's host, for the ?ref on links to other sites. */
     host: string;
+    /** Whether pages may link to GitHub yet (from 25 December 2026). */
+    github?: boolean;
     onpick: (country: Country, name: string, flag?: string) => void;
     onclose: () => void;
   } = $props();
@@ -84,18 +87,17 @@
   }
 </script>
 
-<dialog bind:this={dialog} class="eu-dialog picker" {onclose} aria-labelledby="picker-title">
-  <div class="eu-dialog-top">
+<dialog bind:this={dialog} onclose={onclose} aria-labelledby="picker-title">
+  <div class="top">
     <h2 id="picker-title"><Icon icon={faBookOpen} /> Start from an example or a real country</h2>
-    <button type="button" class="eu-btn eu-btn--quiet eu-btn--icon" aria-label="Close" onclick={() => dialog.close()}><Line icon={lineClose} /></button>
+    <button class="btn close" aria-label="Close" onclick={() => dialog.close()}><Icon icon={faXmark} /></button>
   </div>
   <div class="search">
     <Icon icon={faMagnifyingGlass} />
-    <label class="eu-visually-hidden" for="picker-search">Search</label>
+    <label class="visually-hidden" for="picker-search">Search</label>
     <!-- svelte-ignore a11y_autofocus -->
     <input
       id="picker-search"
-      class="eu-input"
       maxlength="100"
       autocomplete="off"
       type="search"
@@ -105,150 +107,200 @@
     />
   </div>
 
-  {#if shown}
-    <div class="lists">
-      <section aria-labelledby="examples-title">
-        <h3 id="examples-title">Examples <span class="count">{shownExamples.length}</span></h3>
-        {#if shownExamples.length}
-          <ul>
-            {#each shownExamples as e (e.key)}
-              <li>
-                <button type="button" class="eu-btn eu-btn--quiet entry" onclick={() => pick(e, false)}>
-                  <span class="title">{e.title}</span>
-                  <span class="meta">{e.government} · {e.regime}</span>
-                </button>
-              </li>
-            {/each}
-          </ul>
-        {:else}
-          <p class="eu-help">No examples match.</p>
-        {/if}
-      </section>
+  <div class="lists">
+    <section aria-labelledby="examples-title">
+      <h3 id="examples-title">Examples <span class="count">{shownExamples.length}</span></h3>
+      {#if shownExamples.length}
+        <ul>
+          {#each shownExamples as e (e.key)}
+            <li>
+              <button onclick={() => pick(e, false)}>
+                <span class="title">{e.title}</span>
+                <span class="meta">{e.government} · {e.regime}</span>
+              </button>
+            </li>
+          {/each}
+        </ul>
+      {:else}
+        <p class="empty">No examples match.</p>
+      {/if}
+    </section>
 
-      <section aria-labelledby="countries-title">
-        <h3 id="countries-title">Real countries <span class="count">{shownCountries}</span></h3>
-        <p class="eu-help">
-          Approximate, as of 2026: institutions follow each constitution, and how free elections are follows the
-          consensus of election observers. Spot a mistake?
-          <a href={ref('https://eurth.org', host)}>Tell us on the Eurth forum</a>.
-        </p>
-        {#each shownRegions as r (r.region)}
-          <h4 class="eu-kicker">{r.region}</h4>
-          <ul>
-            {#each r.entries as e (e.key)}
-              <li>
-                <button type="button" class="eu-btn eu-btn--quiet entry" onclick={() => pick(e, true)}>
-                  <span class="title">
-                    <img class="flag" src="/flags/{e.flag}.svg" alt="" width="20" height="20" loading="lazy" />
-                    {e.title}
-                  </span>
-                  <span class="meta">{e.government} · {e.regime}</span>
-                  {#if e.note}<span class="meta note">{e.note}</span>{/if}
-                </button>
-              </li>
-            {/each}
-          </ul>
+    <section aria-labelledby="countries-title">
+      <h3 id="countries-title">Real countries <span class="count">{shownCountries}</span></h3>
+      <p class="about">
+        Approximate, as of 2026: institutions follow each constitution, and how free elections are follows the
+        consensus of election observers. Spot a mistake?
+        {#if github}
+          <a href={ref('https://github.com/eurth-org/eurth-government/issues', host)}>Tell us on GitHub</a>.
         {:else}
-          <p class="eu-help">No countries match.</p>
-        {/each}
-      </section>
-    </div>
-  {/if}
+          <a href={ref('https://eurth.org', host)}>Tell us on the Eurth forum</a>.
+        {/if}
+      </p>
+      {#each shownRegions as r (r.region)}
+        <h4>{r.region}</h4>
+        <ul>
+          {#each r.entries as e (e.key)}
+            <li>
+              <button onclick={() => pick(e, true)}>
+                <span class="title">
+                  <img class="flag" src="/flags/{e.flag}.svg" alt="" width="16" height="16" loading="lazy" />
+                  {e.title}
+                </span>
+                <span class="meta">{e.government} · {e.regime}</span>
+                {#if e.note}<span class="note">{e.note}</span>{/if}
+              </button>
+            </li>
+          {/each}
+        </ul>
+      {:else}
+        <p class="empty">No countries match.</p>
+      {/each}
+    </section>
+  </div>
 </dialog>
 
 <style>
-  /* As wide as a column of text, or the screen. The title and the search stay put; the lists
-     scroll under them. */
-  .picker {
-    width: min(var(--size-measure), calc(100vw - 2 * var(--space-4)));
-    overflow: hidden;
+  dialog {
+    width: min(720px, calc(100vw - 2 * var(--space-4)));
+    max-height: min(820px, calc(100dvh - 2 * var(--space-4)));
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-panel);
+    background: var(--surface);
+    color: var(--ink);
+    display: none;
+    flex-direction: column;
   }
 
-  .picker[open] {
+  dialog[open] {
     display: flex;
-    flex-direction: column;
-    gap: var(--space-3);
+  }
+
+  dialog::backdrop {
+    background: rgb(0 0 0 / 0.55);
+  }
+
+  .top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    padding: var(--space-4) var(--space-4) var(--space-2);
+  }
+
+  h2 {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin: 0;
+    font-size: 18px;
   }
 
   .search {
     display: flex;
-    flex: none;
     align-items: center;
     gap: var(--space-2);
+    margin: 0 var(--space-4) var(--space-3);
+    padding: 0 var(--space-3);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-control);
     color: var(--ink-muted);
   }
 
-  .lists {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-4);
-    min-height: 0;
-    margin: 0 calc(-1 * var(--space-2));
-    padding: 0 var(--space-2) var(--space-2);
-    overflow-y: auto;
+  .search:focus-within {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
   }
 
-  section {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
+  .search input {
+    flex: 1;
+    padding: 8px 0;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+  }
+
+  .search input:focus-visible {
+    outline: none;
+  }
+
+  .lists {
+    overflow-y: auto;
+    padding: 0 var(--space-4) var(--space-4);
   }
 
   h3 {
     display: flex;
     align-items: baseline;
     gap: var(--space-2);
+    margin: var(--space-3) 0 var(--space-2);
+    font-size: 16px;
   }
 
   h4 {
-    margin-top: var(--space-2);
+    margin: var(--space-3) 0 var(--space-1);
+    color: var(--ink-muted);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
   }
 
   .count {
     color: var(--ink-muted);
-    font: var(--type-data);
+    font-size: 13px;
+    font-weight: 400;
+  }
+
+  .about,
+  .empty {
+    margin: 0 0 var(--space-2);
+    color: var(--ink-muted);
+    font-size: 13px;
   }
 
   ul {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
-    gap: var(--space-1) var(--space-2);
     margin: 0;
     padding: 0;
     list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 2px var(--space-2);
   }
 
-  /* A country to start from: its name, then what it is in a smaller line. */
-  .entry {
+  li button {
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    justify-items: start;
-    gap: 0;
     width: 100%;
-    padding: var(--space-2);
+    padding: 6px var(--space-2);
+    border: 0;
+    border-radius: var(--radius-control);
+    background: transparent;
     text-align: left;
+    cursor: pointer;
+    transition: background-color 0.15s;
+  }
+
+  li button:hover {
+    background: var(--hover);
   }
 
   .title {
     display: flex;
     align-items: center;
-    gap: var(--space-2);
+    gap: 6px;
+    font-weight: 600;
   }
 
   .flag {
     flex: none;
-    width: var(--space-5);
-    height: var(--space-5);
+    width: 16px;
+    height: 16px;
   }
 
-  .meta {
+  .meta,
+  .note {
     color: var(--ink-muted);
-    font: var(--type-note);
-  }
-
-  /* On the hover fill, text is ink. */
-  .entry:hover .meta {
-    color: var(--ink);
+    font-size: 13px;
   }
 
   .note {

@@ -6,8 +6,8 @@
   import type { Country, SettingId } from '../model/settings';
   import { describeSuggestion, suggest, type Suggestion } from '../model/suggest';
   import { calm, niceWatcher } from '@eurth/style';
-  import Icon from '@eurth/style/components/Icon.svelte';
   import { coinBurst } from './fun';
+  import Icon from './Icon.svelte';
   import { axisIcons } from './icons';
 
   let {
@@ -69,13 +69,13 @@
     {@const [lowIcon, highIcon] = axisIcons[score.axis]}
     <li>
       <div class="head">
-        <span class="eu-label" title={axis.help}>{axis.label}</span>
-        <span class="eu-data score" id="score-{score.axis}">{Math.round(shown.current[i] ?? score.score)}%</span>
+        <span class="label" title={axis.help}>{axis.label}</span>
+        <span class="score" id="score-{score.axis}">{Math.round(shown.current[i] ?? score.score)}%</span>
       </div>
       <div class="slider">
         <span class="end" title={axis.low}><Icon icon={lowIcon} label={axis.low} /></span>
         <input
-          class="eu-range"
+          class="range"
           style:--fill="{shown.current[i] ?? score.score}%"
           type="range"
           min="0"
@@ -88,7 +88,7 @@
         />
         <span class="end" title={axis.high}><Icon icon={highIcon} label={axis.high} /></span>
       </div>
-      <div class="eu-help poles" aria-hidden="true"><span>{axis.low}</span><span>{axis.high}</span></div>
+      <div class="poles" aria-hidden="true"><span>{axis.low}</span><span>{axis.high}</span></div>
 
       {#if hint?.axis === score.axis}
         <div class="hint" id="hint-{score.axis}" role="status">
@@ -97,9 +97,9 @@
             <ul>
               {#each hint.suggestions as s (s.setting)}
                 <li>
-                  <button type="button" class="eu-btn where" onclick={() => onflash([s.setting], true)}>{describeSuggestion(s)}</button>
-                  <span class="eu-data delta">{s.delta > 0 ? '+' : ''}{s.delta}%</span>
-                  <button type="button" class="eu-btn eu-btn--selected" onclick={() => apply(s)}>Apply</button>
+                  <button class="link" onclick={() => onflash([s.setting], true)}>{describeSuggestion(s)}</button>
+                  <span class="delta">{s.delta > 0 ? '+' : ''}{s.delta}%</span>
+                  <button class="btn btn-primary apply" onclick={() => apply(s)}>Apply</button>
                 </li>
               {/each}
             </ul>
@@ -109,7 +109,7 @@
               contradicting another setting.
             </p>
           {/if}
-          <button type="button" class="eu-btn eu-btn--quiet" onclick={() => (hint = null)}>Close</button>
+          <button class="link dismiss" onclick={() => (hint = null)}>Close</button>
         </div>
       {/if}
     </li>
@@ -118,21 +118,22 @@
 
 <style>
   .scales {
-    display: grid;
-    gap: var(--space-3);
     margin: 0;
     padding: 0;
     list-style: none;
+    display: grid;
+    gap: var(--space-3);
   }
 
   .head {
     display: flex;
     justify-content: space-between;
-    gap: var(--space-2);
+    font-weight: 600;
   }
 
   .score {
     color: var(--ink-muted);
+    font-variant-numeric: tabular-nums;
   }
 
   .slider {
@@ -143,44 +144,41 @@
 
   .end {
     display: inline-flex;
-    justify-content: center;
-    width: var(--space-5);
     color: var(--ink-muted);
+    font-size: 16px;
   }
 
-  .eu-range {
+  .range {
     flex: 1;
-    min-width: 0;
   }
 
-  /* What each end means, in words under the icons. */
   .poles {
     display: flex;
     justify-content: space-between;
-    gap: var(--space-2);
-    margin-top: calc(-1 * var(--space-2));
+    padding: 0 26px;
+    color: var(--ink-muted);
+    font-size: 12px;
   }
 
   .hint {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-2);
     margin-top: var(--space-2);
-    padding: var(--space-3);
+    padding: var(--space-2) var(--space-3);
     border: 1px solid var(--line-strong);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-control);
     background: var(--surface);
-    font: var(--type-body-sm);
+    font-size: 14px;
+  }
+
+  .hint p {
+    margin: 0 0 var(--space-1);
   }
 
   .hint ul {
-    display: grid;
-    gap: var(--space-2);
-    width: 100%;
     margin: 0;
     padding: 0;
     list-style: none;
+    display: grid;
+    gap: var(--space-1);
   }
 
   .hint li {
@@ -189,17 +187,28 @@
     gap: var(--space-2);
   }
 
-  /* A button whose label is a sentence: it may run over two lines. */
-  .where {
-    flex: 1;
-    justify-content: flex-start;
-    min-width: 0;
-    padding-block: var(--space-2);
-    text-align: left;
+  .delta {
+    margin-left: auto;
+    color: var(--ink-muted);
+    font-variant-numeric: tabular-nums;
   }
 
-  .delta {
-    color: var(--ink-muted);
-    white-space: nowrap;
+  .link {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--accent-text);
+    text-align: left;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  .apply {
+    padding: 2px 10px;
+  }
+
+  .dismiss {
+    margin-top: var(--space-1);
+    font-size: 13px;
   }
 </style>

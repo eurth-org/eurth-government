@@ -1,9 +1,10 @@
 /**
  * Governmint's signature: the coin. A soft clink when something is minted or copied, and a
  * burst of small coins when a scale reaches 100%. The tones come from @eurth/style's playTones,
- * which stays silent until the visitor switches sound on in the footer; the burst is skipped
- * for reduced motion and when motion is switched off (calm()). The coins' colours are tokens
- * (src/app.css). Toasts, the paper plane and "Nice." are the suite's own.
+ * which stays silent until the visitor switches sound on (in About, or in the footer); the
+ * burst is skipped for reduced motion and when motion is switched off (calm()). Toasts, the
+ * paper plane and "Nice." are made by the suite's helpers and wear Governmint's own look
+ * (src/app.css), as the coins do.
  */
 import { calm, inView, playTones } from '@eurth/style';
 
@@ -23,7 +24,7 @@ export function coinBurst(x: number, y: number) {
   if (calm()) return;
   for (let i = 0; i < 12; i++) {
     const coin = document.createElement('span');
-    coin.className = 'gov-burst-coin';
+    coin.className = 'burst-coin';
     const angle = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 1.2;
     const reach = 40 + Math.random() * 50;
     coin.style.left = `${x}px`;
@@ -47,4 +48,22 @@ export function coinBurst(x: number, y: number) {
       )
       .finished.finally(() => coin.remove());
   }
+}
+
+/**
+ * Governmint's own buttons answer a click with a small movement: they press in (app.css), and
+ * their icon does what the button says (data-click names it: spin-back, tumble, bounce,
+ * swing-left, swing-right, pop). Installed once, for the tool (App.svelte). The suite's shell
+ * does the same for its own buttons, and hides tooltips on Escape for both.
+ */
+export function clickDelights() {
+  document.addEventListener('click', (event) => {
+    if (calm()) return;
+    const button = (event.target as Element | null)?.closest<HTMLElement>('.gov .btn, .gov .pill');
+    if (!button || button.matches(':disabled')) return;
+    button.classList.remove('clicked');
+    void button.offsetWidth;
+    button.classList.add('clicked');
+    setTimeout(() => button.classList.remove('clicked'), 700);
+  });
 }
