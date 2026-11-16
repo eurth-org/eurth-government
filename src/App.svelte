@@ -44,11 +44,10 @@
   import Export from './ui/Export.svelte';
   import Field from './ui/Field.svelte';
   import { clickDelights, clink } from './ui/fun';
-  import Coin from './ui/Coin.svelte';
   import Icon from './ui/Icon.svelte';
   import Info from './ui/Info.svelte';
   import { mint } from './ui/minted.svelte';
-  import Mints from './ui/Mints.svelte';
+  import { world } from './ui/spin.svelte';
   import NameCard from './ui/NameCard.svelte';
   import { groupIcons, groupSwatches, panelIcons, ruleIcon, severityIcons } from './ui/icons';
   import Picker from './ui/Picker.svelte';
@@ -359,11 +358,10 @@
   // The forum reads the body as Markdown, so the name goes in as plain text.
   const forumBody = $derived(`${summary(markdownText(shownName), profile)} Freshly minted on Governmint.\n\n${link}`);
 
-  // Easter egg: choosing "The whole world" sets the coin beside the Preview badge spinning.
-  let worldSpin = $state(0);
+  // Easter egg: choosing "The whole world" sets the coin in front of the name spinning.
   let lastExtent = untrack(() => country.extent);
   $effect(() => {
-    if (ready && country.extent === 'world' && lastExtent !== 'world') worldSpin += 1;
+    if (ready && country.extent === 'world' && lastExtent !== 'world') world.spins += 1;
     lastExtent = country.extent;
   });
 
@@ -378,6 +376,18 @@
   // About shows the same two, where Governmint has always had them.
   let prefs = $state(getPrefs());
   onMount(() => onPrefs((next) => (prefs = next)));
+
+  // About is a pill in the suite's blue bar (pages/index.astro), a link to #about: it opens
+  // the same window as the "?" button and the ? key.
+  onMount(() => {
+    const open = (event: MouseEvent) => {
+      if (!(event.target instanceof Element) || !event.target.closest('a[href="#about"]')) return;
+      event.preventDefault();
+      infoOpen = true;
+    };
+    document.addEventListener('click', open);
+    return () => document.removeEventListener('click', open);
+  });
   function toggleSound() {
     setPrefs({ sound: !prefs.sound });
     if (prefs.sound) clink();
@@ -441,18 +451,11 @@
 <!-- Everything inside .gov keeps Governmint's own design (app.css). The suite's header is above
      it and the suite's footer below; neither is rebuilt here. -->
 <div class="gov">
-  <!-- Governmint's own row of actions: the name and the tagline are in the suite's header now,
-       so the coin, the Preview badge and the count of minted countries stand here on their own. -->
+  <!-- Governmint's own row of actions. The coin, the name and the tagline are in the suite's
+       header (the coin through its "mark" slot, see pages/index.astro), and About is a pill in
+       its blue bar. -->
   <div class="header">
     <div class="bar">
-      <div class="brand">
-        <!-- Like any site's logo, the coin goes home: a fresh, default country. -->
-        <a class="home" href="/" title="Governmint: start afresh" aria-label="Governmint: start afresh">
-          <Coin spin={worldSpin} />
-        </a>
-        <span class="badge">Preview</span>
-        <Mints />
-      </div>
       <div class="actions">
         <button class="btn" onclick={() => (pickerOpen = true)} data-tip="Start from an example or a real country (E)">
           <Icon icon={faBookOpen} /> Examples<span class="wide-only">&amp; countries</span>
@@ -664,9 +667,9 @@
 />
 
 <style>
-  /* Governmint's own row under the suite's header: the coin, the badge and the count on the
-     left, the actions on the right. It stacks above the sticky section bar (z-index 2), so its
-     tooltips show over it. */
+  /* Governmint's own row under the suite's header: the actions, on the right as they have
+     always been. It stacks above the sticky section bar (z-index 2), so its tooltips show
+     over it. */
   /* On wide screens, the bar's contents line up with the page below instead of the screen's edges. */
   .bar {
     max-width: calc(1200px - 2 * var(--space-4));
@@ -685,32 +688,8 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
     gap: var(--space-2) var(--space-4);
-  }
-
-  .brand,
-  .home {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-  }
-
-  .home {
-    color: inherit;
-    text-decoration: none;
-    border-radius: var(--radius-control);
-  }
-
-  .badge {
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--ink-muted);
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius-sm);
-    padding: 0 6px;
   }
 
   .actions {
