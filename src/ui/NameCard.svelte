@@ -1,10 +1,12 @@
 <script lang="ts">
-  import { faArrowRight, faCrown, faDice, faFlag } from '@fortawesome/free-solid-svg-icons';
+  import { faCrown, faDice, faFlag } from '@fortawesome/free-solid-svg-icons';
   import { onDestroy, untrack } from 'svelte';
   import type { Profile } from '../model/engine';
   import { sentence } from '../model/formats';
   import { calm } from '@eurth/style';
   import Icon from '@eurth/style/components/Icon.svelte';
+  import Line from '@eurth/style/components/Line.svelte';
+  import { lineArrowRight } from '@eurth/style/line';
   import coin from '../assets/eurth-coin.svg?url';
   import { motto } from '../model/motto';
   import { nameLimit } from '../model/text';
@@ -13,8 +15,9 @@
    * The country's name card. New names are freshly minted: they type themselves out, a coin
    * flips and a seal stamps down. Monarchies get a crown on the flag, theocracies a halo, and a
    * real country its own flag. None of the movement happens for reduced motion, or with motion
-   * switched off in the footer. The dice beside
-   * the name roll a random country; typing a real country's name offers its real government.
+   * switched off in the footer. The dice beside the name roll a random country, by way of the
+   * toolbar's Random: it replaces the whole country, so the dice turn red when pointed at and
+   * the first roll asks. Typing a real country's name offers its real government.
    */
   let {
     name = $bindable(),
@@ -92,7 +95,14 @@
     onfocus={suggestNames}
     onblur={stopSuggesting}
   />
-  <button type="button" class="eu-btn eu-btn--selected eu-btn--icon" data-click="tumble" aria-label="Roll a random country" data-tip="Roll a random country (R)" onclick={onrandom}>
+  <button
+    type="button"
+    class="eu-btn eu-btn--selected eu-btn--risky eu-btn--icon"
+    data-click="tumble"
+    aria-label="Roll a random country"
+    data-tip="Replaces your country (R)"
+    onclick={onrandom}
+  >
     <Icon icon={faDice} />
   </button>
 </div>
@@ -101,7 +111,7 @@
     <img src="/flags/{real.flag}.svg" alt="" width="20" height="20" />
     <span>Real country: load its actual government</span>
     <span class="eu-visually-hidden">({real.name})</span>
-    <Icon icon={faArrowRight} />
+    <Line icon={lineArrowRight} />
   </button>
 {/if}
 

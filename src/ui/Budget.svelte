@@ -3,7 +3,6 @@
     faChartPie,
     faChartSimple,
     faCheck,
-    faClockRotateLeft,
     faLock,
     faLockOpen,
     faRotateLeft,
@@ -18,6 +17,8 @@
   import type { ShareSettingDef } from '../model/types';
   import { calm, niceWatcher } from '@eurth/style';
   import Icon from '@eurth/style/components/Icon.svelte';
+  import Line from '@eurth/style/components/Line.svelte';
+  import { lineBackupRestore } from '@eurth/style/line';
   import Download from './Download.svelte';
   import { budgetStyle } from './icons';
   import { treemap } from './treemap';
@@ -193,7 +194,9 @@
   Each area's share of all government spending. Move one and the others make room, so the total stays at 100%.
 </p>
 
-<!-- Chart types on the left; ways back to an earlier budget on the right. -->
+<!-- Chart types on the left; ways back to an earlier budget on the right. Both throw away the
+     shares as they stand, so each turns red when pointed at and says what goes (above the
+     button, clear of the chart), but only while there is something to throw away. -->
 <div class="toolbar">
   <div class="eu-row tight" role="radiogroup" aria-label="Chart">
     <label class="eu-pill">
@@ -216,15 +219,26 @@
     <button
       type="button"
       class="eu-btn"
+      class:eu-btn--risky={!same(baseline)}
       data-click="spin"
       disabled={same(baseline)}
-      data-tip="Back to the budget this country started with"
+      data-tip="Replaces your shares and locks with the budget this country started with"
+      data-tip-side="top"
       onclick={() => resetTo(baseline)}
     >
-      <Icon icon={faClockRotateLeft} /> Restore budget
+      <Line icon={lineBackupRestore} /> Restore budget
     </button>
     {#if !baselineIsDefault}
-      <button type="button" class="eu-btn" data-click="spin" disabled={same(fresh)} data-tip="Governmint's default shares" onclick={() => resetTo(fresh)}>
+      <button
+        type="button"
+        class="eu-btn"
+        class:eu-btn--risky={!same(fresh)}
+        data-click="spin"
+        disabled={same(fresh)}
+        data-tip="Replaces your shares and locks with Governmint's default budget"
+        data-tip-side="top"
+        onclick={() => resetTo(fresh)}
+      >
         <Icon icon={faRotateLeft} /> Default budget
       </button>
     {/if}

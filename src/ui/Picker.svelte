@@ -1,6 +1,8 @@
 <script lang="ts">
-  import { faBookOpen, faMagnifyingGlass, faXmark } from '@fortawesome/free-solid-svg-icons';
+  import { faBookOpen, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
   import Icon from '@eurth/style/components/Icon.svelte';
+  import Line from '@eurth/style/components/Line.svelte';
+  import { lineClose } from '@eurth/style/line';
   import { countries, type Region } from '../model/countries';
   import { describe } from '../model/engine';
   import { examples } from '../model/examples';
@@ -85,7 +87,7 @@
 <dialog bind:this={dialog} class="eu-dialog picker" {onclose} aria-labelledby="picker-title">
   <div class="eu-dialog-top">
     <h2 id="picker-title"><Icon icon={faBookOpen} /> Start from an example or a real country</h2>
-    <button type="button" class="eu-btn eu-btn--quiet eu-btn--icon" aria-label="Close" onclick={() => dialog.close()}><Icon icon={faXmark} /></button>
+    <button type="button" class="eu-btn eu-btn--quiet eu-btn--icon" aria-label="Close" onclick={() => dialog.close()}><Line icon={lineClose} /></button>
   </div>
   <div class="search">
     <Icon icon={faMagnifyingGlass} />

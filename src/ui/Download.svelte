@@ -1,7 +1,9 @@
 <script lang="ts">
-  import { faCheck, faCopy, faDownload } from '@fortawesome/free-solid-svg-icons';
+  import { faCopy } from '@fortawesome/free-solid-svg-icons';
   import { toast } from '@eurth/style';
   import Icon from '@eurth/style/components/Icon.svelte';
+  import Line from '@eurth/style/components/Line.svelte';
+  import { lineConfirm, lineDownloadOutline } from '@eurth/style/line';
   import { onMount } from 'svelte';
   import { canCopyImage, canWebp, copyImage, downloadImage, downloadSvg, downloadText } from './download';
   import { clink } from './fun';
@@ -10,7 +12,8 @@
   /**
    * Saving a chart, all in the browser: PNG, SVG or WebP (where the browser can make one), any
    * text versions the chart offers (Markdown, JSON), or a copy on the clipboard to paste straight
-   * into a chat or a post.
+   * into a chat or a post. The arrow draws itself as the row comes into view, and a tick draws
+   * itself once the image is copied.
    */
   interface TextVersion {
     label: string;
@@ -47,7 +50,7 @@
 </script>
 
 <div class="download">
-  <span class="eu-muted label"><Icon icon={faDownload} /> Download as</span>
+  <span class="eu-muted label"><Line icon={lineDownloadOutline} /> Download as</span>
   <button type="button" class="eu-btn" aria-label="Download {name} as PNG" onclick={() => svg() && (mint(), downloadImage(svg()!, name, 'png'))}>PNG</button>
   <button type="button" class="eu-btn" aria-label="Download {name} as SVG" onclick={() => svg() && (mint(), downloadSvg(svg()!, name))}>SVG</button>
   {#if webp}
@@ -60,7 +63,7 @@
   {/each}
   {#if clipboard}
     <button type="button" class="eu-btn" aria-label={copied ? `Copied: ${name}` : `Copy image of ${name}`} onclick={copy}>
-      <Icon icon={copied ? faCheck : faCopy} />
+      {#if copied}<Line icon={lineConfirm} />{:else}<Icon icon={faCopy} />{/if}
       {copied ? 'Copied' : 'Copy image'}
     </button>
   {/if}

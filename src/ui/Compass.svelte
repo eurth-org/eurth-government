@@ -1,10 +1,12 @@
 <script lang="ts">
-  import { faCheck, faExpand, faXmark } from '@fortawesome/free-solid-svg-icons';
+  import { faCheck } from '@fortawesome/free-solid-svg-icons';
   import { axes } from '../model/axes';
   import { compassAxes, compassPoint } from '../model/compass';
   import { compassJson, compassMarkdown } from '../model/compassText';
   import type { AxisScore } from '../model/engine';
   import Icon from '@eurth/style/components/Icon.svelte';
+  import Line from '@eurth/style/components/Line.svelte';
+  import { lineArrowsDiagonal, lineClose } from '@eurth/style/line';
   import CompassChart, { type Mode } from './CompassChart.svelte';
   import Download from './Download.svelte';
 
@@ -54,7 +56,7 @@
 <!-- Reference points on the left, Enlarge on the right. -->
 <div class="toolbar">
   {@render modePicker('compass-mode')}
-  <button type="button" class="eu-btn" onclick={() => ((enlarged = true), dialog.showModal())}><Icon icon={faExpand} /> Enlarge</button>
+  <button type="button" class="eu-btn" onclick={() => ((enlarged = true), dialog.showModal())}><Line icon={lineArrowsDiagonal} /> Enlarge</button>
 </div>
 <div class="room" bind:clientWidth={room}>
   <CompassChart {scores} {mode} half={fit(room, 170)} bind:svg={small} />
@@ -83,7 +85,7 @@
 <dialog bind:this={dialog} class="eu-dialog large" aria-labelledby="compass-large-title">
   <div class="eu-dialog-top">
     <h2 id="compass-large-title">Compass</h2>
-    <button type="button" class="eu-btn eu-btn--quiet eu-btn--icon" aria-label="Close" onclick={() => dialog.close()}><Icon icon={faXmark} /></button>
+    <button type="button" class="eu-btn eu-btn--quiet eu-btn--icon" aria-label="Close" onclick={() => dialog.close()}><Line icon={lineClose} /></button>
   </div>
   <div class="eu-stack">
     {@render modePicker('compass-mode-large')}

@@ -1,6 +1,8 @@
 <script lang="ts">
-  import { faCircleInfo, faCircleQuestion, faEarthEurope, faKeyboard, faLightbulb, faUserShield, faVolumeHigh, faXmark } from '@fortawesome/free-solid-svg-icons';
+  import { faCircleInfo, faCircleQuestion, faEarthEurope, faKeyboard, faLightbulb, faUserShield, faVolumeHigh } from '@fortawesome/free-solid-svg-icons';
   import Icon from '@eurth/style/components/Icon.svelte';
+  import Line from '@eurth/style/components/Line.svelte';
+  import { lineClose } from '@eurth/style/line';
   import { ref } from './ref';
 
   /**
@@ -51,7 +53,7 @@
   <!-- The title and Close stay in view; only the text below scrolls. -->
   <div class="eu-dialog-top">
     <h2 id="info-title"><Icon icon={faCircleQuestion} /> About Governmint</h2>
-    <button type="button" class="eu-btn eu-btn--quiet eu-btn--icon" aria-label="Close" onclick={() => dialog.close()}><Icon icon={faXmark} /></button>
+    <button type="button" class="eu-btn eu-btn--quiet eu-btn--icon" aria-label="Close" onclick={() => dialog.close()}><Line icon={lineClose} /></button>
   </div>
   <div class="body">
     <!-- Two columns where there's room: about Governmint on the left, using it on the right. -->
@@ -63,8 +65,9 @@
           settings contradict each other. This preview covers government and the budget; the economy and law come next.
         </p>
         <p>
-          Start from an example or a real country, or roll the dice beside the name. Drag a scale to see which settings
-          would move it, and follow "Show settings" to step through what a check is about.
+          Start from an example or a real country, or press Random: the dice beside the name do the same. Random
+          replaces the whole country, so the first time you've changed something it asks before it rolls. Drag a scale
+          to see which settings would move it, and follow "Show settings" to step through what a check is about.
         </p>
       </section>
 

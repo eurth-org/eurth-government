@@ -13,7 +13,6 @@
     faBookOpen,
     faCircleQuestion,
     faFileExport,
-    faLink,
     faRedo,
     faShareNodes,
     faUndo,
@@ -22,12 +21,15 @@
   import ProfileButtons from '@eurth/profile/ProfileButtons.svelte';
   import { calm, copyText, paperPlane, toast } from '@eurth/style';
   import Icon from '@eurth/style/components/Icon.svelte';
+  import Line from '@eurth/style/components/Line.svelte';
+  import RandomButton from '@eurth/style/components/RandomButton.svelte';
   import ShareButtons from '@eurth/style/components/ShareButtons.svelte';
+  import { lineAlert, lineConfirm, lineLink } from '@eurth/style/line';
   import { onMount, tick, untrack } from 'svelte';
   import { slide } from 'svelte/transition';
   import { defaultCountry, describe } from './model/engine';
   import { countries } from './model/countries';
-  import { description, summary } from './model/formats';
+  import { description, summary, toMarkdown } from './model/formats';
   import { randomName } from './model/names';
   import { randomCountry } from './model/random';
   import { cleanName, markdownText } from './model/text';
@@ -127,6 +129,11 @@
   });
 
   const canUndo = $derived(past.length > 0 || snapshot !== recorded);
+
+  // The country the page opened with. Random only asks before it rolls once the visitor has
+  // changed something: a setting, the name, or the whole country for another.
+  let opened = $state(untrack(() => snapshot));
+  const changed = $derived(ready && snapshot !== opened);
 
   function restore(saved: string) {
     const [savedCode, savedName, savedFlag] = JSON.parse(saved) as [string, string, string | null];
@@ -276,17 +283,28 @@
     if (location.search) {
       const arrived = readLink(location.search);
       load(arrived.country, arrived.name, arrived.flag);
-      // The country the page opens with is where undo starts, not a change to undo.
+      // The country the page opens with is where undo starts, not a change to undo, and
+      // nothing Random would be throwing away.
       recorded = snapshot;
+      opened = snapshot;
     }
     ready = true;
   });
 
-  // Random: a random government with the name of a famous fictional nation, credited.
+  // Random: a random government with the name of a famous fictional nation, credited. The
+  // suite's Random button (in the toolbar) calls this: it asks once before it replaces a country
+  // the visitor has changed, and never again.
   function random() {
     const picked = randomName();
     load(randomCountry(), picked.name);
     toast(`${picked.name}, from ${picked.from}.`);
+  }
+
+  // The dice beside the name and the R key press the toolbar's Random, so all three ask the
+  // one question, once between them.
+  let randomHost: HTMLElement | undefined = $state();
+  function askRandom() {
+    randomHost?.querySelector<HTMLButtonElement>(':scope > button')?.click();
   }
 
   // Typed the name of a real country? Offer its real government, with its flag.
@@ -298,7 +316,10 @@
   });
 
   // Copy link: the link is what travels, and what "saving" a country means. A paper plane flies
-  // off the button, the coin clinks (with sound on), and the country counts as minted.
+  // off the button, a tick draws itself in the link's place, the coin clinks (with sound on),
+  // and the country counts as minted.
+  let linkCopied = $state(false);
+  let linkTimer: ReturnType<typeof setTimeout> | undefined;
   async function copyLink(from?: HTMLElement) {
     if (!(await copyText(link))) {
       toast("That didn't copy. Your browser may not allow it here.");
@@ -308,6 +329,9 @@
     clink();
     if (from) paperPlane(from);
     toast('Freshly minted, and copied.');
+    linkCopied = true;
+    clearTimeout(linkTimer);
+    linkTimer = setTimeout(() => (linkCopied = false), 2000);
   }
 
   // The nation's profile file: loaded here, saved with Governmint's section written and every
@@ -387,7 +411,7 @@
         break;
       case 'r':
       case 'R':
-        random();
+        askRandom();
         break;
       case 's':
       case 'S':
@@ -413,6 +437,9 @@
       <button type="button" class="eu-btn" onclick={() => (pickerOpen = true)} data-tip="Start from an example or a real country (E)" data-tip-align="start">
         <Icon icon={faBookOpen} /> <span>Examples<span class="wide-only">{' '}&amp; countries</span></span>
       </button>
+      <span class="random" bind:this={randomHost}>
+        <RandomButton onrandom={random} guard={changed} what="country" />
+      </span>
       <button type="button" class="eu-btn eu-btn--icon" data-click="swing-left" onclick={undo} disabled={!canUndo} aria-label="Undo" data-tip="Undo ({mod}Z)">
         <Icon icon={faUndo} />
       </button>
@@ -420,7 +447,7 @@
         <Icon icon={faRedo} />
       </button>
       <button type="button" class="eu-btn" onclick={(e) => copyLink(e.currentTarget)} data-tip="The link holds the whole country (S)">
-        <Icon icon={faLink} /> Copy link
+        <Line icon={linkCopied ? lineConfirm : lineLink} /> {linkCopied ? 'Copied' : 'Copy link'}
       </button>
       <button
         type="button"
@@ -489,7 +516,7 @@
           {profile}
           seed={code}
           {flag}
-          onrandom={random}
+          onrandom={askRandom}
           real={realMatch && { name: realMatch.name, flag: realMatch.code.toLowerCase() }}
           onreal={() => realMatch && load(structuredClone(realMatch.country), realMatch.name, realMatch.code.toLowerCase())}
         />
@@ -497,7 +524,8 @@
 
       {#if profile.checks.length}
         <section class="eu-card eu-card--outline panel" aria-labelledby="checks-title" transition:slide={{ duration: calm() ? 0 : 250 }}>
-          <h2 id="checks-title"><Icon icon={panelIcons.checks} /> Worth a second look</h2>
+          <!-- The panel arrives when a check does: its warning sign draws itself as it opens. -->
+          <h2 id="checks-title"><Line icon={lineAlert} /> Worth a second look</h2>
           <ul class="points">
             {#each profile.checks as check (check.id)}
               {@const kind = check.severity === 'conflict' ? 'Contradiction' : 'Unusual'}
@@ -550,7 +578,7 @@
 
       <section class="eu-card eu-card--outline panel" aria-labelledby="radar-title">
         <h2 id="radar-title"><Icon icon={panelIcons.radar} /> Shape</h2>
-        <Radar scores={profile.axes} name={shownName} />
+        <Radar scores={profile.axes} name={shownName} {link} />
       </section>
 
       <section class="eu-card eu-card--outline panel" aria-labelledby="compass-title">
@@ -573,6 +601,7 @@
             text={shareText}
             {forumBody}
             description={() => description(shownName, country, profile)}
+            markdown={() => toMarkdown(shownName, country, profile, link)}
             heading={name.trim() ? `Share ${name.trim()}` : 'Share your country'}
             said={{ link: 'Freshly minted, and copied.' }}
             oncopy={clink}
@@ -751,7 +780,8 @@
     text-align: left;
   }
 
-  .share {
+  .share,
+  .random {
     display: contents;
   }
 </style>

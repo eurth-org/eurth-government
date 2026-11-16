@@ -6,12 +6,28 @@
   import { fade } from 'svelte/transition';
   import { axes } from '../model/axes';
   import type { AxisScore } from '../model/engine';
+  import { scalesJson, scalesMarkdown } from '../model/formats';
   import Download from './Download.svelte';
 
   // The scales as a web: the further out, the higher the score. Pointing at a spoke's outer end
   // shows its score. Each edge of the blue shape is a thread: brush across one and that edge
   // twangs, once. After three twangs a tiny spider comes down to see what's caught in its web.
-  let { scores, name }: { scores: AxisScore[]; name: string } = $props();
+  let {
+    scores,
+    name,
+    link,
+  }: {
+    scores: AxisScore[];
+    name: string;
+    /** The country's link, for the Markdown and JSON downloads. */
+    link: string;
+  } = $props();
+
+  // The shape as text too: its eight scores as a Markdown table, and as JSON.
+  const texts = $derived([
+    { label: 'Markdown', extension: 'md', type: 'text/markdown', make: () => scalesMarkdown(name, scores, link) },
+    { label: 'JSON', extension: 'json', type: 'application/json', make: () => scalesJson(name, scores, link) },
+  ]);
 
   const count = axes.length;
   const angle = (i: number) => (Math.PI * 2 * i) / count - Math.PI / 2;
@@ -263,7 +279,7 @@
   </svg>
 </div>
 
-<Download svg={() => svg} name="{name} shape" />
+<Download svg={() => svg} name="{name} shape" {texts} />
 
 <style>
   /* The room the chart has: the chart is drawn to fit it, at one unit to the pixel. */

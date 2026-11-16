@@ -1,5 +1,5 @@
 import { axes } from './axes';
-import { picked, settingDef, type Profile } from './engine';
+import { picked, settingDef, type AxisScore, type Profile } from './engine';
 import { familyLabels, type Family } from './naming';
 import { budgetIds, type Country, type SettingId } from './settings';
 import { markdownText, wikiText } from './text';
@@ -240,6 +240,40 @@ export function budgetJson(name: string, country: Country, link: string): string
     name,
     budget: Object.fromEntries(budgetIds.map((id) => [settingDef(id).label, country[id]])),
     unit: 'percent of government spending',
+    link,
+    madeWith: 'Governmint, https://gov.eurth.org',
+  };
+  return `${JSON.stringify(data, null, 2)}\n`;
+}
+
+/** A scale's own words: its name and what stands at either end. */
+const scale = (score: AxisScore) => axes.find((a) => a.id === score.axis)!;
+
+/**
+ * The shape as Markdown: the eight scales in a table, each with its score and what 0 and 100
+ * stand for. The spider chart is a picture of exactly these figures.
+ */
+export function scalesMarkdown(name: string, scores: AxisScore[], link: string): string {
+  return [
+    `### The shape of ${markdownText(name)}`,
+    '',
+    'Eight scales, each from 0 to 100:',
+    '',
+    '| Scale | Score | At 0 | At 100 |',
+    '| --- | --- | --- | --- |',
+    ...scores.map((s) => `| ${scale(s).label} | ${s.score} | ${scale(s).low} | ${scale(s).high} |`),
+    '',
+    `<small>Made with [Governmint](${link})</small>`,
+    '',
+  ].join('\n');
+}
+
+/** The shape as JSON: each scale's score, from 0 (its low end) to 100 (its high end). */
+export function scalesJson(name: string, scores: AxisScore[], link: string): string {
+  const data = {
+    name,
+    scales: scores.map((s) => ({ scale: scale(s).label, score: s.score, low: scale(s).low, high: scale(s).high })),
+    unit: 'from 0 to 100',
     link,
     madeWith: 'Governmint, https://gov.eurth.org',
   };

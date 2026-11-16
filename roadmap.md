@@ -19,9 +19,9 @@ Three parts: what comes next, what each release added (newest first, times in UT
 
 ## 15 November 2026: round 12, onto the shared shell (#12, 0.12.0)
 
-Feedback 146–155.
+Feedback 146–159.
 
-- Governmint stands on the shared shell of Eurth's tools (`@eurth/style`): the header with the yurt and "Governmint by Eurth", the Tools menu, the Deluminator, the footer with this visit's sound and motion switches, the share row and dialog, toasts and the offline note. Its own top bar, header, footer, theme switch and share window are gone; its actions (Examples & countries, Undo, Redo, Copy link, About) sit in its own toolbar, with the coin and the count of minted countries.
+- Governmint stands on the shared shell of Eurth's tools (`@eurth/style`): the header with the yurt and "Governmint by Eurth", the Tools menu, the Deluminator, the footer with this visit's sound and motion switches, the share row and dialog, toasts and the offline note. Its own top bar, header, footer, theme switch and share window are gone; its actions (Examples & countries, Random, Undo, Redo, Copy link, About) sit in its own toolbar, with the coin and the count of minted countries.
 - Built with Astro: the page is real HTML before any script runs, with one heading, an introduction, how it works and questions and answers. The shared build writes the security headers, the service worker, the web manifest, the sitemap, `robots.txt` and `llms.txt`.
 - Nothing is stored. The theme, sound and motion last for the visit; so do the single-key shortcuts switch and undo. "Saved on this device" is gone, and the offline copy the old version kept is cleared away.
 - The nation's profile file: Load profile and Save profile. Governmint writes the `government` section and leaves every other section as it was; a loaded profile with a Governmint link opens that country.
@@ -29,6 +29,10 @@ Feedback 146–155.
 - Only the suite's tokens: Night and light at WCAG 2.2 AAA, every target at least 44 by 44 pixels, charts in the category colours with their words on the page's own ground, and drawn at the size they're shown so their text never shrinks on a phone.
 - Copy description: the country in words. A label and its dropdown no longer share an id with their section.
 - The suite's checks (`npm test`, `npm run axe`, `npm run smoke`), its CI and a nightly run that keeps the shell up to date.
+- On `@eurth/style` 1.4.0, the look Stijn reviewed: the blue bar at the top with the Tools menu and the Deluminator, the yurt and the name under it, the footer in the page's centred column, a blue bar at the foot with Forums, Map, News, Status and Join Eurth, and white labels on eurth-blue. All of that comes with the package; the sharing image is remade with the white label on its pill.
+- Random in the toolbar, as the suite's own button: pointing at it turns it red, and the first roll that would replace a country you've changed asks before it does, once. The dice beside the name and the R key go the same way, so there is one question between the three. Restore budget and Default budget turn red too and say what goes, while there is something to throw away.
+- Markdown wherever the result has words: Copy Markdown in the share row; the Export panel saves its text as a file (Markdown, wikitext or JSON) as well as copying it; the Shape chart downloads as Markdown and JSON, as the budget and the compass already did.
+- Icons that draw themselves (line-md) where something happens: a tick once a link, a text or an image is copied, the download arrows, Enlarge, Restore budget, Close in each window, the arrow to a real country's government, and the warning sign on "Worth a second look" as that panel opens. Undo and Redo keep their still arrows, which swing when clicked.
 
 ## 10 November 2026: round 11 (#11)
 
