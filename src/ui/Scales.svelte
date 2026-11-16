@@ -5,7 +5,8 @@
   import type { AxisScore } from '../model/engine';
   import type { Country, SettingId } from '../model/settings';
   import { describeSuggestion, suggest, type Suggestion } from '../model/suggest';
-  import { coinBurst, niceWatcher } from './fun';
+  import { calm, niceWatcher } from '@eurth/style';
+  import { coinBurst } from './fun';
   import Icon from './Icon.svelte';
   import { axisIcons } from './icons';
 
@@ -27,8 +28,7 @@
 
   // Scores glide to their new values. One that settles on 69 gets a "Nice."; one that reaches
   // 100% gets a little burst of coins.
-  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const shown = Tween.of(() => scores.map((s) => s.score), { duration: calm ? 0 : 400, easing: cubicOut });
+  const shown = Tween.of(() => scores.map((s) => s.score), { duration: calm() ? 0 : 400, easing: cubicOut });
   const watchers = Object.fromEntries(axes.map((a) => [a.id, niceWatcher()]));
   const before = new Map<AxisId, number>();
   $effect(() => {
@@ -88,7 +88,7 @@
         />
         <span class="end" title={axis.high}><Icon icon={highIcon} label={axis.high} /></span>
       </div>
-      <div class="poles"><span>{axis.low}</span><span>{axis.high}</span></div>
+      <div class="poles" aria-hidden="true"><span>{axis.low}</span><span>{axis.high}</span></div>
 
       {#if hint?.axis === score.axis}
         <div class="hint" id="hint-{score.axis}" role="status">

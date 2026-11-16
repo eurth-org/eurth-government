@@ -15,8 +15,8 @@
   import { budgetJson, budgetMarkdown } from '../model/formats';
   import { budgetIds, settings, type BudgetId, type Country, type SettingId } from '../model/settings';
   import type { ShareSettingDef } from '../model/types';
+  import { calm, niceWatcher } from '@eurth/style';
   import Download from './Download.svelte';
-  import { niceWatcher } from './fun';
   import Icon from './Icon.svelte';
   import { budgetStyle } from './icons';
   import { treemap } from './treemap';
@@ -50,7 +50,6 @@
     { label: 'JSON', extension: 'json', type: 'application/json', make: () => budgetJson(name, country, link) },
   ]);
 
-  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const fresh = defaultCountry();
 
   const lines = budgetIds.map((id) => {
@@ -68,7 +67,7 @@
   const summary = $derived(lines.map((l) => `${l.def.label} ${country[l.id]}%`).join(', '));
 
   // The charts glide to new shares instead of jumping.
-  const shares = Tween.of(() => budgetIds.map((id) => country[id]), { duration: calm ? 0 : 350, easing: cubicOut });
+  const shares = Tween.of(() => budgetIds.map((id) => country[id]), { duration: calm() ? 0 : 350, easing: cubicOut });
 
   // The chart: a bar, a pie or a treemap, each part showing its area and share on hover, with
   // a legend inside the picture so a download explains itself.

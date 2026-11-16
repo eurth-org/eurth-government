@@ -20,6 +20,8 @@
   let small = $state<SVGSVGElement>();
   let large = $state<SVGSVGElement>();
   let dialog: HTMLDialogElement;
+  // The enlarged compass is drawn once its window has been opened, not with the page.
+  let enlarged = $state(false);
 
   const here = $derived(compassPoint(scores));
   const label = (id: string) => axes.find((a) => a.id === id)!.label;
@@ -46,7 +48,7 @@
 <!-- Reference points on the left, Enlarge on the right. -->
 <div class="toolbar">
   {@render modePicker('compass-mode')}
-  <button class="btn enlarge" onclick={() => dialog.showModal()}><Icon icon={faExpand} /> Enlarge</button>
+  <button class="btn enlarge" onclick={() => ((enlarged = true), dialog.showModal())}><Icon icon={faExpand} /> Enlarge</button>
 </div>
 <CompassChart {scores} {mode} bind:svg={small} />
 
@@ -76,7 +78,9 @@
     <button class="btn" aria-label="Close" onclick={() => dialog.close()}><Icon icon={faXmark} /></button>
   </div>
   {@render modePicker('compass-mode-large')}
-  <CompassChart {scores} {mode} half={300} bind:svg={large} />
+  {#if enlarged}
+    <CompassChart {scores} {mode} half={300} bind:svg={large} />
+  {/if}
   <Download svg={() => large} name="{name} compass" {texts} />
 </dialog>
 

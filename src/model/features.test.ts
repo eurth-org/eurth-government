@@ -2,7 +2,7 @@ import { describe as group, expect, it } from 'vitest';
 import { compassPoint } from './compass';
 import { defaultCountry, describe, scoreAxes } from './engine';
 import { examples } from './examples';
-import { article, budgetJson, budgetMarkdown, sentence, summary, toJson, toMarkdown, toWikitext } from './formats';
+import { article, budgetJson, budgetMarkdown, scalesJson, scalesMarkdown, sentence, summary, toJson, toMarkdown, toWikitext } from './formats';
 import { suggest } from './suggest';
 import { motto } from './motto';
 import { randomCountry } from './random';
@@ -79,6 +79,25 @@ group('formats', () => {
     expect(md).toContain('| Head of state | A president, chosen by popular vote |');
     expect(md).toContain('[Governmint](https://gov.eurth.org/?c=x)');
     for (const line of md.split('\n').filter((l) => l.startsWith('|'))) expect(line.split('|').length).toBe(4);
+  });
+
+  it('end the Markdown with the link that brings the country back', () => {
+    const md = toMarkdown('Ruritania', country, profile, 'https://gov.eurth.org/?c=x').trimEnd();
+    expect(md.split('\n').at(-1)).toBe('<small>Made with [Governmint](https://gov.eurth.org/?c=x)</small>');
+  });
+
+  it('write the shape as a Markdown table and as JSON', () => {
+    const md = scalesMarkdown('Ruri|tania', profile.axes, 'https://gov.eurth.org/?c=x');
+    expect(md).toContain('### The shape of Ruri\\|tania');
+    const rows = md.split('\n').filter((l) => l.startsWith('|'));
+    expect(rows.length).toBe(2 + profile.axes.length);
+    for (const row of rows) expect(row.split('|').length).toBe(6);
+    expect(md).toContain(`| Participation | ${profile.axes.find((a) => a.axis === 'participation')!.score} | Few have a say | Everyone has a say |`);
+    expect(md.trimEnd().endsWith('[Governmint](https://gov.eurth.org/?c=x)</small>')).toBe(true);
+    const json = JSON.parse(scalesJson('Ruritania', profile.axes, 'https://gov.eurth.org/?c=x'));
+    expect(json.scales).toHaveLength(profile.axes.length);
+    expect(json.scales[0]).toEqual({ scale: 'Participation', score: profile.axes[0]!.score, low: 'Few have a say', high: 'Everyone has a say' });
+    expect(json.link).toBe('https://gov.eurth.org/?c=x');
   });
 
   it('make an infobox and section for the wiki', () => {

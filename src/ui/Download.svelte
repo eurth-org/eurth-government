@@ -1,7 +1,9 @@
 <script lang="ts">
   import { faCheck, faCopy, faDownload } from '@fortawesome/free-solid-svg-icons';
+  import { toast } from '@eurth/style';
+  import { onMount } from 'svelte';
   import { canCopyImage, canWebp, copyImage, downloadImage, downloadSvg, downloadText } from './download';
-  import { clink, toast } from './fun';
+  import { clink } from './fun';
   import { mint } from './minted.svelte';
   import Icon from './Icon.svelte';
 
@@ -21,20 +23,26 @@
     $props();
 
   let copied = $state(false);
+  // What this browser can do, asked once the page is in it.
+  let webp = $state(false);
+  let clipboard = $state(false);
+  onMount(() => {
+    webp = canWebp();
+    clipboard = canCopyImage();
+  });
 
   async function copy() {
     const chart = svg();
     if (!chart) return;
-    try {
-      await copyImage(chart);
-      mint();
-      copied = true;
-      toast('Image copied: paste it anywhere.');
-      clink();
-      setTimeout(() => (copied = false), 2000);
-    } catch {
+    if (!(await copyImage(chart))) {
       toast("This browser wouldn't copy the image. Download it instead.");
+      return;
     }
+    mint();
+    copied = true;
+    toast('Image copied: paste it anywhere.');
+    clink();
+    setTimeout(() => (copied = false), 2000);
   }
 </script>
 
@@ -42,7 +50,7 @@
   <span class="label"><Icon icon={faDownload} /> Download as</span>
   <button class="btn" aria-label="Download {name} as PNG" onclick={() => svg() && (mint(), downloadImage(svg()!, name, 'png'))}>PNG</button>
   <button class="btn" aria-label="Download {name} as SVG" onclick={() => svg() && (mint(), downloadSvg(svg()!, name))}>SVG</button>
-  {#if canWebp}
+  {#if webp}
     <button class="btn" aria-label="Download {name} as WebP" onclick={() => svg() && (mint(), downloadImage(svg()!, name, 'webp'))}>WebP</button>
   {/if}
   {#each texts as t (t.label)}
@@ -50,8 +58,8 @@
       {t.label}
     </button>
   {/each}
-  {#if canCopyImage}
-    <button class="btn" aria-label="Copy {name} as an image" onclick={copy}>
+  {#if clipboard}
+    <button class="btn" aria-label={copied ? `Copied: ${name}` : `Copy image of ${name}`} onclick={copy}>
       <Icon icon={copied ? faCheck : faCopy} />
       {copied ? 'Copied' : 'Copy image'}
     </button>

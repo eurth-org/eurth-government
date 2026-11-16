@@ -3,6 +3,7 @@
   import {
     faCircleInfo,
     faCircleQuestion,
+    faComments,
     faKeyboard,
     faLightbulb,
     faUserShield,
@@ -11,28 +12,42 @@
     faXmark,
   } from '@fortawesome/free-solid-svg-icons';
   import Icon from './Icon.svelte';
-  import { motion, setMotion } from './motion.svelte';
   import { ref } from './ref';
 
   /**
-   * About Governmint, opened with the "?" button, the About link or the ? key: what it does,
-   * where your country is kept, the keyboard shortcuts (with a switch to turn the single keys
-   * off, for speech input; WCAG 2.1.4), the sound switch, and where to suggest ideas.
+   * About Governmint, opened with the "?" button or the ? key: what it does, where your country
+   * is kept, the keyboard shortcuts (with a switch to turn the single keys off, for speech
+   * input; WCAG 2.1.4), the sound and motion switches, and where to suggest ideas. Sound and
+   * motion are the suite's choices for the visit: the same two switches are in the footer.
    */
   let {
     open,
     onclose,
     sound,
     ontogglesound,
+    motion,
+    ontogglemotion,
     shortcuts,
     ontoggleshortcuts,
+    mod,
+    host,
+    github = false,
   }: {
     open: boolean;
     onclose: () => void;
     sound: boolean;
     ontogglesound: () => void;
+    /** Whether things may move: the suite's motion choice for this visit. */
+    motion: boolean;
+    ontogglemotion: () => void;
     shortcuts: boolean;
     ontoggleshortcuts: () => void;
+    /** The command key as this device writes it: "⌘" or "Ctrl+". */
+    mod: string;
+    /** This site's host, for the ?ref on links to other sites. */
+    host: string;
+    /** Whether pages may link to GitHub yet (from 25 December 2026). */
+    github?: boolean;
   } = $props();
   let dialog: HTMLDialogElement;
   let body = $state<HTMLDivElement>();
@@ -43,19 +58,18 @@
     if (body) more = body.scrollTop + body.clientHeight < body.scrollHeight - 4;
   }
 
-  const mac = /Mac|iPhone|iPad/.test(navigator.platform);
-  const mod = mac ? '⌘' : 'Ctrl';
-  const keys: [string[], string][] = [
+  const command = $derived(mod.replace('+', ''));
+  const keys: [string[], string][] = $derived([
     [['/'], 'Search settings'],
     [['E'], 'Examples and real countries'],
     [['R'], 'A random country'],
-    [['S'], 'Save, and copy the link'],
+    [['S'], 'Save: copy the link'],
     [['[', ']'], 'Previous or next section'],
     [['?'], 'This window'],
-    [[mod, 'Z'], 'Undo'],
-    [[mod, '⇧', 'Z'], 'Redo'],
+    [[command, 'Z'], 'Undo'],
+    [[command, '⇧', 'Z'], 'Redo'],
     [['Esc'], 'Close, or clear the search'],
-  ];
+  ]);
 
   $effect(() => {
     if (open && !dialog.open) dialog.showModal();
@@ -90,8 +104,8 @@
       <section aria-labelledby="info-yours">
         <h3 id="info-yours"><Icon icon={faUserShield} /> Your country stays yours</h3>
         <p>
-          A country lives in its link: copy it to share it or come back later. Save also keeps a list in this browser.
-          Nothing about you or your country is stored anywhere else, and there's no account; Governmint only counts
+          A country lives in its link: copy it to share it or come back later. Save copies the link too.
+          Nothing about you or your country is stored anywhere, and there's no account; Governmint only counts
           how many countries are minted (saved, shared or exported). After your first visit, Governmint works
           offline too: it keeps a copy of itself on this device.
         </p>
@@ -101,10 +115,16 @@
         <h3 id="info-ideas"><Icon icon={faLightbulb} /> Ideas</h3>
         <p>
           Fellow worldbuilder?
-          <a href={ref('https://github.com/eurth-org/eurth-government/discussions/categories/ideas')}>
-            <Icon icon={faGithub} /> Table a motion for the roadmap</a
-          >
-          on GitHub. No quorum required.
+          {#if github}
+            <a href={ref('https://github.com/eurth-org/eurth-government/discussions/categories/ideas', host)}>
+              <Icon icon={faGithub} /> Table a motion for the roadmap</a
+            >
+            on GitHub.
+          {:else}
+            <a href={ref('https://eurth.org', host)}> <Icon icon={faComments} /> Table a motion for the roadmap</a>
+            on the Eurth forum.
+          {/if}
+          No quorum required.
         </p>
       </section>
     </div>
@@ -137,10 +157,10 @@
           </span>
         </p>
         <p class="setting">
-          <button class="btn" aria-pressed={motion.on} onclick={() => setMotion(!motion.on)}>
-            Hearts: {motion.on ? 'beating' : 'still'}
+          <button class="btn" aria-pressed={motion} onclick={ontogglemotion}>
+            Motion: {motion ? 'on' : 'still'}
           </button>
-          <span class="note">The footer's hearts beat every few seconds. Stop them here.</span>
+          <span class="note">Coins flip, icons move and the footer's hearts beat. Stop it all here.</span>
         </p>
       </section>
     </div>

@@ -9,6 +9,7 @@
     faXmark,
     type IconDefinition,
   } from '@fortawesome/free-solid-svg-icons';
+  import { calm } from '@eurth/style';
   import { scale } from 'svelte/transition';
   import Coin from './Coin.svelte';
   import Icon from './Icon.svelte';
@@ -55,9 +56,9 @@
   let timer: ReturnType<typeof setTimeout> | undefined;
   let list: HTMLUListElement;
 
-  // How far down the page you are, as a thin bar along the bottom of the sticky bar. Once the
-  // header has scrolled away, the Eurth coin joins the bar as a way back to the top.
-  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // How far down the page you are, as a thin bar along the bottom of the sticky bar. Once
+  // Governmint's own row of actions (.header, in App.svelte) has scrolled away, the Eurth coin
+  // joins the bar as a way back to the top.
   let progress = $state(0);
   let away = $state(false);
   $effect(() => {
@@ -92,7 +93,7 @@
   });
 
   function scrollChips(direction: 1 | -1) {
-    list.scrollBy({ left: direction * list.clientWidth * 0.7, behavior: 'smooth' });
+    list.scrollBy({ left: direction * list.clientWidth * 0.7, behavior: calm() ? 'auto' : 'smooth' });
   }
 
   function search() {
@@ -116,7 +117,7 @@
     if (!chip) return;
     const left = chip.offsetLeft - list.offsetLeft;
     if (left < list.scrollLeft || left + chip.offsetWidth > list.scrollLeft + list.clientWidth) {
-      list.scrollTo({ left: left - 16, behavior: 'smooth' });
+      list.scrollTo({ left: left - 16, behavior: calm() ? 'auto' : 'smooth' });
     }
   });
 </script>
@@ -129,8 +130,8 @@
         aria-label="Back to the top"
         data-tip="Back to the top"
         data-tip-align="start"
-        transition:scale={{ duration: calm ? 0 : 200, start: 0.6 }}
-        onclick={() => scrollTo({ top: 0, behavior: calm ? 'auto' : 'smooth' })}
+        transition:scale={{ duration: calm() ? 0 : 200, start: 0.6 }}
+        onclick={() => scrollTo({ top: 0, behavior: calm() ? 'auto' : 'smooth' })}
       >
         <Coin size={30} />
       </button>

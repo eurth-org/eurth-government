@@ -1,53 +1,73 @@
 <script lang="ts">
   import { faMarkdown, faWikipediaW } from '@fortawesome/free-brands-svg-icons';
-  import { faCheck, faCopy, faFileCode, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
+  import { faCheck, faCopy, faDownload, faFileCode, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
+  import { copyText, toast } from '@eurth/style';
   import type { Profile } from '../model/engine';
   import { toJson, toMarkdown, toWikitext } from '../model/formats';
   import type { Country } from '../model/settings';
+  import { downloadText } from './download';
   import { clink } from './fun';
   import { mint } from './minted.svelte';
   import Icon from './Icon.svelte';
 
-  // The country as text to paste elsewhere: Markdown, wikitext or JSON. Copied text gets postmarked.
+  // The country as text to paste elsewhere, or to keep as a file: Markdown, wikitext or JSON.
+  // Copied text gets postmarked.
   let { name, country, profile, link }: { name: string; country: Country; profile: Profile; link: string } = $props();
 
   type Format = 'markdown' | 'wikitext' | 'json';
   let format = $state<Format>('markdown');
   let copied = $state(false);
 
-  const formats: { id: Format; label: string; icon: IconDefinition; help: string }[] = [
+  const formats: { id: Format; label: string; icon: IconDefinition; help: string; extension: string; type: string }[] = [
     {
       id: 'markdown',
       label: 'Markdown',
       icon: faMarkdown,
+      extension: 'md',
+      type: 'text/markdown',
       help: 'For a post on the Eurth.org forum: a summary, the institutions and the budget as tables.',
     },
     {
       id: 'wikitext',
       label: 'Wikitext',
       icon: faWikipediaW,
+      extension: 'txt',
+      type: 'text/plain',
       help: 'For IIWiki: an {{Infobox country}}, a Government section and a budget table.',
     },
     {
       id: 'json',
       label: 'JSON',
       icon: faFileCode,
+      extension: 'json',
+      type: 'application/json',
       help: 'For tools and spreadsheets: the labels, institutions, budget, scales and checks, plus the raw settings.',
     },
   ];
   const writers = { markdown: toMarkdown, wikitext: toWikitext, json: toJson };
+  const chosen = $derived(formats.find((f) => f.id === format)!);
   const text = $derived(writers[format](name, country, profile, link));
 
   let postmarked = $state(0);
-  const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).toUpperCase();
+  let today = $state('');
 
   async function copy() {
-    await navigator.clipboard.writeText(text);
+    if (!(await copyText(text))) {
+      toast("That didn't copy. Select the text and copy it.");
+      return;
+    }
     mint();
     copied = true;
     clink();
+    today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).toUpperCase();
     postmarked += 1;
     setTimeout(() => (copied = false), 2000);
+  }
+
+  // The same text as a file, named after the country: "Ruritania.md".
+  function save() {
+    mint();
+    downloadText(text, `${name}.${chosen.extension}`, chosen.type);
   }
 </script>
 
@@ -60,8 +80,8 @@
     </label>
   {/each}
 </div>
-<p class="help">{formats.find((f) => f.id === format)!.help}</p>
-<label class="visually-hidden" for="export-text">{formats.find((f) => f.id === format)!.label}</label>
+<p class="help">{chosen.help}</p>
+<label class="visually-hidden" for="export-text">{chosen.label}</label>
 <div class="paper">
   <textarea id="export-text" readonly rows="9" value={text}></textarea>
   {#key postmarked}
@@ -79,12 +99,16 @@
     <Icon icon={copied ? faCheck : faCopy} />
     {copied ? 'Copied' : 'Copy text'}
   </button>
+  <button class="btn" data-click="bounce" aria-label="Download {name} as {chosen.label}" onclick={save}>
+    <Icon icon={faDownload} /> Download
+  </button>
 </div>
 
 <style>
   /* Like the charts' "Download as" row, with "Copy image". */
   .copy-row {
     display: flex;
+    gap: var(--space-2);
     margin-top: var(--space-2);
     font-size: 13px;
   }
@@ -161,9 +185,12 @@
     }
   }
 
+  /* For reduced motion the postmark doesn't stamp down: it is simply there for a moment. (The
+     suite cuts every animation short for reduced motion; this one is no movement, so it stays.) */
   @media (prefers-reduced-motion: reduce) {
     .postmark {
       animation: postmark-calm 2.6s steps(1);
+      animation-duration: 2.6s !important;
     }
 
     @keyframes postmark-calm {

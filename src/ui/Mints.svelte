@@ -1,17 +1,19 @@
 <script lang="ts">
-  import coin from '../assets/eurth-coin.svg';
+  import { calm } from '@eurth/style';
+  import { onMount } from 'svelte';
+  import coin from '../assets/eurth-coin.svg?url';
   import { loadMints, mints } from './minted.svelte';
 
-  // How many countries have been minted with Governmint: saved, shared or exported.
-  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  loadMints();
+  // How many countries have been minted with Governmint: saved, shared or exported. The count
+  // is asked for once the page is in the browser.
+  onMount(loadMints);
   const shown = $derived(mints.count === undefined ? '' : mints.count.toLocaleString('en-GB'));
 </script>
 
 {#if mints.count !== undefined}
   <span class="mints" title="Countries saved, shared or exported with Governmint so far">
     {#key mints.count}
-      <img class:pop={!calm} src={coin} alt="" width="16" height="16" />
+      <img class:pop={!calm()} src={coin} alt="" width="16" height="16" />
     {/key}
     {shown} {mints.count === 1 ? 'country' : 'countries'} minted
   </span>

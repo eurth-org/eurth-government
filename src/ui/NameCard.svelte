@@ -1,9 +1,11 @@
 <script lang="ts">
-  import { faArrowRight, faCrown, faDice, faFlag } from '@fortawesome/free-solid-svg-icons';
+  import { faArrowRight, faCrown, faFlag } from '@fortawesome/free-solid-svg-icons';
+  import { calm } from '@eurth/style';
+  import RandomButton from '@eurth/style/components/RandomButton.svelte';
   import { onDestroy, untrack } from 'svelte';
   import type { Profile } from '../model/engine';
   import { sentence } from '../model/formats';
-  import coin from '../assets/eurth-coin.svg';
+  import coin from '../assets/eurth-coin.svg?url';
   import { motto } from '../model/motto';
   import { nameLimit } from '../model/text';
   import Icon from './Icon.svelte';
@@ -11,8 +13,13 @@
   /**
    * The country's name card. New names are freshly minted: they type themselves out, a coin
    * flips and a seal stamps down. Monarchies get a crown on the flag, theocracies a halo, and a
-   * real country its own flag. None of the movement happens for reduced motion. The dice beside
-   * the name roll a random country; typing a real country's name offers its real government.
+   * real country its own flag. None of the movement happens for reduced motion, or with motion
+   * switched off. Typing a real country's name offers its real government.
+   *
+   * The dice beside the name roll a random country. They are the suite's Random button
+   * (@eurth/style's RandomButton, as a dice): a roll replaces the whole country, so once the
+   * visitor has changed something (`risky`) the dice turn red when pointed at, and the first
+   * roll asks. They wear Governmint's own look: the styles at the foot of this file.
    */
   let {
     name = $bindable(),
@@ -20,6 +27,7 @@
     seed,
     flag,
     onrandom,
+    risky = false,
     real,
     onreal,
   }: {
@@ -28,12 +36,19 @@
     seed: string;
     flag?: string;
     onrandom: () => void;
+    /** Whether a roll would replace something the visitor has made. */
+    risky?: boolean;
     /** The real country whose name was typed, if any. */
     real?: { name: string; flag: string };
     onreal: () => void;
   } = $props();
 
-  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let dice: RandomButton | undefined = $state();
+  /** Rolls the dice from elsewhere (the R key): it asks the first time, as a click does. */
+  export function roll() {
+    dice?.press();
+  }
+
   const monarchy = $derived(/monarch/i.test(profile.labels.form.label));
   const theocracy = $derived(/theocra/i.test(profile.labels.form.label) || profile.labels.regime.rule === 'theocracy');
 
@@ -91,9 +106,7 @@
     onfocus={suggestNames}
     onblur={stopSuggesting}
   />
-  <button class="btn btn-primary dice" data-click="tumble" aria-label="Roll a random country" data-tip="Roll a random country (R)" onclick={onrandom}>
-    <Icon icon={faDice} />
-  </button>
+  <RandomButton bind:this={dice} {onrandom} guard={risky} what="country" label="Roll a random country (R)" iconOnly class="btn btn-primary dice" />
 </div>
 {#if real}
   <button class="real" onclick={onreal}>
@@ -109,7 +122,7 @@
 <div class="card-size" style:height={cardHeight ? `${cardHeight + 14}px` : undefined}>
 <div class="card" bind:clientHeight={cardHeight}>
   {#key minted}
-    <span class="coin" class:flipping={minted > 0 && !calm} aria-hidden="true">
+    <span class="coin" class:flipping={minted > 0 && !calm()} aria-hidden="true">
       <span class="face front"><img src={coin} alt="" /></span>
       <span class="face back"><img src={coin} alt="" /></span>
     </span>
@@ -117,11 +130,11 @@
   <div class="title">
     <h2 class="government" aria-live="polite">
       {#key minted}
-        <span class="minted" class:typing={minted > 0 && !calm}>{profile.name}</span>
+        <span class="minted" class:typing={minted > 0 && !calm()}>{profile.name}</span>
       {/key}
     </h2>
     {#key minted}
-      {#if minted > 0 && !calm}
+      {#if minted > 0 && !calm()}
         <span class="seal" aria-hidden="true">Freshly minted</span>
       {/if}
     {/key}
@@ -198,14 +211,56 @@
     font-weight: 600;
   }
 
-  .dice {
+  /* The dice are the suite's Random button, in Governmint's own look: a primary button joined
+     to the name field. Its element comes from the suite's component, so these rules reach it
+     by name, and set everything the suite's button would otherwise bring. */
+  .name-row :global(.eu-btn.dice) {
+    justify-content: normal;
+    gap: 6px;
+    width: auto;
+    min-width: auto;
+    min-height: auto;
     padding: 0 12px;
+    border: 1px solid var(--selected-edge);
     border-radius: 0 var(--radius-control) var(--radius-control) 0;
+    background: var(--selected);
+    color: var(--on-selected);
+    font: inherit;
     font-size: 16px;
+    font-weight: 700;
   }
 
-  .dice:hover {
+  .name-row :global(.eu-btn.dice > svg) {
+    width: auto;
+    height: 1em;
+  }
+
+  .name-row :global(.eu-btn.dice:hover) {
+    border-color: var(--selected-edge);
+    background: var(--selected);
+    color: var(--on-selected);
+    box-shadow: 0 2px 6px rgb(0 0 0 / 0.15);
     transform: none;
+  }
+
+  .name-row :global(.eu-btn.dice:active) {
+    transform: none;
+  }
+
+  /* Clicked, the dice tumble as Governmint's own buttons do (the keyframes are in app.css). */
+  @media (prefers-reduced-motion: no-preference) {
+    .name-row :global(.eu-btn.dice.eu-clicked .eu-icon) {
+      animation: click-tumble 0.6s cubic-bezier(0.3, 1.2, 0.5, 1);
+    }
+  }
+
+  /* With something to lose, the dice turn red when pointed at or reached with the keyboard:
+     a roll replaces the country. */
+  .name-row :global(.eu-btn.dice.eu-btn--risky:hover),
+  .name-row :global(.eu-btn.dice.eu-btn--risky:focus-visible) {
+    border-color: var(--danger);
+    background: var(--danger);
+    color: var(--surface);
   }
 
   /* Typed a real country's name: its real government is a click away. */

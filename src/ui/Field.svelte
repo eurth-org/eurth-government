@@ -57,8 +57,9 @@
       </div>
     </fieldset>
   {:else}
-    <label class="question" for={def.id}>{def.question}</label>
-    <select id={def.id} {value} aria-describedby="help-{def.id}" onchange={(e) => onchange(e.currentTarget.value)}>
+    <!-- Not the bare id: a section may carry the same word ("legislature"), and ids are one each. -->
+    <label class="question" for="setting-{def.id}">{def.question}</label>
+    <select id="setting-{def.id}" {value} aria-describedby="help-{def.id}" onchange={(e) => onchange(e.currentTarget.value)}>
       {#each def.options as option (option.id)}
         <option value={option.id}>{option.label}</option>
       {/each}

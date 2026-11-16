@@ -1,16 +1,33 @@
 <script lang="ts">
   import { faSpider } from '@fortawesome/free-solid-svg-icons';
+  import { calm } from '@eurth/style';
   import { cubicOut } from 'svelte/easing';
   import { Tween } from 'svelte/motion';
   import { fade } from 'svelte/transition';
   import { axes } from '../model/axes';
   import type { AxisScore } from '../model/engine';
+  import { scalesJson, scalesMarkdown } from '../model/formats';
   import Download from './Download.svelte';
 
   // The scales as a web: the further out, the higher the score. Pointing at a spoke's outer end
   // shows its score. Each edge of the blue shape is a thread: brush across one and that edge
   // twangs, once. After three twangs a tiny spider comes down to see what's caught in its web.
-  let { scores, name }: { scores: AxisScore[]; name: string } = $props();
+  let {
+    scores,
+    name,
+    link,
+  }: {
+    scores: AxisScore[];
+    name: string;
+    /** The country's link, for the Markdown and JSON downloads. */
+    link: string;
+  } = $props();
+
+  // The shape as text too: its eight scores as a Markdown table, and as JSON.
+  const texts = $derived([
+    { label: 'Markdown', extension: 'md', type: 'text/markdown', make: () => scalesMarkdown(name, scores, link) },
+    { label: 'JSON', extension: 'json', type: 'application/json', make: () => scalesJson(name, scores, link) },
+  ]);
 
   const radius = 100;
   const count = axes.length;
@@ -18,10 +35,9 @@
   const point = (i: number, r: number) => [Math.cos(angle(i)) * r, Math.sin(angle(i)) * r] as const;
   const ring = (r: number) => axes.map((_, i) => point(i, r).join(',')).join(' ');
   const summary = $derived(scores.map((s) => `${axes.find((a) => a.id === s.axis)!.label} ${s.score}`).join(', '));
-  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // The shape glides to new scores.
-  const shown = Tween.of(() => scores.map((s) => s.score), { duration: calm ? 0 : 400, easing: cubicOut });
+  const shown = Tween.of(() => scores.map((s) => s.score), { duration: calm() ? 0 : 400, easing: cubicOut });
   const corners = $derived(axes.map((_, i) => point(i, ((shown.current[i] ?? 0) / 100) * radius)));
 
   // How far each edge bows out from straight, while it twangs.
@@ -55,13 +71,13 @@
   /** A damped twang of one edge, inward or outward as the pointer crossed it. */
   function pluck(i: number, event: PointerEvent) {
     touches += 1;
-    if (touches >= 3 && !spider && !calm) {
+    if (touches >= 3 && !spider && !calm()) {
       target = onWeb(toChart(event));
       spider = { ...home, turn: 180 };
       since = performance.now();
       crawl();
     }
-    if (calm) return;
+    if (calm()) return;
     const [ax, ay] = corners[i]!;
     const [bx, by] = corners[(i + 1) % count]!;
     const outward = (by - ay) * (ax + bx) - (bx - ax) * (ay + by) >= 0 ? 1 : -1;
@@ -220,7 +236,7 @@
   {/if}
 </svg>
 
-<Download svg={() => svg} name="{name} shape" />
+<Download svg={() => svg} name="{name} shape" {texts} />
 
 <style>
   .intro {

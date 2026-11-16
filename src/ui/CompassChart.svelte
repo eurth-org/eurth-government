@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { calm } from '@eurth/style';
   import { cubicOut } from 'svelte/easing';
   import { Tween } from 'svelte/motion';
   import { compassAxes, compassPoint, quadrants } from '../model/compass';
@@ -30,8 +31,7 @@
 
   const here = $derived(compassPoint(scores));
   // This country's dot glides to its new place.
-  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const moving = Tween.of(() => here, { duration: calm ? 0 : 450, easing: cubicOut });
+  const moving = Tween.of(() => here, { duration: calm() ? 0 : 450, easing: cubicOut });
 
   const corners = $derived([
     { name: quadrants.topLeft, x: -half + 6, y: -half + 14, anchor: 'start', swatch: '#bf1e2e' },

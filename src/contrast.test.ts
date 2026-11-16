@@ -4,9 +4,14 @@ import { describe, expect, it } from 'vitest';
 
 const css = readFileSync(new URL('./app.css', import.meta.url), 'utf8');
 
-/** The custom properties declared in one block of app.css, as written. */
+/**
+ * The custom properties declared in one block of app.css, as written. Governmint's own tokens
+ * are declared on its wrapper, .gov: the suite's tokens (on the root) are tested by the suite.
+ */
 function declared(css: string, selector: string): Record<string, string> {
-  const start = css.indexOf(`${selector} {`);
+  // The first block that opens with exactly this selector, at the start of a line.
+  const start = css.split('\n').reduce((found, line, i, lines) => (found < 0 && line.trim() === `${selector} {` ? lines.slice(0, i).join('\n').length : found), -1);
+  if (start < 0) throw new Error(`app.css has no "${selector}" block`);
   const block = css.slice(start, css.indexOf('}', start));
   return Object.fromEntries([...block.matchAll(/--([\w-]+):\s*([^;]+);/g)].map(([, name, value]) => [name!, value!.trim()]));
 }
@@ -33,8 +38,8 @@ function contrast(a: string, b: string): number {
   return (hi! + 0.05) / (lo! + 0.05);
 }
 
-const light = resolved(declared(css, ':root'));
-const dark = resolved({ ...declared(css, ':root'), ...declared(css, ":root[data-theme='dark']") });
+const light = resolved(declared(css, '.gov'));
+const dark = resolved({ ...declared(css, '.gov'), ...declared(css, ":root[data-theme='dark'] .gov") });
 
 // [foreground, background, minimum]: 4.5 for text, 3 for icons, borders and focus rings.
 const pairs: [string, string, number][] = [
@@ -61,7 +66,7 @@ const pairs: [string, string, number][] = [
 ];
 
 it('uses the same dark colours with and without the theme switch', () => {
-  expect(declared(css, ':root:not([data-theme])')).toEqual(declared(css, ":root[data-theme='dark']"));
+  expect(declared(css, ':root:not([data-theme]) .gov')).toEqual(declared(css, ":root[data-theme='dark'] .gov"));
 });
 
 /*

@@ -1,0 +1,105 @@
+---
+// The maker, and under it what search engines and newcomers both want: how to use it, and
+// answers to the usual questions (also given to search engines as structured data).
+// The page is real HTML before any script runs: the tool is drawn on the server with the
+// default country, then woken up in the browser, where it reads the country from the link.
+//
+// Governmint keeps its own design between the suite's header and footer (CLAUDE.md): the tool
+// brings its own stylesheet (src/app.css, by way of App.svelte) and fills the page from edge
+// to edge, as it does on its own. There is no intro block above it, as there never was: the
+// page's one <h1> is there for screen readers and search engines.
+import { faqPage, githubLinksAllowed, ref, webApplication } from '@eurth/style/build';
+import Page from '@eurth/style/components/Page.astro';
+import { site } from '../../eurth.config.mjs';
+import Governmint from '../App.svelte';
+
+const out = (href: string) => ref(href, site.host);
+// Until 25 December 2026 no page links to GitHub (the handbook, Shell); after it, the nightly
+// rebuild turns these credits into links by itself.
+const github = githubLinksAllowed();
+
+const faq = [
+  {
+    q: 'Is Governmint free?',
+    a: 'Yes. There is no account, no advert and no paid tier. It is made by the Eurth worldbuilding community for anyone who needs a government: worldbuilders, writers, roleplayers and the curious.',
+  },
+  {
+    q: 'Where is my country saved?',
+    a: "In its link. The link holds every setting and the name, so copying the link is saving the country. You can also save your nation as a profile file that the other Eurth tools can read, and load it again here. Nothing is kept in your browser or on a server: earlier versions kept a list of saved countries in the browser, and that list is gone, but every link ever copied still opens its country.",
+  },
+  {
+    q: 'What does Governmint count?',
+    a: 'One number: how many countries have been minted, which is to say copied, shared or exported. The page sends "one more" and nothing else: nothing about you, and nothing about your country.',
+  },
+  {
+    q: 'How accurate are the real countries?',
+    a: 'They are simplified and approximate, as of 2026: institutions follow each constitution, and how free elections are follows the consensus of election observers. Governmint is a worldbuilding tool, made for fiction and fun: not an assessment of any government, and not legal or political advice.',
+  },
+  {
+    q: 'Does it work offline, and on a phone?',
+    a: "Yes to both. After the first visit the site keeps a copy of itself on your device and opens without a connection. The flags of real countries need a connection the first time each is shown.",
+  },
+];
+---
+
+<Page
+  site={site}
+  jsonld={[
+    webApplication(site, {
+      featureList: [
+        '27 settings for a state, its institutions and its budget',
+        'A name for the kind of state, with the reason for each label',
+        'Checks for contradictions between settings',
+        'Eight scales, a spider chart and a compass',
+        '18 examples and 197 real countries to start from',
+        'A link that holds the whole country',
+        'Markdown, wikitext and JSON exports; charts as SVG, PNG and WebP',
+        'Nation profile file',
+      ],
+    }),
+    faqPage(faq),
+  ]}
+>
+  <h1 class="eu-visually-hidden">Governmint: freshly minted governments</h1>
+
+  <!-- client:load draws the maker as real HTML first, then wakes it up. -->
+  <Governmint client:load siteUrl={site.url} host={site.host} github={github} />
+
+  <!-- Under the tool, in the suite's column and the suite's type: these words are new with the
+       shared shell, and no part of Governmint's own design. -->
+  <div class="gov-after">
+    <section class="eu-prose">
+      <h2>How it works</h2>
+      <ol>
+        <li>Answer the questions on the left, section by section, or start from an example or a real country. The dice beside the name roll one for you, and ask first if that would replace a country you've changed.</li>
+        <li>Read the result on the right: the name of the kind of state you've made, why each label applies, and what's worth a second look.</li>
+        <li>Drag a scale to see which settings would move it, and set the budget: move one share and the others make room.</li>
+        <li>Save copies the link, which holds the whole country. Share it with the Eurth forum, or take it away as Markdown, wikitext or JSON: copied, or as a file.</li>
+      </ol>
+      <p>
+        Governmint is a preview: it covers government and the budget, and the economy and law come next. Built a
+        country you like? <a href={out('https://eurth.org')}>Eurth</a> has a world for it to live in.
+      </p>
+
+      <h2>Questions</h2>
+      <dl>
+        {
+          faq.map((item) => (
+            <>
+              <dt>{item.q}</dt>
+              <dd>{item.a}</dd>
+            </>
+          ))
+        }
+      </dl>
+    </section>
+  </div>
+
+  <Fragment slot="inspirations">
+    Governmint is inspired by the {
+      github ? <a href={out('https://minkinfin.github.io/Filteries-Political-Simulator-Archive/')}>Filteries Political Simulator</a> : 'Filteries Political Simulator'
+    } (2016–2018) and by StateCrafter, and written from scratch. Eurth's worldbuilding began on <a href={out('https://www.nationstates.net')}>NationStates</a>.
+    Every label links to <a href={out('https://en.wikipedia.org')}>Wikipedia</a> for the full story: thank you, Wikipedia. The share icon was designed by
+    the late, great <a href={out('https://alexking.org')}>Alex King</a>. Flags by {github ? <a href={out('https://github.com/jdecked/twemoji')}>Twemoji</a> : 'Twemoji'} (CC BY 4.0).
+  </Fragment>
+</Page>

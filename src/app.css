@@ -1,7 +1,18 @@
-/* Tokens from the Eurth design system, matching eurth.org: the forum's light scheme, and its
-   Solarized dark scheme ("Night"). The theme switch sets data-theme; without script, the page
-   follows the system. Every text pair meets WCAG 2.2 AA (contrast.test.ts checks them). */
-:root {
+/* Governmint's own design, kept exactly as it was perfected on gov.eurth.org. The suite
+   (@eurth/style) provides the header and the footer; everything between them is Governmint's,
+   and lives inside the .gov wrapper (App.svelte).
+
+   So this file does two jobs, both scoped to .gov:
+   1. It gives the tool its own tokens. Several share a name with the suite's (--ink-muted,
+      --accent-text, --selected and more) but not a value: declared on .gov, they apply inside
+      the tool and nowhere else.
+   2. It keeps the suite's base styles from restyling the tool: headings, paragraphs, lists,
+      links, code and tooltips go back to what they were, so the components' own styles land
+      on the same ground they were written on.
+
+   Every text pair meets WCAG 2.2 AA (contrast.test.ts checks them). Governmint is held to AA,
+   not to the suite's AAA and 44px targets: Stijn, 16 November 2026 (CLAUDE.md). */
+.gov {
   --eurth-blue: #2698d4;
   --eurth-blue-deep: #1b6fa0;
   --night: #002b36;
@@ -42,26 +53,18 @@
   --radius-sm: 2px;
   --radius-control: 6px;
   --radius-panel: 8px;
-  --nav-height: 52px;
-
-  color-scheme: light;
-}
-
-/* On small screens the sticky bar also holds the search box and the country's name. */
-@media (max-width: 899px) {
-  :root {
-    --nav-height: 128px;
-  }
 }
 
 /* Eurth blue as the brand specifies it, on screens with wide colour; #2698d4 elsewhere. */
 @supports (color: color(display-p3 0 0 0)) {
-  :root {
+  .gov {
     --eurth-blue: color(display-p3 0.2981 0.5884 0.8115);
   }
 }
 
-:root[data-theme='dark'] {
+/* Night. The suite's head script sets data-theme on <html> before the first paint; without
+   script nothing is set, and the page follows the device. */
+:root[data-theme='dark'] .gov {
   --surface: var(--night);
   --surface-raised: #0d353f;
   --header: var(--night);
@@ -76,11 +79,10 @@
   --flash: #6b6a1f;
   --hover: #164a57;
   --track: #3a6470;
-  color-scheme: dark;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme]) {
+  :root:not([data-theme]) .gov {
     --surface: var(--night);
     --surface-raised: #0d353f;
     --header: var(--night);
@@ -95,97 +97,91 @@
     --flash: #6b6a1f;
     --hover: #164a57;
     --track: #3a6470;
-    color-scheme: dark;
   }
 }
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
+/* The height of the sticky section bar: jumps within the page land below it, and the name card
+   sticks under it. On small screens the bar also holds the search box and the country's name.
+   (On the root, since the page's own scrolling needs it; the suite has no token of this name.) */
+:root {
+  --nav-height: 52px;
+}
+
+@media (max-width: 899px) {
+  :root {
+    --nav-height: 128px;
+  }
 }
 
 html {
-  background: var(--surface);
   scroll-padding-top: calc(var(--nav-height) + var(--space-4));
 }
 
-body {
-  margin: 0;
-  background: var(--surface);
+/* The tool fills the page from edge to edge between the suite's header and footer, as it does
+   on its own: its bars run the full width and its column centres itself. The words under the
+   tool (index.astro) keep the suite's column. */
+.eu-main:has(.gov) {
+  max-width: none;
+  padding: 0;
+}
+
+.gov-after {
+  width: 100%;
+  max-width: var(--size-page);
+  margin: 0 auto;
+  padding: var(--space-8);
+}
+
+@media (max-width: 720px) {
+  .gov-after {
+    padding: var(--space-6) var(--space-4);
+  }
+}
+
+/* The tool's own ground: what the page's body gave it before the shared shell. */
+.gov {
   color: var(--ink);
   font-family: var(--font-sans);
   font-size: 15px;
+  font-style: normal;
+  font-weight: 400;
   line-height: 1.45;
 }
 
-a {
+/* The suite's base styles, undone inside the tool. "html :where(.gov) x" outranks the suite's
+   bare element selectors wherever the two stylesheets land in the page, and still gives way to
+   every component's own (class-scoped) rule. */
+html :where(.gov) :is(h1, h2, h3, h4) {
+  margin: revert;
+  font: revert;
+  text-wrap: revert;
+}
+
+html :where(.gov) :is(p, ul, ol, dl, figure, blockquote) {
+  margin: revert;
+}
+
+html :where(.gov) :is(code, kbd, samp, pre) {
+  font: revert;
+}
+
+html :where(.gov) :is(img, svg, video, canvas) {
+  max-width: none;
+}
+
+html :where(.gov) a {
+  color: var(--accent-text);
+  text-underline-offset: auto;
+}
+
+/* The suite turns links ink when pointed at; Governmint's keep their colour. */
+html :where(.gov) a:hover {
   color: var(--accent-text);
 }
 
-button,
-select,
-input,
-textarea {
-  font: inherit;
-  color: inherit;
-}
-
-:focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 2px;
-}
-
-/* The theme switch's circular reveal (View Transitions), after Deluminator. */
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation: none;
-  mix-blend-mode: normal;
-}
-
-/* Going light, the new page grows out of the switch; going dark, the lit page shrinks into it.
-   The circle comes from here, not from script, so it's in place from the very first frame (with
-   script, the new page could show in full for a moment, and going light looked instant).
-   ThemeSwitch.svelte sets --vt-x, --vt-y (the switch) and --vt-r (the farthest corner). */
-html.vt-grow::view-transition-old(root) {
-  z-index: 1;
-}
-
-html.vt-grow::view-transition-new(root) {
-  z-index: 9999;
-  animation: vt-grow 0.5s cubic-bezier(0.25, 0.55, 0.45, 1) forwards;
-}
-
-html.vt-shrink::view-transition-old(root) {
-  z-index: 9999;
-  animation: vt-shrink 0.5s cubic-bezier(0.55, 0, 0.75, 0.45) forwards;
-}
-
-html.vt-shrink::view-transition-new(root) {
-  z-index: 1;
-}
-
-@keyframes vt-grow {
-  from {
-    clip-path: circle(0 at var(--vt-x) var(--vt-y));
-  }
-  to {
-    clip-path: circle(var(--vt-r) at var(--vt-x) var(--vt-y));
-  }
-}
-
-@keyframes vt-shrink {
-  from {
-    clip-path: circle(var(--vt-r) at var(--vt-x) var(--vt-y));
-  }
-  to {
-    clip-path: circle(0 at var(--vt-x) var(--vt-y));
-  }
-}
-
 /* Buttons and option pills: slightly rounded, lifting a little on hover. */
-.btn,
-.pill {
+:where(.gov) .btn,
+:where(.gov) .pill {
   border-radius: var(--radius-control);
   transition:
     background-color 0.15s,
@@ -194,7 +190,7 @@ html.vt-shrink::view-transition-new(root) {
     transform 0.15s;
 }
 
-.btn {
+:where(.gov) .btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -205,7 +201,7 @@ html.vt-shrink::view-transition-new(root) {
   cursor: pointer;
 }
 
-.pill {
+:where(.gov) .pill {
   /* --pad is the side padding of a chosen option. Unchosen ones get 9px more on each side: the
      room the check mark takes (12px, and the 6px gap), so choosing never changes the width. */
   --pad: 12px;
@@ -220,7 +216,7 @@ html.vt-shrink::view-transition-new(root) {
   cursor: pointer;
 }
 
-.pill input {
+:where(.gov) .pill input {
   position: absolute;
   inset: 0;
   margin: 0;
@@ -228,8 +224,8 @@ html.vt-shrink::view-transition-new(root) {
   cursor: pointer;
 }
 
-.btn:hover,
-.pill:hover {
+:where(.gov) .btn:hover,
+:where(.gov) .pill:hover {
   background: var(--hover);
   border-color: var(--selected-edge);
   box-shadow: 0 2px 6px rgb(0 0 0 / 0.15);
@@ -237,10 +233,10 @@ html.vt-shrink::view-transition-new(root) {
 }
 
 /* Selected options and primary buttons: white on the deeper Eurth blue. */
-.btn-primary,
-.btn-primary:hover,
-.pill:has(input:checked),
-.pill:has(input:checked):hover {
+:where(.gov) .btn-primary,
+:where(.gov) .btn-primary:hover,
+:where(.gov) .pill:has(input:checked),
+:where(.gov) .pill:has(input:checked):hover {
   background: var(--selected);
   border-color: var(--selected-edge);
   color: var(--on-selected);
@@ -248,34 +244,34 @@ html.vt-shrink::view-transition-new(root) {
 }
 
 /* The check mark in front of a selected option. */
-.pill .check {
+:where(.gov) .pill .check {
   display: none;
   justify-content: center;
   width: 12px;
   font-size: 12px;
 }
 
-.pill:has(input:checked) {
+:where(.gov) .pill:has(input:checked) {
   padding-inline: var(--pad);
 }
 
-.pill:has(input:checked) .check {
+:where(.gov) .pill:has(input:checked) .check {
   display: inline-flex;
 }
 
 /* Options whose own icon says enough (chart types, export formats): no check mark, so no room
    kept for one either. */
-.pill.plain {
+:where(.gov) .pill.plain {
   padding-inline: var(--pad);
 }
 
 /* Text that turns bold when chosen keeps room for its bold self (a hidden bold copy sets the
    width), so the options beside it never shift. Put the text in data-text too. */
-.steady {
+:where(.gov) .steady {
   display: inline-grid;
 }
 
-.steady::after {
+:where(.gov) .steady::after {
   content: attr(data-text) / '';
   height: 0;
   visibility: hidden;
@@ -284,31 +280,126 @@ html.vt-shrink::view-transition-new(root) {
   pointer-events: none;
 }
 
-.steady,
-.steady::after {
+:where(.gov) .steady,
+:where(.gov) .steady::after {
   grid-area: 1 / 1;
 }
 
-.pill:has(input:focus-visible) {
+:where(.gov) .pill:has(input:focus-visible) {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .btn,
-  .pill {
+  :where(.gov) .btn,
+  :where(.gov) .pill {
     transition: none;
   }
 
-  .btn:hover,
-  .pill:hover {
+  :where(.gov) .btn:hover,
+  :where(.gov) .pill:hover {
     transform: none;
   }
 }
 
+/* Motion switched off in the footer (the suite's switch): the same as the device asking. */
+html[data-motion='still'] :where(.gov) :is(.btn, .pill):hover {
+  transform: none;
+}
+
+/* Buttons that come from the shared packages (the profile file's Load and Save) wear
+   Governmint's own button, so a row of buttons in the tool reads as one. Not inside a dialog
+   of the suite's: that keeps the suite's look, tokens and all (below). */
+.gov .eu-btn:not(.eu-dialog *) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  min-width: 0;
+  min-height: 0;
+  padding: 6px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  background: var(--button);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s,
+    box-shadow 0.15s,
+    transform 0.15s;
+}
+
+.gov .eu-btn:not(.eu-dialog *):hover {
+  background: var(--hover);
+  border-color: var(--selected-edge);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.15);
+  transform: translateY(-1px);
+}
+
+.gov .eu-btn:not(.eu-dialog *):disabled {
+  border-style: solid;
+  border-color: transparent;
+  background: var(--button);
+  color: var(--ink);
+  opacity: 0.45;
+  cursor: default;
+  box-shadow: none;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gov .eu-btn:not(.eu-dialog *) {
+    transition: none;
+  }
+
+  .gov .eu-btn:not(.eu-dialog *):hover {
+    transform: none;
+  }
+}
+
+html[data-motion='still'] .gov .eu-btn:not(.eu-dialog *):hover {
+  transform: none;
+}
+
+/* A dialog of the suite's that opens from inside the tool (Random's question) inherits the
+   tool's tokens from its place in the page. It gets the suite's own back: the root keeps a
+   copy of each token Governmint redefines, and the dialog reads the copies. */
+:root {
+  --suite-eurth-blue: var(--eurth-blue);
+  --suite-selected: var(--selected);
+  --suite-on-selected: var(--on-selected);
+  --suite-ink-muted: var(--ink-muted);
+  --suite-accent-text: var(--accent-text);
+  --suite-focus-ring: var(--focus-ring);
+  --suite-danger: var(--danger);
+  --suite-type-body: var(--type-body);
+}
+
+.gov .eu-dialog {
+  --eurth-blue: var(--suite-eurth-blue);
+  --selected: var(--suite-selected);
+  --on-selected: var(--suite-on-selected);
+  --ink-muted: var(--suite-ink-muted);
+  --accent-text: var(--suite-accent-text);
+  --focus-ring: var(--suite-focus-ring);
+  --danger: var(--suite-danger);
+  font: var(--suite-type-body);
+}
+
+.gov .eu-dialog :is(h1, h2, h3, h4, p) {
+  margin: 0;
+}
+
+.gov .eu-dialog h2 {
+  font: var(--type-subtitle);
+  text-wrap: balance;
+}
+
 /* Sliders, drawn the same in every browser (Chrome and Safari draw native ones differently):
    a light track, filled in Eurth blue up to the value. Set --fill to the value as a percentage. */
-.range {
+:where(.gov) .range {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
@@ -319,7 +410,7 @@ html.vt-shrink::view-transition-new(root) {
   cursor: pointer;
 }
 
-.range::-webkit-slider-thumb {
+:where(.gov) .range::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 18px;
   height: 18px;
@@ -329,7 +420,7 @@ html.vt-shrink::view-transition-new(root) {
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
 }
 
-.range::-moz-range-thumb {
+:where(.gov) .range::-moz-range-thumb {
   width: 14px;
   height: 14px;
   border: 2px solid var(--selected);
@@ -338,39 +429,39 @@ html.vt-shrink::view-transition-new(root) {
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
 }
 
-.range::-moz-range-track {
+:where(.gov) .range::-moz-range-track {
   background: transparent;
 }
 
 /* Small delights, only for visitors who don't ask for reduced motion. */
 @media (prefers-reduced-motion: no-preference) {
   /* The check mark pops in when an option is chosen. */
-  .pill:has(input:checked) .check {
+  :where(.gov) .pill:has(input:checked) .check {
     animation: pop 0.25s cubic-bezier(0.3, 1.6, 0.6, 1);
   }
 
   /* Slider handles grow under the pointer, a little more while held. */
-  .range::-webkit-slider-thumb {
+  :where(.gov) .range::-webkit-slider-thumb {
     transition: transform 0.15s;
   }
 
-  .range:hover::-webkit-slider-thumb {
+  :where(.gov) .range:hover::-webkit-slider-thumb {
     transform: scale(1.15);
   }
 
-  .range:active::-webkit-slider-thumb {
+  :where(.gov) .range:active::-webkit-slider-thumb {
     transform: scale(1.3);
   }
 
-  .range::-moz-range-thumb {
+  :where(.gov) .range::-moz-range-thumb {
     transition: transform 0.15s;
   }
 
-  .range:hover::-moz-range-thumb {
+  :where(.gov) .range:hover::-moz-range-thumb {
     transform: scale(1.15);
   }
 
-  .range:active::-moz-range-thumb {
+  :where(.gov) .range:active::-moz-range-thumb {
     transform: scale(1.3);
   }
 }
@@ -381,7 +472,10 @@ html.vt-shrink::view-transition-new(root) {
   }
 }
 
-/* Delights from ui/fun.ts: coins, a paper plane and a toast, outside the page's layout. */
+/* Delights from ui/fun.ts and @eurth/style: coins, a paper plane, a toast and "Nice.". They
+   sit on the page itself, outside its layout (and outside .gov), so their colours are written
+   here as they are on gov.eurth.org. The toast, the plane and "Nice." are made by the suite's
+   own helpers, under the suite's class names. */
 .burst-coin {
   position: fixed;
   z-index: 50;
@@ -394,60 +488,31 @@ html.vt-shrink::view-transition-new(root) {
   pointer-events: none;
 }
 
-.paper-plane {
-  position: fixed;
-  z-index: 50;
+body > .eu-plane {
   width: 18px;
   color: var(--eurth-blue);
-  pointer-events: none;
 }
 
-.toast {
-  position: fixed;
-  left: 50%;
-  bottom: var(--space-6);
-  z-index: 60;
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-control);
-  background: var(--ink);
-  color: var(--surface);
-  font-weight: 600;
+body > .eu-toast {
+  display: block;
+  max-width: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font: 600 15px/1.45 system-ui, Arial, sans-serif;
   box-shadow: 0 4px 16px rgb(0 0 0 / 0.25);
-  transform: translateX(-50%);
-  animation: toast-in 0.3s cubic-bezier(0.3, 1.4, 0.6, 1);
 }
 
-.toast.leaving {
-  opacity: 0;
-  transform: translate(-50%, 12px);
-  transition:
-    opacity 0.4s,
-    transform 0.4s;
+/* "Nice." (the suite's niceWatcher), when a slider settles on 69. */
+body > .eu-nice {
+  padding: 2px 8px;
+  border-radius: 6px;
+  font: 700 13px/1.45 system-ui, Arial, sans-serif;
 }
 
-@keyframes toast-in {
-  from {
-    opacity: 0;
-    transform: translate(-50%, 16px);
-  }
-}
+/* Smooth, not jerky: in-page jumps glide (the suite's stylesheet sees to that, and stops it
+   when motion is switched off). */
 
-@media (prefers-reduced-motion: reduce) {
-  .toast,
-  .toast.leaving {
-    animation: none;
-    transition: none;
-  }
-}
-
-/* Smooth, not jerky: in-page jumps glide, and slider fills follow their values. */
-@media (prefers-reduced-motion: no-preference) {
-  html {
-    scroll-behavior: smooth;
-  }
-}
-
-.visually-hidden {
+:where(.gov) .visually-hidden {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -456,72 +521,35 @@ html.vt-shrink::view-transition-new(root) {
   white-space: nowrap;
 }
 
-/* "Nice." (ui/fun.ts), when a slider settles on 69. */
-.nice {
-  position: fixed;
-  z-index: 50;
-  padding: 2px 8px;
-  border-radius: var(--radius-control);
-  background: var(--ink);
-  color: var(--surface);
-  font-size: 13px;
-  font-weight: 700;
-  pointer-events: none;
-  transform: translate(-50%, calc(-100% - 6px));
-  animation: nice 1.6s ease-out forwards;
-}
-
-@keyframes nice {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, calc(-100% + 4px)) scale(0.8);
-  }
-  12%,
-  75% {
-    opacity: 1;
-    transform: translate(-50%, calc(-100% - 6px)) scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, calc(-100% - 14px));
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .nice {
-    animation: none;
-  }
-}
-
 /* Clicks: buttons press in, and their icons act out what the button does (ui/fun.ts). */
 @media (prefers-reduced-motion: no-preference) {
-  .btn:active,
-  .pill:active {
+  :where(.gov) .btn:active,
+  :where(.gov) .pill:active {
     transform: translateY(0) scale(0.96);
     box-shadow: none;
   }
 
-  .clicked .icon {
+  :where(.gov) .clicked .icon {
     animation: click-pop 0.35s cubic-bezier(0.3, 1.6, 0.6, 1);
   }
 
-  .clicked[data-click='spin-back'] .icon {
+  :where(.gov) .clicked[data-click='spin-back'] .icon {
     animation: click-spin-back 0.6s cubic-bezier(0.3, 1.2, 0.5, 1);
   }
 
-  .clicked[data-click='tumble'] .icon {
+  :where(.gov) .clicked[data-click='tumble'] .icon {
     animation: click-tumble 0.6s cubic-bezier(0.3, 1.2, 0.5, 1);
   }
 
-  .clicked[data-click='bounce'] .icon {
+  :where(.gov) .clicked[data-click='bounce'] .icon {
     animation: click-bounce 0.5s ease-out;
   }
 
-  .clicked[data-click='swing-left'] .icon {
+  :where(.gov) .clicked[data-click='swing-left'] .icon {
     animation: click-swing-left 0.45s ease-out;
   }
 
-  .clicked[data-click='swing-right'] .icon {
+  :where(.gov) .clicked[data-click='swing-right'] .icon {
     animation: click-swing-right 0.45s ease-out;
   }
 }
@@ -573,17 +601,19 @@ html.vt-shrink::view-transition-new(root) {
 
 /* Tooltips for buttons: data-tip holds the text (aria-label carries it for screen readers).
    They appear under the button at once, aligned to its right edge so they stay on screen, stay
-   while pointed at, and go with Escape (WCAG 1.4.13). */
-[data-tip] {
-  position: relative;
+   while pointed at, and go with Escape (WCAG 1.4.13). The suite has tooltips of its own on the
+   same attribute, so every property it sets is set back here. */
+html :where(.gov) [data-tip]:is(:hover, :focus-visible) {
+  z-index: auto;
 }
 
-[data-tip]:hover::after,
-[data-tip]:focus-visible::after {
+.gov [data-tip]:hover::after,
+.gov [data-tip]:focus-visible::after {
   content: attr(data-tip);
   position: absolute;
   top: calc(100% + 6px);
   right: 0;
+  bottom: auto;
   z-index: 20;
   /* As wide as its text, whatever the button's own layout (a grid would squeeze it). */
   width: max-content;
@@ -592,26 +622,31 @@ html.vt-shrink::view-transition-new(root) {
   border-radius: var(--radius-control);
   background: var(--ink);
   color: var(--surface);
+  font: inherit;
   font-size: 12px;
   font-weight: 600;
   line-height: 1.4;
+  text-align: inherit;
   white-space: nowrap;
+  pointer-events: auto;
+  animation: none;
 }
 
 /* A tooltip at the left edge of the screen lines up with its button's left edge instead. */
-[data-tip-align='start']::after {
+.gov [data-tip-align='start']:hover::after,
+.gov [data-tip-align='start']:focus-visible::after {
   right: auto;
   left: 0;
 }
 
-/* Escape hides tooltips until the pointer moves again (ui/fun.ts). */
-.tips-hidden [data-tip]::after {
+/* Escape hides tooltips until the pointer moves again (the suite's shell sees to the class). */
+.eu-tips-hidden .gov [data-tip]::after {
   display: none;
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  [data-tip]:hover::after,
-  [data-tip]:focus-visible::after {
+  .gov [data-tip]:hover::after,
+  .gov [data-tip]:focus-visible::after {
     animation: tip-in 0.15s ease-out;
   }
 }
