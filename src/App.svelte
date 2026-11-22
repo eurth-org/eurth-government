@@ -14,15 +14,7 @@
    * suite's choices for the visit (getPrefs).
    */
   import './app.css';
-  import {
-    faBookOpen,
-    faCircleQuestion,
-    faFileExport,
-    faFloppyDisk,
-    faRedo,
-    faShareNodes,
-    faUndo,
-  } from '@fortawesome/free-solid-svg-icons';
+  import { faFileExport, faShareNodes } from '@fortawesome/free-solid-svg-icons';
   import type { EurthProfile } from '@eurth/profile';
   import { calm, copyText, getPrefs, onPrefs, setPrefs, toast } from '@eurth/style';
   import ShareDialog from '@eurth/style/components/ShareDialog.svelte';
@@ -48,6 +40,7 @@
   import Info from './ui/Info.svelte';
   import { mint } from './ui/minted.svelte';
   import { world } from './ui/spin.svelte';
+  import { toolbar } from './ui/toolbar.svelte';
   import NameCard from './ui/NameCard.svelte';
   import { groupIcons, groupSwatches, panelIcons, ruleIcon, severityIcons } from './ui/icons';
   import Picker from './ui/Picker.svelte';
@@ -377,6 +370,19 @@
   let prefs = $state(getPrefs());
   onMount(() => onPrefs((next) => (prefs = next)));
 
+  // The row of actions is in the suite's header (ui/Actions.svelte): tell it what can be done
+  // just now, and how.
+  toolbar.examples = () => (pickerOpen = true);
+  toolbar.undo = () => undo();
+  toolbar.redo = () => redo();
+  toolbar.save = () => saveCountry();
+  toolbar.about = () => (infoOpen = true);
+  $effect(() => {
+    toolbar.canUndo = canUndo;
+    toolbar.canRedo = future.length > 0;
+    toolbar.mod = mod;
+  });
+
   // About is a pill in the suite's blue bar (pages/index.astro), a link to #about: it opens
   // the same window as the "?" button and the ? key.
   onMount(() => {
@@ -451,38 +457,8 @@
 <!-- Everything inside .gov keeps Governmint's own design (app.css). The suite's header is above
      it and the suite's footer below; neither is rebuilt here. -->
 <div class="gov">
-  <!-- Governmint's own row of actions. The coin, the name and the tagline are in the suite's
-       header (the coin through its "mark" slot, see pages/index.astro), and About is a pill in
-       its blue bar. -->
-  <div class="header">
-    <div class="bar">
-      <div class="actions">
-        <button class="btn" onclick={() => (pickerOpen = true)} data-tip="Start from an example or a real country (E)">
-          <Icon icon={faBookOpen} /> Examples<span class="wide-only">&amp; countries</span>
-        </button>
-        <span class="history">
-          <button class="btn icon-only" data-click="swing-left" onclick={undo} disabled={!canUndo} aria-label="Undo" data-tip="Undo ({mod}Z)">
-            <Icon icon={faUndo} />
-          </button>
-          <button class="btn icon-only" data-click="swing-right" onclick={redo} disabled={!future.length} aria-label="Redo" data-tip="Redo (⇧{mod}Z)">
-            <Icon icon={faRedo} />
-          </button>
-        </span>
-        <button class="btn btn-primary" data-click="bounce" onclick={saveCountry} data-tip="Save: copy the link, which holds the whole country (S)">
-          <Icon icon={faFloppyDisk} /> Save
-        </button>
-        <button
-          class="btn icon-only"
-          aria-label="About Governmint and keyboard shortcuts"
-          data-tip="About and shortcuts (?)"
-          onclick={() => (infoOpen = true)}
-        >
-          <Icon icon={faCircleQuestion} />
-        </button>
-      </div>
-    </div>
-  </div>
-
+  <!-- Governmint's actions (Examples, Undo, Redo, Save, About) stand on the line of the coin
+       and the name, in the suite's header: ui/Actions.svelte, by way of ui/toolbar.svelte.ts. -->
   <SectionNav
     sections={groups}
     {current}
@@ -667,72 +643,6 @@
 />
 
 <style>
-  /* Governmint's own row under the suite's header: the actions, on the right as they have
-     always been. It stacks above the sticky section bar (z-index 2), so its tooltips show
-     over it. */
-  /* On wide screens, the bar's contents line up with the page below instead of the screen's edges. */
-  .bar {
-    max-width: calc(1200px - 2 * var(--space-4));
-    margin: 0 auto;
-  }
-
-  .header {
-    position: relative;
-    z-index: 3;
-    background: var(--header);
-    padding: var(--space-2) var(--space-4);
-  }
-
-  .header .bar {
-    min-height: 56px;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: flex-end;
-    gap: var(--space-2) var(--space-4);
-  }
-
-  .actions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--space-2);
-  }
-
-  @media (max-width: 480px) {
-    .wide-only {
-      display: none;
-    }
-  }
-
-  .history {
-    display: inline-flex;
-    gap: 2px;
-  }
-
-  /* Every header tool is the same height; the icon-only ones are square. */
-  .actions .btn {
-    height: 36px;
-  }
-
-  .icon-only {
-    justify-content: center;
-    width: 36px;
-    padding: 0;
-  }
-
-  .actions .btn:disabled {
-    opacity: 0.45;
-    cursor: default;
-    box-shadow: none;
-    transform: none;
-  }
-
-  .actions .btn:disabled:hover {
-    background: var(--button);
-    border-color: transparent;
-  }
-
   /* Layout */
   .layout {
     max-width: 1200px;
