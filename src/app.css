@@ -117,6 +117,12 @@ html {
   scroll-padding-top: calc(var(--nav-height) + var(--space-4));
 }
 
+/* The suite's header and footer keep Governmint's own gutter, so their edges line up with the
+   tool's (@eurth/style reads --eu-gutter). */
+:root {
+  --eu-gutter: 16px;
+}
+
 /* The tool fills the page from edge to edge between the suite's header and footer, as it does
    on its own: its bars run the full width and its column centres itself. The words under the
    tool (index.astro) keep the suite's column. */

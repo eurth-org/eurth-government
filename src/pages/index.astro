@@ -9,11 +9,14 @@
 // to edge, as it does on its own. There is no intro block above it, as there never was: the
 // page's one <h1> is there for screen readers and search engines.
 import { faqPage, githubLinksAllowed, ref, webApplication } from '@eurth/style/build';
-import { faCircleInfo } from '@fortawesome/free-solid-svg-icons';
+import { faWikipediaW } from '@fortawesome/free-brands-svg-icons';
+import { faCircleInfo, faCodeBranch, faCoins, faHeart, faLandmark, faShareNodes } from '@fortawesome/free-solid-svg-icons';
 import Fa from '@eurth/style/components/Fa.astro';
 import Page from '@eurth/style/components/Page.astro';
+import ThanksItem from '@eurth/style/components/ThanksItem.astro';
 import { site } from '../../eurth.config.mjs';
 import Governmint from '../App.svelte';
+import Actions from '../ui/Actions.svelte';
 import Coin from '../ui/Coin.svelte';
 
 const out = (href: string) => ref(href, site.host);
@@ -66,6 +69,8 @@ const faq = [
   <!-- Governmint's own mark in front of its name, in the suite's header: the gold coin, as a
        component, so it still flips when the name is pointed at and spins for "The whole world". -->
   <Coin slot="mark" client:load follow size={32} />
+  <!-- Governmint's actions, on the same line as its coin and name, as they have always been. -->
+  <Actions slot="actions" client:load />
   <!-- About, where Governmint has always had it: a pill in the blue bar. The tool opens it. -->
   <a slot="bar" class="eu-barlink" href="#about"><Fa icon={faCircleInfo} /> About</a>
 
@@ -104,11 +109,20 @@ const faq = [
     </section>
   </div>
 
-  <Fragment slot="inspirations">
-    Governmint is inspired by the {
-      github ? <a href={out('https://minkinfin.github.io/Filteries-Political-Simulator-Archive/')}>Filteries Political Simulator</a> : 'Filteries Political Simulator'
-    } (2016–2018) and by StateCrafter, and written from scratch. Eurth's worldbuilding began on <a href={out('https://www.nationstates.net')}>NationStates</a>.
-    Every label links to <a href={out('https://en.wikipedia.org')}>Wikipedia</a> for the full story: thank you, Wikipedia. The share icon was designed by
-    the late, great <a href={out('https://alexking.org')}>Alex King</a>. Flags by {github ? <a href={out('https://github.com/jdecked/twemoji')}>Twemoji</a> : 'Twemoji'} (CC BY 4.0).
-  </Fragment>
+  <!-- Governmint's own lines of the footer's "With thanks", as it has always had them. -->
+  <ThanksItem slot="thanks" icon={faShareNodes}>
+    The share icon was designed by the late, great <a href={out('https://alexking.org')}>Alex King</a>. We never met him, but his work shaped how the web shares things. <span class="eu-heart"><Fa icon={faHeart} label="with love" /></span>
+  </ThanksItem>
+  <ThanksItem slot="thanks" icon={faWikipediaW}>
+    Every label links to <a href={out('https://en.wikipedia.org')}>Wikipedia</a> for the full story. Thank you, Wikipedia <span class="eu-heart"><Fa icon={faHeart} label="with love" /></span>
+  </ThanksItem>
+  <ThanksItem slot="thanks" icon={faCodeBranch}>
+    Inspired by the {github ? <a href={out('https://minkinfin.github.io/Filteries-Political-Simulator-Archive/')}>Filteries Political Simulator</a> : 'Filteries Political Simulator'} (2016–2018) and by StateCrafter, and written from scratch. Eurth's worldbuilding began on <a href={out('https://www.nationstates.net')}>NationStates</a>. Flags by {github ? <a href={out('https://github.com/jdecked/twemoji')}>Twemoji</a> : 'Twemoji'} (CC BY 4.0).
+  </ThanksItem>
+  <ThanksItem slot="thanks" icon={faCoins}>
+    The one thing Governmint counts is how many countries are minted: a single number, with nothing about you or your country.
+  </ThanksItem>
+  <ThanksItem slot="thanks" icon={faLandmark}>
+    Its pictures of real countries are simplified and approximate, as of 2026: not an assessment of any government, and not legal or political advice.
+  </ThanksItem>
 </Page>
